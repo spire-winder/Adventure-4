@@ -67,9 +67,13 @@ class AdventureGame:
         self.center : urwid.Widget = urwid.ListBox(urwid.SimpleFocusListWalker([urwid.Text("Original Body")]))
         self.top : urwid.Frame = urwid.Frame(self.center)
         self.inventory = set()
-        self.change_location("map_top")
+        self.init_location("map_top")
     
     def change_center(self, new_center : urwid.Widget):
+        #self.top.body = urwid.ListBox(urwid.SimpleFocusListWalker([urwid.Text("")]))
+        self.top.body = urwid.SolidFill(" ")
+        loop.draw_screen()
+        time.sleep(0.1)
         self.center = new_center
         self.top.body = self.center
 
@@ -94,6 +98,15 @@ class AdventureGame:
         place : Room = map[destination_id]
         self.place = place
         self.room_center()
+    
+    def init_location(self, destination_id : str):
+        if not destination_id in map:
+            sys.exit('Room ID not found in map!')
+        place : Room = map[destination_id]
+        self.place = place
+        center_widget : urwid.ListBox = urwid.ListBox(urwid.SimpleFocusListWalker([self.place.heading, urwid.Divider(), *self.place.choices]))
+        self.center = center_widget
+        self.top.body = self.center
 
     def take_thing(self, thing : Item) -> None:
         if self.place.remove_roomobject(thing):
