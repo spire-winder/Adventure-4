@@ -1,31 +1,66 @@
 
 import sys
+import typing
+if typing.TYPE_CHECKING:
+    from classes.interactable import Interactable
 
 class InteractionAction:
-    def execute(self, game_handler):
+    def execute(self, dungeon):
         raise NotImplementedError("Subclasses must implement execute()")
 
-class PlayerInputAction(InteractionAction):
-    def execute(self, game_handler, actor):
-        game_handler.room_center()
+    def get_name(self):
+        raise NotImplementedError("Subclasses must implement get_name()")
+
+class PlayerInteractAction(InteractionAction):
+    def __init__(self, inter : "Interactable"):
+        self.inter : "Interactable" = inter
+    
+    def execute(self, dungeon):
+        dungeon.interact(self.inter)
+
+    def get_name(self):
+        return self.inter.name
         
 class EnterPassageAction(InteractionAction):
     def __init__(self, passage):
         self.passage = passage
 
-    def execute(self, game_handler, actor):
-        game_handler.place.remove_roomobject(actor)
-        game_handler.init_location(self.passage.destination_id)
-        game_handler.place.add_roomobject(actor)
-        game_handler.add_to_message_queue([actor.name, " entered the ", self.passage.name, "."])
-        game_handler.end_current_turn()
+    def execute(self, dungeon):
+        dungeon.place.remove_roomobject(dungeon.actor)
+        dungeon.init_location(self.passage.destination_id)
+        dungeon.place.add_roomobject(dungeon.actor)
+        dungeon.add_to_message_queue([dungeon.actor.name, " entered the ", self.passage.name, "."])
+        dungeon.end_current_turn()
+    def get_name(self):
+        return "Enter"
 
 class TakeItemAction(InteractionAction):
     def __init__(self, item):
         self.item = item
     
-    def execute(self, game_handler, actor) -> None:
-        if not game_handler.place.remove_roomobject(self.item):
+    def execute(self, dungeon) -> None:
+        if not dungeon.place.remove_roomobject(self.item):
             sys.exit('Object not found in room!')
-        game_handler.add_to_message_queue([actor.name, " picked up the ", self.item.name, "."])
-        game_handler.end_current_turn()
+        dungeon.add_to_message_queue([dungeon.actor.name, " picked up the ", self.item.name, "."])
+        dungeon.end_current_turn()
+    
+    def get_name(self):
+        return "Take"
+
+class UIAction:
+    def execute(self, game_handler):
+        raise NotImplementedError("Subclasses must implement execute()")
+
+class InteractAction(UIAction):
+    def __init__(self, inter):
+        self.inter : Interactable = inter
+
+    def execute(self, game_handler) -> None:
+        game_handler.interact(self.inter)
+
+class MessageQueueAction(UIAction):
+    def __init__(self, queue):
+        self.queue = queue
+    
+    def execute(self, game_handler) -> None:
+        game_handler.show_message_queue(self.queue)

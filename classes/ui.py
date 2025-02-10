@@ -2,6 +2,7 @@ from __future__ import annotations
 import urwid
 import typing
 if typing.TYPE_CHECKING:
+    from classes.actions import InteractionAction
     from collections.abc import Callable, Hashable, MutableSequence
 
 base_palette = [
@@ -41,3 +42,27 @@ class ActionButton(urwid.Button):
     ) -> None:
         super().__init__("", on_press=callback)
         self._w = urwid.AttrMap(urwid.SelectableIcon(caption, 0), None, focus_map=focus_dict)
+
+class SaveButton(ActionButton):
+    def __init__(
+        self,
+        caption: str | tuple["Hashable", str] | list[str | tuple["Hashable", str]],
+        callback: Callable[[ActionButton], typing.Any],
+        save_file : str
+    ) -> None:
+        super().__init__(caption, callback)
+        self.save_file = save_file
+
+class InteractableActionButton(urwid.Button):
+    def __init__(
+        self,
+        dungeon,
+        action : InteractionAction
+    ) -> None:
+        self.dungeon = dungeon
+        self.action = action
+        super().__init__("", self.execute)
+        self._w = urwid.AttrMap(urwid.SelectableIcon(self.action.get_name(), 0), None, focus_map=focus_dict)
+    
+    def execute(self, button):
+        self.action.execute(self.dungeon)

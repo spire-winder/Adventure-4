@@ -1,0 +1,69 @@
+from classes.ui import ActionButton
+from classes.ui import InteractableActionButton
+import sys
+import urwid
+from systems.event_system import Event
+import systems.save_system
+from classes.interactable import Interactable
+from classes.interactable import Player
+from classes.interactable import RoomObject
+from classes.interactable import Room
+import classes.dungeon
+import classes.actions
+
+class Game:
+    def __init__(self, save_file : str):
+        self.save_file = save_file
+        self.dungeon : classes.dungeon.Dungeon
+        if systems.save_system.has_save_of_name(save_file):
+            self.dungeon = systems.save_system.load_save(save_file)
+        else:
+            self.dungeon = classes.dungeon.Dungeon()
+            self.save()
+        self.set_center_event = Event()
+        self.quit_event = Event()
+
+    def connect_signals(self):
+        self.dungeon.ui_event.subscribe(self.handle_ui_event)
+        self.dungeon.save_game_event.subscribe(self.save)
+
+    def handle_ui_event(self, action : classes.actions.UIAction):
+        if action != None:
+            action.execute(self)
+
+    def start_game(self) -> None:
+        self.connect_signals()
+        self.dungeon.player.name = self.save_file
+        self.dungeon.start_game()
+
+    def interact(self, interactable : Interactable):
+        room_list = []
+        room_list.append(urwid.Text(interactable.name))
+        room_list.append(urwid.Divider())
+        for x in interactable.get_choices():
+            room_list.append(InteractableActionButton(self.dungeon, x))
+        room_list.append(ActionButton("Save and Quit", self.save_and_quit))
+        center_widget : urwid.ListBox = urwid.ListBox(urwid.SimpleFocusListWalker(room_list))
+        self.set_center_event.emit(new_center=center_widget)
+
+    def show_message_queue(self, queue : list):
+        li : list = []
+        for x in queue:
+            li.append(urwid.Text(x))
+        li.append(urwid.Divider())
+        li.append(ActionButton(["Okay"], self.end_round))
+        notif_widget = urwid.ListBox(urwid.SimpleFocusListWalker(li))
+        self.set_center_event.emit(new_center=notif_widget)
+
+    def end_current_turn(self):
+        self.start_next_turn()
+
+    def save(self) -> None:
+        systems.save_system.save_game(self.save_file, self.dungeon)
+
+    def save_and_quit(self, button : ActionButton) -> None:
+        self.save()
+        self.quit_event.emit()
+
+    def end_round(self, button : ActionButton) -> None:
+        self.dungeon.start_round()
