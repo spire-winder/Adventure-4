@@ -66,3 +66,19 @@ class InteractableActionButton(urwid.Button):
     
     def execute(self, button):
         self.action.execute(self.dungeon)
+
+class QuestionBox(urwid.Edit):
+    def __init__(
+        self,
+        caption: str | tuple["Hashable", str] | list[str | tuple["Hashable", str]],
+        callback: Callable
+    ) -> None:
+        super().__init__(caption)
+        self.callback : Callable = callback
+    def keypress(self, size, key: str) -> str | None:
+        if key != "enter":
+            return super().keypress(size, key)
+        else:
+            if self.get_edit_text() != "":
+                self.callback.__call__()
+            return None

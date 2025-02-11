@@ -11,6 +11,7 @@ import classes.ui
 import os
 os.system('title Adventure 4')
 
+
 class Program:
     def __init__(self) -> None:
         self.load_ui()
@@ -20,6 +21,9 @@ class Program:
         self.header : urwid.Widget = urwid.AttrMap(urwid.Text("Adventure 4", align="center"), "header")
         self.center : urwid.Widget = urwid.Text("")
         self.top : urwid.Frame = urwid.Frame(self.center, header=self.header)
+
+    def load_main_menu_wrapper(self, button):
+        self.load_main_menu()
 
     def load_main_menu(self):
         start_menu_options = []
@@ -40,10 +44,8 @@ class Program:
 
     def load_make_new_save(self):
         save_menu_options = []
-        self.namebox : urwid.Edit = urwid.Edit("What is your name, adventurer?\n")
+        self.namebox : urwid.Edit = classes.ui.QuestionBox("What is your name, adventurer?\n", self.new_game)
         save_menu_options.append(self.namebox)
-        save_menu_options.append(classes.ui.ActionButton("Enter", self.new_game))
-        save_menu_options.append(classes.ui.ActionButton("Return", self.load_main_menu))
         save_menu = urwid.ListBox(urwid.SimpleFocusListWalker(save_menu_options))
         self.set_center(save_menu)
 
@@ -52,7 +54,7 @@ class Program:
         for save in systems.save_system.get_saves():
             save_menu_options.append(classes.ui.SaveButton(save, self.load_game, save))
         save_menu_options.append(classes.ui.ActionButton("New Game", self.new_character))
-        save_menu_options.append(classes.ui.ActionButton("Return", self.load_main_menu))
+        save_menu_options.append(classes.ui.ActionButton("Return", self.load_main_menu_wrapper))
         main_menu = urwid.ListBox(urwid.SimpleFocusListWalker(save_menu_options))
         self.set_center(main_menu)
     
@@ -60,11 +62,10 @@ class Program:
         self.game : Game = Game(button.save_file)
         self.init_game()
 
-    def new_game(self, button : classes.ui.ActionButton):
+    def new_game(self):
         filename : str = self.namebox.get_edit_text()
-        if not filename == "":
-            self.game : Game = Game(filename)
-            self.init_game()
+        self.game : Game = Game(filename)
+        self.init_game()
     
     def init_game(self):
         self.connect_signals()
@@ -75,14 +76,17 @@ class Program:
         self.game.quit_event.subscribe(self.load_main_menu)
 
     def clear_center(self):
-        self.top.body = urwid.SolidFill(" ")
-        if 'loop' in globals():
-            loop.draw_screen()
-            time.sleep(0.1)  
+        pass
 
     def set_center(self, new_center : urwid.Widget):
-        self.clear_center()
+        self.top.body = urwid.SolidFill(" ")
         self.center = new_center
+        if 'loop' in globals():
+            loop.set_alarm_in(0.1, self.set_body)
+        else:
+            self.top.body = self.center
+
+    def set_body(self, a, b):
         self.top.body = self.center
 
     def exit_game(self, button : classes.ui.ActionButton) -> typing.NoReturn:
