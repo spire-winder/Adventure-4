@@ -2,7 +2,6 @@
 import systems.save_system
 import typing
 import urwid
-import time
 from classes.game import Game
 
 import data.maps
@@ -59,13 +58,16 @@ class Program:
         self.set_center(main_menu)
     
     def load_game(self, button : classes.ui.SaveButton):
-        self.game : Game = Game(button.save_file)
+        self.game : Game = Game(button.save_file, True)
         self.init_game()
 
     def new_game(self):
-        filename : str = self.namebox.get_edit_text()
-        self.game : Game = Game(filename)
-        self.init_game()
+        charactername : str = self.namebox.get_edit_text().strip()
+        if charactername:
+            save_file = "".join(c for c in charactername if c.isalnum() or c in (" _-")).rstrip()
+            self.game : Game = Game(save_file, False)
+            self.game.set_player_name(charactername)
+            self.init_game()
     
     def init_game(self):
         self.connect_signals()

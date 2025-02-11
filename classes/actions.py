@@ -12,14 +12,15 @@ class InteractionAction:
         raise NotImplementedError("Subclasses must implement get_name()")
 
 class PlayerInteractAction(InteractionAction):
-    def __init__(self, inter : "Interactable"):
-        self.inter : "Interactable" = inter
+    def __init__(self, interactable : "Interactable"):
+        self.interactable : "Interactable" = interactable
+        self.prev = None
     
     def execute(self, dungeon):
-        dungeon.interact(self.inter)
+        dungeon.player_interact(self)
 
     def get_name(self):
-        return self.inter.name
+        return self.interactable.name
         
 class EnterPassageAction(InteractionAction):
     def __init__(self, passage):
@@ -52,11 +53,11 @@ class UIAction:
         raise NotImplementedError("Subclasses must implement execute()")
 
 class InteractAction(UIAction):
-    def __init__(self, inter):
-        self.inter : Interactable = inter
+    def __init__(self, inter : PlayerInteractAction):
+        self.inter : PlayerInteractAction = inter
 
     def execute(self, game_handler) -> None:
-        game_handler.interact(self.inter)
+        game_handler.player_interact(self.inter)
 
 class MessageQueueAction(UIAction):
     def __init__(self, queue):

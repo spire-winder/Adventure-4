@@ -1,5 +1,6 @@
 import sys
 from systems.event_system import Event
+import systems.event_system
 import systems.save_system
 from classes.interactable import Interactable
 from classes.interactable import Player
@@ -73,5 +74,5 @@ class Dungeon:
     def end_current_turn(self):
         self.start_next_turn()
 
-    def interact(self, inter : Interactable):
+    def player_interact(self, inter : classes.actions.PlayerInteractAction):
         self.ui_event.emit(classes.actions.InteractAction(inter))

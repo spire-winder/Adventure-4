@@ -11,7 +11,7 @@ map_dir_name : str = "maps"
 map_ext : str = ".map"
 
 def get_save_filepath(filename : str) -> str:
-    return os.path.join(save_dir_name, filename + save_ext)
+    return os.path.join(save_dir_name, f"{filename}{save_ext}")
 
 def get_saves() -> list:
     files : list[str] = os.listdir(save_dir_name)
@@ -37,7 +37,7 @@ def load_save(filename : str):
         return loaded_game
 
 def get_map_filepath(filename : str) -> str:
-    return os.path.join(map_dir_name, filename + map_ext)
+    return os.path.join(map_dir_name, f"{filename}{map_ext}")
 
 def save_map(filename : str, game):
     with open(get_map_filepath(filename), 'wb') as f:
@@ -49,14 +49,4 @@ def load_map(filename : str):
         return loaded_game
 
 def create_folder(folder_name):
-        # Create the directory
-        try:
-            os.mkdir(folder_name)
-            #print(f"Directory '{directory_name}' created successfully.")
-        except FileExistsError:
-            pass
-            #print(f"Directory '{directory_name}' already exists.")
-        except PermissionError:
-            sys.exit(f"Permission denied: Unable to create '{folder_name}'.")
-        except Exception as e:
-            sys.exit(f"An error occurred: {e}")
+    os.makedirs(folder_name, exist_ok=True)

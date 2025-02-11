@@ -171,5 +171,5 @@ cython_debug/
 .pypirc
 
 # Data files
-.adventure
-.map
+/maps
+/saves

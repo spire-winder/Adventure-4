@@ -12,11 +12,11 @@ import classes.dungeon
 import classes.actions
 
 class Game:
-    def __init__(self, save_file : str):
-        self.save_file = save_file
+    def __init__(self, character_name : str, load : bool):
+        self.save_file = "".join(c for c in character_name if c.isalnum() or c in (" _-")).rstrip()
         self.dungeon : classes.dungeon.Dungeon
-        if systems.save_system.has_save_of_name(save_file):
-            self.dungeon = systems.save_system.load_save(save_file)
+        if load:
+            self.dungeon = systems.save_system.load_save(self.save_file)
         else:
             self.dungeon = classes.dungeon.Dungeon()
             self.save()
@@ -36,13 +36,21 @@ class Game:
         self.dungeon.player.name = self.save_file
         self.dungeon.start_game()
 
-    def interact(self, interactable : Interactable):
+    def set_player_name(self, name):
+        self.dungeon.player.name = name
+
+    def player_interact(self, inter: classes.actions.PlayerInteractAction):
         room_list = []
-        room_list.append(urwid.Text(interactable.name))
+        room_list.append(urwid.Text(inter.interactable.name))
         room_list.append(urwid.Divider())
-        for x in interactable.get_choices():
+        for x in inter.interactable.get_choices():
+            if isinstance(x, classes.actions.PlayerInteractAction):
+                x.prev = inter
             room_list.append(InteractableActionButton(self.dungeon, x))
-        room_list.append(ActionButton("Save and Quit", self.save_and_quit))
+        if inter.prev != None:
+            room_list.append(InteractableActionButton(self.dungeon, inter.prev))
+        else:
+            room_list.append(ActionButton("Save and Quit", self.save_and_quit))
         center_widget : urwid.ListBox = urwid.ListBox(urwid.SimpleFocusListWalker(room_list))
         self.set_center_event.emit(new_center=center_widget)
 
