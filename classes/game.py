@@ -33,7 +33,7 @@ class Game:
 
     def start_game(self) -> None:
         self.connect_signals()
-        self.dungeon.player.name = self.save_file
+        self.set_player_name(self.save_file)
         self.dungeon.start_game()
 
     def set_player_name(self, name):
@@ -41,7 +41,8 @@ class Game:
 
     def player_interact(self, inter: classes.actions.PlayerInteractAction):
         room_list = []
-        room_list.append(urwid.Text(inter.interactable.name))
+        room_list.append(urwid.Text(inter.interactable.get_name()))
+        room_list.append(urwid.Text(inter.interactable.get_description()))
         room_list.append(urwid.Divider())
         for x in inter.interactable.get_choices():
             if isinstance(x, classes.actions.PlayerInteractAction):

@@ -10,6 +10,7 @@ base_palette = [
     ("iron", "dark gray", ""),
     ("wood", "brown", ""),
     ("magic", "light magenta", ""),
+    ("goblin", "light green", ""),
     ("header", "white", "dark gray")
 ]
 
