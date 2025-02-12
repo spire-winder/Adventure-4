@@ -44,7 +44,7 @@ class Game:
         room_list.append(urwid.Text(inter.interactable.get_name()))
         room_list.append(urwid.Text(inter.interactable.get_description()))
         room_list.append(urwid.Divider())
-        for x in inter.interactable.get_choices():
+        for x in inter.get_choices(self.dungeon):
             if isinstance(x, classes.actions.PlayerInteractAction):
                 x.prev = inter
             room_list.append(InteractableActionButton(self.dungeon, x))

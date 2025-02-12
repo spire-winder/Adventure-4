@@ -2,6 +2,7 @@
 import sys
 import typing
 if typing.TYPE_CHECKING:
+    from collections.abc import Callable, Hashable, MutableSequence
     from classes.interactable import Interactable
     from classes.interactable import Item
 
@@ -11,6 +12,15 @@ class InteractionAction:
 
     def get_name(self):
         raise NotImplementedError("Subclasses must implement get_name()")
+
+class DummyAction(InteractionAction):
+    def __init__(self, name : str | tuple["Hashable", str] | list[str | tuple["Hashable", str]]):
+        self.name : str | tuple["Hashable", str] | list[str | tuple["Hashable", str]] = name
+    def execute(self, dungeon):
+        pass
+
+    def get_name(self):
+        return self.name
 
 class PlayerInteractAction(InteractionAction):
     def __init__(self, interactable : "Interactable"):
@@ -22,6 +32,36 @@ class PlayerInteractAction(InteractionAction):
 
     def get_name(self):
         return self.interactable.get_name()
+
+    def get_choices(self, dungeon) -> list[InteractionAction]:
+        return self.interactable.get_choices(dungeon)
+
+
+class PlayerEquippedInteractAction(PlayerInteractAction):
+    def __init__(self, interactable : "Equipment"):
+        super().__init__(interactable)
+    
+    def get_name(self):
+        return [self.interactable.equipment_slot, ": ", self.interactable.get_name()]
+
+    def get_choices(self, dungeon) -> list[InteractionAction]:
+        actions = []
+        if dungeon.actor.can_take_item(self.interactable):
+            actions.append(UnequipItemAction(self.interactable))
+        return actions
+
+class PlayerInventoryInteractAction(PlayerInteractAction):
+    def __init__(self, interactable : "Item"):
+        super().__init__(interactable)
+    
+    def get_name(self):
+        return self.interactable.get_name()
+
+    def get_choices(self, dungeon) -> list[InteractionAction]:
+        actions = []
+        if hasattr(self.interactable, "equipment_slot") and dungeon.actor.can_equip(self.interactable):
+            actions.append(EquipItemAction(self.interactable))
+        return actions
 
 class EnterPassageAction(InteractionAction):
     def __init__(self, passage):
@@ -46,12 +86,37 @@ class TakeItemAction(InteractionAction):
         if not dungeon.place.remove_roomobject(self.item):
             sys.exit('Object not found in room!')
         dungeon.actor.take_item(self.item)
-        self.item.is_in_inventory = True
         dungeon.add_to_message_queue([dungeon.actor.get_name(), " picked up the ", self.item.get_name(), "."])
         dungeon.end_current_turn()
     
     def get_name(self):
         return "Take"
+
+class UnequipItemAction(InteractionAction):
+    def __init__(self, item : "Equipment"):
+        self.item = item
+    
+    def execute(self, dungeon) -> None:
+        if not dungeon.actor.can_take_item(self.item):
+            return
+        dungeon.actor.unequip_item(self.item)
+        dungeon.add_to_message_queue([dungeon.actor.get_name(), " unequipped the ", self.item.get_name(), "."])
+        dungeon.end_current_turn()
+    
+    def get_name(self):
+        return "Unequip"
+
+class EquipItemAction(InteractionAction):
+    def __init__(self, item : "Equipment"):
+        self.item = item
+    
+    def execute(self, dungeon) -> None:
+        dungeon.actor.equip_item(self.item)
+        dungeon.add_to_message_queue([dungeon.actor.get_name(), " equipped the ", self.item.get_name(), "."])
+        dungeon.end_current_turn()
+    
+    def get_name(self):
+        return "Equip"
 
 class AttackAction(InteractionAction):
     def __init__(self, entity):
