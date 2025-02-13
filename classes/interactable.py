@@ -2,6 +2,7 @@ import sys
 from collections.abc import Callable, Hashable, MutableSequence
 from systems.event_system import Event
 import classes.actions
+import random
 
 class Interactable:
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]) -> None:
@@ -20,11 +21,13 @@ class Interactable:
     def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
         return self.name
 
-class RoomObject(Interactable):
-    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]) -> None:
-        super().__init__(name)
-    def take_turn(self) -> None:
+class Actor(Interactable):
+    def take_turn(self, dungeon) -> None:
         self.event.emit(action=None)
+
+class RoomObject(Actor):
+    def add_to_action_queue(self, action_queue : list) -> None:
+        action_queue.append(self)
 
 class Item(RoomObject):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]]) -> None:
@@ -63,6 +66,8 @@ class EquipmentHandler(Interactable):
         return equipment_to_return
     
     def get_item_in_slot(self, slot : str) -> Equipment:
+        if not slot in self.equipment_dict:
+            return None
         return self.equipment_dict[slot]
     
     def get_choices(self, dungeon) -> list[classes.actions.InteractionAction]:
@@ -146,6 +151,13 @@ class Inventory(Interactable):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
         return [classes.actions.PlayerInteractAction(self.equipment_handler), classes.actions.PlayerInteractAction(self.bag)]
 
+class Passage(RoomObject):
+    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], destination_id : str):
+        super().__init__(name)
+        self.destination_id : str = destination_id
+    def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
+        return [classes.actions.EnterPassageAction(self)]
+
 class Entity(RoomObject):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], inventory : Inventory = Inventory()):
         super().__init__(name)
@@ -179,14 +191,20 @@ class Player(Entity):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
         return [classes.actions.PlayerInteractAction(self.inventory)]
 
-class Passage(RoomObject):
-    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], destination_id : str):
+class StateEntity(Entity):
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], inventory : Inventory = Inventory()):
         super().__init__(name)
-        self.destination_id : str = destination_id
-    def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
-        return [classes.actions.EnterPassageAction(self)]
+        self.inventory = inventory
+    def take_turn(self, dungeon) -> None:
+        current_room : Room = dungeon.get_location_of_roomobject(self)
+        if dungeon.player in current_room.room_contents:
+            self.event.emit(action=classes.actions.AttackAction(dungeon.player))
+        else:
+            passages = dungeon.get_location_of_roomobject(self).get_roomobjects(lambda item : isinstance(item, Passage))
+            passage = random.choice(passages)
+            self.event.emit(action=classes.actions.EnterPassageAction(passage))
 
-class Room(Interactable):
+class Room(Actor):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], room_contents : list["RoomObject"]) -> None:
         self.room_contents : list[RoomObject] = room_contents
         super().__init__(name)
@@ -211,15 +229,23 @@ class Room(Interactable):
             return True
         return False
     
-    def get_nonplayers(self) -> list["RoomObject"]:
-        new_list : list["RoomObject"] = []
+    def get_roomobjects(self, condition = lambda item : True) -> list["RoomObject"]:
+        roomobjets : list["RoomObject"] = []
         for x in self.room_contents:
-            if not isinstance(x, Player):
-                new_list.append(x)
-        return new_list
+            if condition(x):
+                roomobjets.append(x)
+            else:
+                pass
+        return roomobjets
 
     def get_player(self) -> Player:
         for x in self.room_contents:
             if isinstance(x, Player):
                 return x
         return None
+
+    def add_to_action_queue(self, action_queue : list) -> None:
+        action_queue.append(self)
+        for x in self.room_contents:
+            x.add_to_action_queue(action_queue)
+    

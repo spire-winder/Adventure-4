@@ -48,6 +48,7 @@ class Game:
             if isinstance(x, classes.actions.PlayerInteractAction):
                 x.prev = inter
             room_list.append(InteractableActionButton(self.dungeon, x))
+        room_list.append(urwid.Divider())
         if inter.prev != None:
             room_list.append(InteractableActionButton(self.dungeon, inter.prev))
         else:

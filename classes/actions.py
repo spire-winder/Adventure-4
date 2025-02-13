@@ -3,6 +3,7 @@ import sys
 import typing
 if typing.TYPE_CHECKING:
     from collections.abc import Callable, Hashable, MutableSequence
+    from classes.interactable import Equipment
     from classes.interactable import Interactable
     from classes.interactable import Item
 
@@ -68,10 +69,15 @@ class EnterPassageAction(InteractionAction):
         self.passage = passage
 
     def execute(self, dungeon):
+        if dungeon.current_action_visible() and not dungeon.actor == dungeon.player:
+            dungeon.add_to_message_queue([dungeon.actor.get_name(), " entered the ", self.passage.get_name(), "."])
         dungeon.place.remove_roomobject(dungeon.actor)
-        dungeon.init_location(self.passage.destination_id)
-        dungeon.place.add_roomobject(dungeon.actor)
-        dungeon.add_to_message_queue([dungeon.actor.get_name(), " entered the ", self.passage.get_name(), "."])
+        dungeon.map[self.passage.destination_id].add_roomobject(dungeon.actor)
+        dungeon.update_location()
+        if dungeon.current_action_visible() and not dungeon.actor == dungeon.player:
+            dungeon.add_to_message_queue([dungeon.actor.get_name(), " exited the ", self.passage.get_name(), "."])
+        if dungeon.actor == dungeon.player:
+            dungeon.add_to_message_queue([dungeon.actor.get_name(), " passes through the ", self.passage.get_name(), "."])
         dungeon.end_current_turn()
     def get_name(self):
         return "Enter"
@@ -86,7 +92,8 @@ class TakeItemAction(InteractionAction):
         if not dungeon.place.remove_roomobject(self.item):
             sys.exit('Object not found in room!')
         dungeon.actor.take_item(self.item)
-        dungeon.add_to_message_queue([dungeon.actor.get_name(), " picked up the ", self.item.get_name(), "."])
+        if dungeon.current_action_visible():
+            dungeon.add_to_message_queue([dungeon.actor.get_name(), " picked up the ", self.item.get_name(), "."])
         dungeon.end_current_turn()
     
     def get_name(self):
@@ -100,7 +107,8 @@ class UnequipItemAction(InteractionAction):
         if not dungeon.actor.can_take_item(self.item):
             return
         dungeon.actor.unequip_item(self.item)
-        dungeon.add_to_message_queue([dungeon.actor.get_name(), " unequipped the ", self.item.get_name(), "."])
+        if dungeon.current_action_visible():
+            dungeon.add_to_message_queue([dungeon.actor.get_name(), " unequipped the ", self.item.get_name(), "."])
         dungeon.end_current_turn()
     
     def get_name(self):
@@ -123,7 +131,7 @@ class AttackAction(InteractionAction):
         self.entity = entity
     
     def execute(self, dungeon) -> None:
-        dungeon.add_to_message_queue([dungeon.actor.get_name(), " attacked ", self.entity.get_name(), " with the ", dungeon.actor.get_weapon().get_name()])
+        dungeon.add_to_message_queue([dungeon.actor.get_name(), " attacked ", self.entity.get_name(), " with the ", dungeon.actor.get_weapon().get_name(), "."])
         dungeon.end_current_turn()
     
     def get_name(self):
