@@ -18,8 +18,8 @@ class AttackingState(State):
     def find_weapon(self, dungeon, actor) -> bool:
         current_room = dungeon.get_location_of_actor(actor)
         weapons = current_room.get_roomobjects(lambda item : hasattr(item, "attack"))
-        weapon = random.choice(weapons)
-        if weapon != None:
+        if weapons != []:
+            weapon = random.choice(weapons)
             actor.event.emit(action=classes.actions.TakeItemAction(weapon))
             return True
         return False

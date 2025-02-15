@@ -35,9 +35,9 @@ magi_dragon : StateEntity = StateEntity(
     Inventory(
         EquipmentHandler({
             "Weapon":Weapon(
-                ("fire", "Fire Breath"), 
-                AbilityHandler(),
-                EffectSelectorTarget(DamageEvent(10))
+                name=("fire", "Fire Breath"),
+                effect=EffectSelectorTarget(DamageEvent(10)),
+                drop_chance=0.0
             )
         })
     ), 
@@ -53,15 +53,21 @@ standard_map : dict = {
         copy.deepcopy(player),
         Passage(("stone", u"Stone door"),AbilityHandler(),"stone_room"),
         Passage(("iron",u"Iron door"),AbilityHandler(),"iron_room"),
-        Weapon(("wood", u"Wooden Sword"), AbilityHandler(),EffectSelectorTarget(DamageEvent(5))),
-        Weapon(("wood", u"Wooden Bo"), AbilityHandler(),EffectSelectorTarget(RepeatEvent(DamageEvent(7),2))),
+        Weapon(
+            name=("wood", u"Wooden Sword"),
+            effect=EffectSelectorTarget(DamageEvent(5))),
+        Weapon(
+            name=("wood", u"Wooden Bo"),
+            effect=EffectSelectorTarget(RepeatEvent(DamageEvent(7),2))),
         copy.deepcopy(goblin_with_iron_sword)
     ]),
     "stone_room": Room(("stone", u"Stone Room"),AbilityHandler(), [
         Passage(("wood", u"Wooden door"),AbilityHandler(),"starting_room"),
         Passage(("iron",u"Iron door"),AbilityHandler(),"iron_room"),
-        Weapon(("magic", "Glyph-covered arm"), AbilityHandler(), EffectSelectorTarget(DamageEvent(10))),
-        Equipment(("wood", u"Wooden Shield"), AbilityHandler([Armor(None, 5)]),"Offhand")
+        Weapon(
+            name=("magic", "Glyph-covered arm"), 
+            effect=EffectSelectorTarget(DamageEvent(10))),
+        Equipment(("wood", u"Wooden Shield"), ability_handler=AbilityHandler([Armor(None, 5)]),slot="Offhand")
     ]),
     "iron_room": Room(("iron", u"Iron Room"), AbilityHandler(),[
         Passage(("stone", u"Stone door"),AbilityHandler(),"stone_room"), 

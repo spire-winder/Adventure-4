@@ -79,7 +79,7 @@ class DeathEvent(Effect):
             if target == dungeon.player:
                 dungeon.game_over = True
             else:
-                for x in target.get_all_items():
+                for x in target.get_drops():
                     AddRoomObjEffect().execute(dungeon, death_room, x)
                     dungeon.add_to_message_queue_if_actor_visible(source, [target.get_name(), " dropped the ", x.get_name(), "."])
             RemoveRoomObjEffect().execute(dungeon, death_room, target)

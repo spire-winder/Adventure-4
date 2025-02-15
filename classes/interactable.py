@@ -36,7 +36,7 @@ class Ability:
     def get_desc(self):
         return None
     def get_full(self):
-        return utility.combine_text([self.get_name(), self.get_desc()])
+        return utility.combine_text([self.get_name(), utility.tab_text([self.get_desc()])])
     def apply(self, owner, effect : Effect):
         raise NotImplementedError("Subclasses must implement apply()")
     def end_of_round(self, dungeon, owner):
@@ -54,7 +54,7 @@ class Status(Ability):
             status_color = "status_depleted"
         else:
             status_color = "status_empty"
-        return utility.combine_text([self.ability.get_desc(), ["(", (status_color, str(self.duration)), " rounds remaining)"]])
+        return utility.combine_text([self.ability.get_desc(), ["(", (status_color, str(self.current_duration)), " rounds remaining)"]])
     def apply(self, owner, effect : Effect):
         self.ability.apply(owner, effect)
     def __init__(self, ability : Ability, duration : int):
@@ -134,14 +134,15 @@ class Campfire(RoomObject):
             return [classes.actions.DummyAction(["You need food to rest at the ", self.name, "."])]
 
 class Item(RoomObject):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler()) -> None:
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler(), drop_chance : float = 1) -> None:
         super().__init__(name, ability_handler)
+        self.drop_chance = drop_chance
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
         return [classes.actions.TakeItemAction(self)]
 
 class Equipment(Item):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler(), slot : str = "?") -> None:
-        super().__init__(name, ability_handler)
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler(), drop_chance : float = 1, slot : str = "?") -> None:
+        super().__init__(name, ability_handler, drop_chance)
         self.equipment_slot : str = slot
     
     def get_description(self):
@@ -242,10 +243,10 @@ class EquipmentHandler(Interactable):
             if not x == None:
                 x.apply_statics_regarding(owner, effect)
     
-    def get_items(self):
+    def get_items(self) -> list[Equipment]:
         equips : list[Equipment] = []
-        for x in self.equipment_dict:
-            if self.equipment_dict[x] != None:
+        for x in self.equipment_dict.values():
+            if x != None:
                 equips.append(x)
         return equips
 
@@ -367,8 +368,13 @@ class Entity(RoomObject):
     def can_equip(self, item : Equipment):
         return self.inventory.can_equip(item)
     
-    def get_all_items(self) -> list["Item"]:
-        return self.inventory.get_all_items()
+    def get_drops(self) -> list[Item]:
+        all_items : list[Item] = self.inventory.get_all_items()
+        drops : list[Equipment] = []
+        for x in all_items:
+            if random.random() <= x.drop_chance:
+                drops.append(x)
+        return drops
 
     def get_items_in_bag(self, condition = lambda item : True) -> list["Item"]:
         return self.inventory.get_items_in_bag(condition)
@@ -384,7 +390,7 @@ class Entity(RoomObject):
 
     def get_weapon(self) -> Equipment:
         if self.inventory.get_item_in_slot("Weapon") == None:
-            return Weapon("Fists", AbilityHandler(), EffectSelectorTarget(DamageEvent(2)))
+            return None
         else:
             return self.inventory.get_item_in_slot("Weapon")
     
@@ -400,15 +406,15 @@ class Player(Entity):
         return [classes.actions.PlayerInteractAction(self.inventory), classes.actions.PlayerInteractAction(self.stathandler), classes.actions.PlayerInteractAction(self.ability_handler)]
 
 class StateEntity(Entity):
-    def __init__(self, name, ability_handler = AbilityHandler(), inventory = Inventory(), stathandler = StatHandler({ "HP": 5 }), state : State = State()):
+    def __init__(self, name, ability_handler = AbilityHandler(), inventory = Inventory(), stathandler = StatHandler({ "HP": 5 }), state : State = IdleState()):
         super().__init__(name, ability_handler, inventory, stathandler)
         self.state : State= state
     def take_turn(self, dungeon) -> None:
         self.state.decide(dungeon, self)
 
 class Weapon(Equipment):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler(), effect : classes.actions.Effect = Effect()) -> None:
-        super().__init__(name, ability_handler, "Weapon")
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler(), drop_chance : float = 1, effect : classes.actions.Effect = Effect()) -> None:
+        super().__init__(name, ability_handler, drop_chance, "Weapon")
         self.effect = effect
     
     def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
