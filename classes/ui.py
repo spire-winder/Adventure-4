@@ -12,7 +12,10 @@ base_palette = [
     ("magic", "light magenta", ""),
     ("goblin", "light green", ""),
     ("fire", "light red", ""),
-    ("header", "white", "dark gray")
+    ("header", "white", "dark gray"),
+    ("status_full", "light green", ""),
+    ("status_depleted", "yellow", ""),
+    ("status_empty", "light red", ""),
 ]
 
 unique_palette = [

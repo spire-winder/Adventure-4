@@ -19,7 +19,6 @@ class Game:
             self.dungeon = systems.save_system.load_save(self.save_file)
         else:
             self.dungeon = classes.dungeon.Dungeon()
-            self.save()
         self.set_center_event = Event()
         self.quit_event = Event()
 
@@ -41,8 +40,8 @@ class Game:
 
     def player_interact(self, inter: classes.actions.PlayerInteractAction):
         room_list = []
-        room_list.append(urwid.Text(inter.interactable.get_name()))
-        room_list.append(urwid.Text(inter.interactable.get_description()))
+        room_list.append(urwid.Text(inter.get_name()))
+        room_list.append(urwid.Text(inter.get_description()))
         room_list.append(urwid.Divider())
         for x in inter.get_choices(self.dungeon):
             if isinstance(x, classes.actions.PlayerInteractAction):
@@ -68,8 +67,6 @@ class Game:
         notif_widget = urwid.ListBox(urwid.SimpleFocusListWalker(li))
         self.set_center_event.emit(new_center=notif_widget)
 
-    def end_current_turn(self):
-        self.start_next_turn()
 
     def save(self) -> None:
         systems.save_system.save_game(self.save_file, self.dungeon)

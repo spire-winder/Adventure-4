@@ -3,6 +3,7 @@ from systems.event_system import Event
 import systems.event_system
 import systems.save_system
 from classes.interactable import *
+from classes.actions import *
 import classes.actions
 
 import typing
@@ -38,6 +39,7 @@ class Dungeon:
         if action != None:
             action.execute(self)
         else:
+            self.actor : Actor = None
             self.end_current_turn()
 
     def init_location(self, destination_id : str):
@@ -45,9 +47,11 @@ class Dungeon:
             sys.exit('Room ID not found in map!')
         self.place : Room = self.map[destination_id]
     
-    def get_location_of_roomobject(self, roomobj : RoomObject) -> Room:
+    def get_location_of_actor(self, actor : Actor) -> Room:
+        if isinstance(actor, Room):
+            return actor
         for x in self.map.values():
-            if roomobj in x.room_contents:
+            if actor in x.room_contents:
                 return x
         return None
         
@@ -59,7 +63,7 @@ class Dungeon:
         self.messagequeue = []
         self.generate_action_queue()
         self.actor : Actor = self.player
-        self.place = self.get_location_of_roomobject(self.actor)
+        self.place = self.get_location_of_actor(self.actor)
         self.place.interact()
     
     def generate_action_queue(self):
@@ -68,7 +72,11 @@ class Dungeon:
             self.map[x].add_to_action_queue(self.action_queue)
     
     def current_action_visible(self):
-        return self.place == self.get_location_of_roomobject(self.player) or (self.get_location_of_roomobject(self.player)) in self.place.get_roomobjects()
+        return self.place == self.get_location_of_actor(self.player) or (self.get_location_of_actor(self.player)) in self.place.get_roomobjects()
+
+    def actor_visible(self, actor : Actor):
+        loc = self.get_location_of_actor(actor)
+        return loc == self.get_location_of_actor(self.player) or (self.get_location_of_actor(self.player)) in loc.get_roomobjects()
 
     def add_to_message_queue(self, msg : str | tuple["Hashable", str] | list[str | tuple["Hashable", str]]):
         self.messagequeue.append(msg)
@@ -77,25 +85,32 @@ class Dungeon:
         if self.current_action_visible():
             self.add_to_message_queue(msg)
 
+    def add_to_message_queue_if_actor_visible(self, actor : Actor, msg : str | tuple["Hashable", str] | list[str | tuple["Hashable", str]]):
+        if self.actor_visible(actor):
+            self.add_to_message_queue(msg)
+
     def show_message_queue(self):
         self.ui_event.emit(action=classes.actions.MessageQueueAction(self.messagequeue))
 
     def update_location(self):
-        if isinstance(self.actor, Room):
-            self.place = self.actor
-        else:
-            self.place = self.get_location_of_roomobject(self.actor)
+        self.place = self.get_location_of_actor(self.actor)
 
     def start_next_turn(self):
         if len(self.action_queue) == 0:
+            self.actor : Actor = None
+            self.end_of_round()
             self.show_message_queue()
         else:
-            self.actor = self.action_queue.pop(-1)
+            self.actor : Actor = self.action_queue.pop(-1)
             self.update_location()
             if self.place != None:
                 self.actor.take_turn(self)
             else:
                 self.start_next_turn()
+
+    def end_of_round(self):
+        for x in self.map:
+            self.map[x].end_of_round(self)
 
     def end_current_turn(self):
         self.start_next_turn()

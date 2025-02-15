@@ -11,7 +11,7 @@ player : Player = Player(
             "Weapon":None, 
             "Offhand":None
         })),
-    StatHandler({"HP":50})
+    StatHandler({"HP":HPContainer(50,50)})
 )
 
 goblin_with_iron_sword : StateEntity = StateEntity(
@@ -26,13 +26,13 @@ goblin_with_iron_sword : StateEntity = StateEntity(
             )
         })
     ), 
-    StatHandler({"HP":20})
+    StatHandler({"HP":HPContainer(20,20)})
 )
 
 magi_dragon : StateEntity = StateEntity(
     ("magic","Dragon"), 
     AbilityHandler([
-        AbilityName("Dragon Scales", Armor(2))
+        Armor("Dragon Scales", 2)
     ]),
     Inventory(
         EquipmentHandler({
@@ -43,7 +43,7 @@ magi_dragon : StateEntity = StateEntity(
             )
         })
     ), 
-    StatHandler({"HP":60})
+    StatHandler({"HP":HPContainer(60,60)})
 )
 
 standard_map : dict = {
@@ -55,18 +55,21 @@ standard_map : dict = {
         Passage(("stone", u"Stone door"),AbilityHandler(),"stone_room"),
         Passage(("iron",u"Iron door"),AbilityHandler(),"iron_room"),
         Weapon(("wood", u"Wooden Sword"), AbilityHandler(),EffectSelectorTarget(DamageEvent(5))),
+        Weapon(("wood", u"Wooden Bo"), AbilityHandler(),EffectSelectorTarget(RepeatEvent(DamageEvent(7),2))),
         copy.deepcopy(goblin_with_iron_sword)
     ]),
     "stone_room": Room(("stone", u"Stone Room"),AbilityHandler(), [
         Passage(("wood", u"Wooden door"),AbilityHandler(),"starting_room"),
         Passage(("iron",u"Iron door"),AbilityHandler(),"iron_room"),
         Weapon(("magic", "Glyph-covered arm"), AbilityHandler(), EffectSelectorTarget(DamageEvent(10))),
-        Equipment(("wood", u"Wooden Shield"), AbilityHandler([Armor(5)]),"Offhand")
+        Equipment(("wood", u"Wooden Shield"), AbilityHandler([Armor(None, 5)]),"Offhand")
     ]),
     "iron_room": Room(("iron", u"Iron Room"), AbilityHandler(),[
         Passage(("stone", u"Stone door"),AbilityHandler(),"stone_room"), 
         Passage(("wood", u"Wooden door"),AbilityHandler(),"starting_room"), 
         Item(("magic", u"Dragon Dreams"),AbilityHandler(),), 
+        Food("Roast chicken", AbilityHandler(), EffectSelectorSelf(EffectSequence([HealEvent(20), EffectSelectorPredefinedTarget(AddAbilityEffect(),Status(Armor("Well Fed",2),12))]))),
+        Campfire(("fire","Campfire")),
         copy.deepcopy(magi_dragon)
     ]),
 }

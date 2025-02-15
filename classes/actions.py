@@ -1,11 +1,15 @@
 
 import sys
 import typing
+import utility
+import copy
 if typing.TYPE_CHECKING:
     from collections.abc import Callable, Hashable, MutableSequence
-    from classes.interactable import Equipment
+    from classes.interactable import *
     from classes.interactable import Interactable
+    from classes.interactable import Equipment
     from classes.interactable import Item
+    from classes.interactable import Campfire
 
 class Effect:
     def execute_with_statics(self, dungeon, source, target):
@@ -27,12 +31,31 @@ class AddRoomObjEffect(Effect):
     def execute(self, dungeon, source, target):
         source.add_roomobject(target)
 
+class EndStatusEffect(Effect):
+    def execute(self, dungeon, source, target):
+        dungeon.add_to_message_queue_if_actor_visible(source, [source.get_name(), "'s ", target.get_name(), " expired."])
+        RemoveAbilityEffect().execute(dungeon, source, target)
+
+class RemoveAbilityEffect(Effect):
+    def execute(self, dungeon, source, target):
+        source.remove_ability(target)
+
+class AddAbilityEffect(Effect):
+    def get_desc(self):
+        return "Apply"
+    def execute(self, dungeon, source, target):
+        dungeon.add_to_message_queue_if_actor_visible(source, [source.get_name(), " gained ", target.get_name(), "."])
+        source.add_ability(target)
+
 class EffectSequence(Effect):
     def __init__(self, effects : list[Effect]):
         self.effects : list[Effect] = effects
     
     def get_desc(self):
-        return '\n'.join(p.get_desc() for p in self.effects)
+        effect_text = []
+        for x in self.effects:
+            effect_text.append(x.get_desc())
+        return utility.combine_text(effect_text)
     
     def execute(self, dungeon, source, target):
         for x in self.effects:
@@ -50,10 +73,12 @@ class DeathEvent(Effect):
         return "Dies"
     
     def execute(self, dungeon, source, target):
-        dungeon.add_to_message_queue_if_visible([target.get_name(), " dies."])
-        RemoveRoomObjEffect().execute(dungeon, dungeon.get_location_of_roomobject(target), target)
-        if target == dungeon.player:
-            dungeon.game_over = True
+        death_room = dungeon.get_location_of_actor(target)
+        if death_room != None:
+            dungeon.add_to_message_queue_if_actor_visible(source, [target.get_name(), " dies."])
+            RemoveRoomObjEffect().execute(dungeon, death_room, target)
+            if target == dungeon.player:
+                dungeon.game_over = True
 
 class DamageEvent(Effect):
     def __init__(self, damage : int):
@@ -64,11 +89,38 @@ class DamageEvent(Effect):
     def execute(self, dungeon, source, target):
         if self.damage < 1:
             self.damage = 1
-        dungeon.add_to_message_queue_if_visible(["Dealt ", str(self.damage), " damage."])
-        new_hp = target.stathandler.get_stat("HP") - self.damage
-        target.stathandler.set_stat("HP", new_hp)
+        dungeon.add_to_message_queue_if_actor_visible(source,["Dealt ", str(self.damage), " damage."])
+        new_hp = target.stathandler.get_stat("HP").damage(self.damage)
         if new_hp <= 0:
             DeathEvent().execute(dungeon, source, target)
+
+class RepeatEvent(Effect):
+    def __init__(self, effect : Effect, amount : int):
+        self.effect : Effect = effect
+        self.amount : int = amount
+    def get_desc(self):
+        return utility.combine_text([["(x",str(self.amount),") "], self.effect.get_desc()], False)
+    
+    def execute(self, dungeon, source, target):
+        for x in range(self.amount):
+            copy.deepcopy(self.effect).execute(dungeon, source, target)
+    def execute_with_statics(self, dungeon, source, target):
+        self.dungeon = dungeon
+        self.source = source
+        self.target = target
+        dungeon.apply_statics(self)
+        for x in range(self.amount):
+            if dungeon.get_location_of_actor(target) != None:
+                copy.deepcopy(self.effect).execute_with_statics(dungeon, source, target)
+
+class HealEvent(Effect):
+    def __init__(self, healing : int):
+        self.healing : int = healing
+    def get_desc(self):
+        return "Heal " + str(self.healing) + " damage"
+    def execute(self, dungeon, source, target):
+        dungeon.add_to_message_queue_if_actor_visible(target, ["Healed ", str(self.healing), " damage."])
+        new_hp = target.stathandler.get_stat("HP").heal(self.healing)
 
 class EffectSelector(Effect):
     def __init__(self, effect:Effect):
@@ -84,7 +136,7 @@ class EffectSelectorTarget(EffectSelector):
         dungeon.apply_statics(self)
         self.effect.execute_with_statics(dungeon, source, target)
     def get_desc(self):
-        return "Target:\n" + self.effect.get_desc()
+        return utility.combine_text(["Target:",utility.tab_text(self.effect.get_desc())])
 
 class EffectSelectorSelf(EffectSelector):
     def execute(self, dungeon, source, target):
@@ -96,7 +148,7 @@ class EffectSelectorSelf(EffectSelector):
         dungeon.apply_statics(self)
         self.effect.execute_with_statics(dungeon, source, source)
     def get_desc(self):
-        return "User:\n" + self.effect.get_desc()
+        return utility.combine_text(["User:",utility.tab_text(self.effect.get_desc())])
 
 class EffectSelectorPredefinedTarget(EffectSelector):
     def __init__(self, effect, target):
@@ -111,7 +163,7 @@ class EffectSelectorPredefinedTarget(EffectSelector):
         dungeon.apply_statics(self)
         self.effect.execute_with_statics(dungeon, source, self.target)
     def get_desc(self):
-        return self.target.get_name() + ":\n" + self.effect.get_desc()
+        return self.effect.get_desc() + " " + self.target.get_name()
 
 class InteractionAction:
     def execute(self, dungeon):
@@ -119,6 +171,9 @@ class InteractionAction:
 
     def get_name(self):
         raise NotImplementedError("Subclasses must implement get_name()")
+
+    def get_description(self):
+        return ""
 
 class DummyAction(InteractionAction):
     def __init__(self, name : str | tuple["Hashable", str] | list[str | tuple["Hashable", str]]):
@@ -139,6 +194,9 @@ class PlayerInteractAction(InteractionAction):
 
     def get_name(self):
         return self.interactable.get_name()
+
+    def get_description(self):
+        return self.interactable.get_description()
 
     def get_choices(self, dungeon) -> list[InteractionAction]:
         return self.interactable.get_choices(dungeon)
@@ -176,19 +234,32 @@ class EnterPassageAction(InteractionAction):
 
     def execute(self, dungeon):
         if not dungeon.actor == dungeon.player:
-            dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " entered the ", self.passage.get_name(), "."])
+            dungeon.add_to_message_queue_if_actor_visible(dungeon.actor, [dungeon.actor.get_name(), " entered the ", self.passage.get_name(), "."])
         source_room = dungeon.place
         target_room = dungeon.map[self.passage.destination_id]
         RemoveRoomObjEffect().execute(dungeon, source_room, dungeon.actor)
         AddRoomObjEffect().execute(dungeon, target_room, dungeon.actor)
         dungeon.update_location()
         if not dungeon.actor == dungeon.player:
-            dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " exited the ", self.passage.get_name(), "."])
+            dungeon.add_to_message_queue_if_actor_visible(dungeon.actor, [dungeon.actor.get_name(), " exited the ", self.passage.get_name(), "."])
         if dungeon.actor == dungeon.player:
-            dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " passes through the ", self.passage.get_name(), "."])
+            dungeon.add_to_message_queue([dungeon.actor.get_name(), " passes through the ", self.passage.get_name(), "."])
         dungeon.end_current_turn()
     def get_name(self):
         return "Enter"
+
+class PlayerCampfireInteractAction(PlayerInteractAction):
+    def __init__(self, interactable : "Campfire"):
+        super().__init__(interactable)
+    
+    def get_name(self):
+        return "Rest"
+
+    def get_choices(self, dungeon) -> list[InteractionAction]:
+        actions = []
+        for x in dungeon.actor.get_items_in_bag(lambda item : hasattr(item,"eat")):
+            actions.append(EatAction(x))
+        return actions
 
 class TakeItemAction(InteractionAction):
     def __init__(self, item):
@@ -231,12 +302,29 @@ class EquipItemAction(InteractionAction):
     def get_name(self):
         return "Equip"
 
+class EatAction(InteractionAction):
+    def __init__(self, food):
+        self.food = food
+    
+    def execute(self, dungeon) -> None:
+        dungeon.add_to_message_queue_if_visible([
+            dungeon.actor.get_name(), " ate the ", 
+            self.food.get_name(), "."])
+        self.food.eat(dungeon, dungeon.actor)
+        dungeon.end_current_turn()
+    
+    def get_name(self):
+        return ["Eat the ", self.food.get_name()]
+
 class AttackAction(InteractionAction):
     def __init__(self, entity):
         self.entity = entity
     
     def execute(self, dungeon) -> None:
-        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " attacked ", self.entity.get_name(), " with the ", dungeon.actor.get_weapon().get_name(), "."])
+        dungeon.add_to_message_queue_if_visible([
+            dungeon.actor.get_name(), " attacked ", 
+            self.entity.get_name(), " with the ", 
+            dungeon.actor.get_weapon().get_name(), "."])
         dungeon.actor.get_weapon().attack(dungeon, self.entity)
         dungeon.end_current_turn()
     
