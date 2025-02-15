@@ -1,5 +1,6 @@
 from classes.interactable import *
 from classes.actions import *
+from classes.states import *
 import systems.save_system
 import copy
 
@@ -19,14 +20,11 @@ goblin_with_iron_sword : StateEntity = StateEntity(
     AbilityHandler(),
     Inventory(
         EquipmentHandler({
-            "Weapon":Weapon(
-                ("iron", "Iron Sword"), 
-                AbilityHandler(),
-                EffectSelectorTarget(DamageEvent(5))
-            )
+            "Weapon":None
         })
     ), 
-    StatHandler({"HP":HPContainer(20,20)})
+    StatHandler({"HP":HPContainer(20,20)}),
+    IdleState()
 )
 
 magi_dragon : StateEntity = StateEntity(
@@ -43,7 +41,8 @@ magi_dragon : StateEntity = StateEntity(
             )
         })
     ), 
-    StatHandler({"HP":HPContainer(60,60)})
+    StatHandler({"HP":HPContainer(60,60)}),
+    IdleState()
 )
 
 standard_map : dict = {

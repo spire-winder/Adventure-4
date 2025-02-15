@@ -6,8 +6,8 @@ from classes.actions import Effect
 from classes.actions import EndStatusEffect
 from classes.interactable import DamageEvent
 from classes.interactable import EffectSelectorTarget
+from classes.states import *
 import classes.actions
-import random
 import copy
 import utility
 
@@ -241,6 +241,13 @@ class EquipmentHandler(Interactable):
         for x in self.equipment_dict.values():
             if not x == None:
                 x.apply_statics_regarding(owner, effect)
+    
+    def get_items(self):
+        equips : list[Equipment] = []
+        for x in self.equipment_dict:
+            if self.equipment_dict[x] != None:
+                equips.append(x)
+        return equips
 
 class Bag(Interactable):
     def __init__(self, size : int = -1, items : list[Item] = []):
@@ -323,6 +330,9 @@ class Inventory(Interactable):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
         return [classes.actions.PlayerInteractAction(self.equipment_handler), classes.actions.PlayerInteractAction(self.bag)]
 
+    def get_all_items(self) -> list[Item]:
+        return self.equipment_handler.get_items() + self.bag.get_items()
+
     def apply_statics_regarding(self, owner : Actor, effect : Effect):
         self.equipment_handler.apply_statics_regarding(owner, effect)
     
@@ -357,6 +367,9 @@ class Entity(RoomObject):
     def can_equip(self, item : Equipment):
         return self.inventory.can_equip(item)
     
+    def get_all_items(self) -> list["Item"]:
+        return self.inventory.get_all_items()
+
     def get_items_in_bag(self, condition = lambda item : True) -> list["Item"]:
         return self.inventory.get_items_in_bag(condition)
     
@@ -365,6 +378,9 @@ class Entity(RoomObject):
     
     def add_ability(self, addition : Ability):
         self.ability_handler.add_ability(addition)
+
+    def has_weapon(self) -> bool:
+        return self.inventory.get_item_in_slot("Weapon") != None
 
     def get_weapon(self) -> Equipment:
         if self.inventory.get_item_in_slot("Weapon") == None:
@@ -384,14 +400,11 @@ class Player(Entity):
         return [classes.actions.PlayerInteractAction(self.inventory), classes.actions.PlayerInteractAction(self.stathandler), classes.actions.PlayerInteractAction(self.ability_handler)]
 
 class StateEntity(Entity):
+    def __init__(self, name, ability_handler = AbilityHandler(), inventory = Inventory(), stathandler = StatHandler({ "HP": 5 }), state : State = State()):
+        super().__init__(name, ability_handler, inventory, stathandler)
+        self.state : State= state
     def take_turn(self, dungeon) -> None:
-        current_room : Room = dungeon.get_location_of_actor(self)
-        if dungeon.player in current_room.room_contents:
-            self.event.emit(action=classes.actions.AttackAction(dungeon.player))
-        else:
-            passages = dungeon.get_location_of_actor(self).get_roomobjects(lambda item : isinstance(item, Passage))
-            passage = random.choice(passages)
-            self.event.emit(action=classes.actions.EnterPassageAction(passage))
+        self.state.decide(dungeon, self)
 
 class Weapon(Equipment):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler(), effect : classes.actions.Effect = Effect()) -> None:

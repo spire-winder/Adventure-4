@@ -76,9 +76,13 @@ class DeathEvent(Effect):
         death_room = dungeon.get_location_of_actor(target)
         if death_room != None:
             dungeon.add_to_message_queue_if_actor_visible(source, [target.get_name(), " dies."])
-            RemoveRoomObjEffect().execute(dungeon, death_room, target)
             if target == dungeon.player:
                 dungeon.game_over = True
+            else:
+                for x in target.get_all_items():
+                    AddRoomObjEffect().execute(dungeon, death_room, x)
+                    dungeon.add_to_message_queue_if_actor_visible(source, [target.get_name(), " dropped the ", x.get_name(), "."])
+            RemoveRoomObjEffect().execute(dungeon, death_room, target)
 
 class DamageEvent(Effect):
     def __init__(self, damage : int):
@@ -270,7 +274,7 @@ class TakeItemAction(InteractionAction):
             return
         RemoveRoomObjEffect().execute(dungeon, dungeon.place, self.item)
         AddtoInventoryEvent().execute(dungeon, dungeon.actor, self.item)
-        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " picked up the ", self.item.get_name(), "."])
+        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " picks up the ", self.item.get_name(), "."])
         dungeon.end_current_turn()
     
     def get_name(self):

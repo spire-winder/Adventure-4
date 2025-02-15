@@ -39,7 +39,6 @@ class Dungeon:
         if action != None:
             action.execute(self)
         else:
-            self.actor : Actor = None
             self.end_current_turn()
 
     def init_location(self, destination_id : str):
@@ -101,7 +100,7 @@ class Dungeon:
             self.end_of_round()
             self.show_message_queue()
         else:
-            self.actor : Actor = self.action_queue.pop(-1)
+            self.actor : Actor = self.action_queue.pop()
             self.update_location()
             if self.place != None:
                 self.actor.take_turn(self)
