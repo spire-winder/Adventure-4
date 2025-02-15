@@ -1,8 +1,10 @@
 import sys
 from collections.abc import Callable, Hashable, MutableSequence
 from systems.event_system import Event
+from classes.actions import *
 import classes.actions
 import random
+import copy
 
 class Interactable:
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]) -> None:
@@ -21,24 +23,102 @@ class Interactable:
     def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
         return self.name
 
+class Ability:
+    def get_name(self):
+        raise NotImplementedError("Subclasses must implement get_name()")
+    def apply(self, owner, effect : Effect):
+        raise NotImplementedError("Subclasses must implement apply()")
+
+class AbilityList(Ability):
+    def get_name(self):
+        return '\n'.join(p.get_name() for p in self.ability_list)
+    def __init__(self, ability_list : list[Ability] = []):
+        self.ability_list = ability_list
+    def apply(self, owner, effect : Effect):
+        for x in self.ability_list:
+            x.apply(owner, effect)
+
+class AbilityName(Ability):
+    def get_name(self):
+        return self.name + ": " + self.ability.get_name()
+    def __init__(self, name, ability : Ability):
+        self.name = name
+        self.ability = ability
+    def apply(self, owner, effect : Effect):
+        self.ability.apply(owner, effect)
+
+class Armor(Ability):
+    def get_name(self):
+        return "+" + str(self.armor_value) + " Armor"
+    def __init__(self, armor_value : int = 1):
+        self.armor_value = armor_value
+    def apply(self, owner, effect : Effect):
+        if isinstance(effect, DamageEvent) and effect.target == owner:
+            effect.damage -= self.armor_value
+
+class AbilityHandler(Interactable):
+    def __init__(self, abilities : list[Ability] = []):
+        super().__init__("Abilities")
+        self.ability_list : list[Ability] = abilities
+    
+    def get_abilities(self):
+        return self.ability_list
+
+    def add_ability(self, new_ability : Ability):
+        self.ability_list.append(new_ability)
+    
+    def get_description(self):
+        return "\n".join(p.get_name() for p in self.ability_list)
+
+    def apply(self, owner, effect : Effect):
+        for x in self.ability_list:
+            x.apply(owner, effect)
+
 class Actor(Interactable):
+    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = AbilityHandler()) -> None:
+        super().__init__(name)
+        self.ability_handler : AbilityHandler = ability_handler
+
     def take_turn(self, dungeon) -> None:
         self.event.emit(action=None)
+    
+    def apply_statics(self, effect : Effect):
+        self.ability_handler.apply(self, effect)
 
 class RoomObject(Actor):
     def add_to_action_queue(self, action_queue : list) -> None:
         action_queue.append(self)
 
 class Item(RoomObject):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]]) -> None:
-        super().__init__(name)
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler()) -> None:
+        super().__init__(name, ability_handler)
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
         return [classes.actions.TakeItemAction(self)]
 
 class Equipment(Item):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], slot : str) -> None:
-        super().__init__(name)
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler(), slot : str = "?") -> None:
+        super().__init__(name, ability_handler)
         self.equipment_slot : str = slot
+    
+    def get_description(self):
+        return self.ability_handler.get_description()
+    
+    def apply_statics_regarding(self, owner, effect : Effect):
+        self.ability_handler.apply(owner, effect)
+
+class StatHandler(Interactable):
+    def __init__(self, stats : dict[str:] = {}):
+        super().__init__("Stats")
+        self.stat_dict : dict[str:] = stats
+    
+    def get_stat(self, stat : str):
+        return self.stat_dict[stat]
+
+    def set_stat(self, stat : str, new_value):
+        self.stat_dict[stat] = new_value
+    
+    def get_description(self):
+        return "\n".join(p + ": " + str(self.stat_dict[p]) for p in self.stat_dict)
 
 class EquipmentHandler(Interactable):
     def __init__(self, equipment : dict[str:Equipment] = {}):
@@ -78,6 +158,11 @@ class EquipmentHandler(Interactable):
             else:
                 choices.append(classes.actions.PlayerEquippedInteractAction(self.equipment_dict[x]))
         return choices
+    
+    def apply_statics_regarding(self, owner : Actor, effect : Effect):
+        for x in self.equipment_dict.values():
+            if not x == None:
+                x.apply_statics_regarding(owner, effect)
 
 class Bag(Interactable):
     def __init__(self, size : int = -1, items : list[Item] = []):
@@ -151,17 +236,21 @@ class Inventory(Interactable):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
         return [classes.actions.PlayerInteractAction(self.equipment_handler), classes.actions.PlayerInteractAction(self.bag)]
 
+    def apply_statics_regarding(self, owner : Actor, effect : Effect):
+        self.equipment_handler.apply_statics_regarding(owner, effect)
+
 class Passage(RoomObject):
-    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], destination_id : str):
-        super().__init__(name)
+    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = AbilityHandler(), destination_id : str = "?"):
+        super().__init__(name, ability_handler)
         self.destination_id : str = destination_id
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
         return [classes.actions.EnterPassageAction(self)]
 
 class Entity(RoomObject):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], inventory : Inventory = Inventory()):
-        super().__init__(name)
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler(), inventory : Inventory = Inventory(), stathandler : StatHandler = StatHandler({"HP": 5})):
+        super().__init__(name, ability_handler)
         self.inventory = inventory
+        self.stathandler = stathandler
     
     def can_take_item(self, item : Item):
         return self.inventory.can_take_item(item)
@@ -180,21 +269,22 @@ class Entity(RoomObject):
     
     def get_weapon(self) -> Equipment:
         if self.inventory.get_item_in_slot("Weapon") == None:
-            return Equipment("Fists", "Weapon")
+            return Weapon("Fists", AbilityHandler(), EffectSelectorTarget(DamageEvent(2)))
         else:
             return self.inventory.get_item_in_slot("Weapon")
     
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
-        return [classes.actions.AttackAction(self)]
+        return [classes.actions.AttackAction(self), classes.actions.PlayerInteractAction(self.stathandler), classes.actions.PlayerInteractAction(self.ability_handler)]
+
+    def apply_statics(self, effect : Effect):
+        super().apply_statics(effect)
+        self.inventory.apply_statics_regarding(self, effect)
 
 class Player(Entity):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
-        return [classes.actions.PlayerInteractAction(self.inventory)]
+        return [classes.actions.PlayerInteractAction(self.inventory), classes.actions.PlayerInteractAction(self.stathandler)]
 
 class StateEntity(Entity):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], inventory : Inventory = Inventory()):
-        super().__init__(name)
-        self.inventory = inventory
     def take_turn(self, dungeon) -> None:
         current_room : Room = dungeon.get_location_of_roomobject(self)
         if dungeon.player in current_room.room_contents:
@@ -204,10 +294,24 @@ class StateEntity(Entity):
             passage = random.choice(passages)
             self.event.emit(action=classes.actions.EnterPassageAction(passage))
 
+class Weapon(Equipment):
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = AbilityHandler(), effect : classes.actions.Effect = Effect()) -> None:
+        super().__init__(name, ability_handler, "Weapon")
+        self.effect = effect
+    
+    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        if hasattr(self.effect, "get_desc"):
+            return self.effect.get_desc()
+        else:
+            return ""
+
+    def attack(self, dungeon, target : Entity):
+        copy.deepcopy(self.effect).execute_with_statics(dungeon, dungeon.actor, target)
+
 class Room(Actor):
-    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], room_contents : list["RoomObject"]) -> None:
+    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = AbilityHandler(), room_contents : list["RoomObject"] = []) -> None:
         self.room_contents : list[RoomObject] = room_contents
-        super().__init__(name)
+        super().__init__(name, ability_handler)
     
     def get_choices(self, dungeon) -> list[classes.actions.InteractionAction]:
         choices = []
@@ -249,3 +353,7 @@ class Room(Actor):
         for x in self.room_contents:
             x.add_to_action_queue(action_queue)
     
+    def apply_statics(self, effect : Effect):
+        super().apply_statics(effect)
+        for x in self.room_contents:
+            x.apply_statics(effect)

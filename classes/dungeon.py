@@ -15,6 +15,7 @@ class Dungeon:
         self.new_game_setup()
         self.ui_event = Event()
         self.save_game_event = Event()
+        self.game_over = False
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -27,7 +28,7 @@ class Dungeon:
 
     def new_game_setup(self):
         self.init_location("starting_room")
-        self.player = self.place.get_player()
+        self.player : Player= self.place.get_player()
 
     def connect_signals(self):
         for room in self.map.values():
@@ -72,6 +73,10 @@ class Dungeon:
     def add_to_message_queue(self, msg : str | tuple["Hashable", str] | list[str | tuple["Hashable", str]]):
         self.messagequeue.append(msg)
     
+    def add_to_message_queue_if_visible(self, msg : str | tuple["Hashable", str] | list[str | tuple["Hashable", str]]):
+        if self.current_action_visible():
+            self.add_to_message_queue(msg)
+
     def show_message_queue(self):
         self.ui_event.emit(action=classes.actions.MessageQueueAction(self.messagequeue))
 
@@ -97,3 +102,6 @@ class Dungeon:
 
     def player_interact(self, inter : classes.actions.PlayerInteractAction):
         self.ui_event.emit(classes.actions.InteractAction(inter))
+    
+    def apply_statics(self, effect : Effect):
+        self.place.apply_statics(effect)

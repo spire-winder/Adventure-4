@@ -28,6 +28,9 @@ def save_game(filename : str, game):
     with open(get_save_filepath(filename), 'wb') as f:
         pickle.dump(game,f)
 
+def delete_game(filename : str):
+    os.remove(get_save_filepath(filename))
+
 def has_save_of_name(filename : str) -> bool:
     return os.path.isfile(get_save_filepath(filename))
 

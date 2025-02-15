@@ -61,7 +61,10 @@ class Game:
         for x in queue:
             li.append(urwid.Text(x))
         li.append(urwid.Divider())
-        li.append(ActionButton(["Okay"], self.end_round))
+        if not self.dungeon.game_over:
+            li.append(ActionButton(["Okay"], self.end_round))
+        else:
+            li.append(ActionButton(["Return to menu"], self.delete_and_quit))
         notif_widget = urwid.ListBox(urwid.SimpleFocusListWalker(li))
         self.set_center_event.emit(new_center=notif_widget)
 
@@ -70,6 +73,13 @@ class Game:
 
     def save(self) -> None:
         systems.save_system.save_game(self.save_file, self.dungeon)
+    
+    def delete_save(self) -> None:
+        systems.save_system.delete_game(self.save_file)
+
+    def delete_and_quit(self, button : ActionButton) -> None:
+        self.delete_save()
+        self.quit_event.emit()
 
     def save_and_quit(self, button : ActionButton) -> None:
         self.save()
