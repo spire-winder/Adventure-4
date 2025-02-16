@@ -18,6 +18,7 @@ base_palette = [
     ("status_empty", "light red", ""),
     ("damage", "dark red", ""),
     ("melee", "dark red", ""),
+    ("stunned", "yellow", ""),
 ]
 
 unique_palette = [

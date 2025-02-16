@@ -69,6 +69,12 @@ class AbilityHandler(Interactable):
             if x.is_id(id):
                 return True
         return False
+    
+    def get_ability(self, id) -> Ability:
+        for x in self.ability_list:
+            if x.is_id(id):
+                return x
+        return None
 
 class Actor(Interactable):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = None) -> None:
@@ -86,6 +92,12 @@ class Actor(Interactable):
     
     def has_ability(self, id : str) -> bool:
         return self.ability_handler.has_ability(id)
+    
+    def get_ability(self, id : str) -> Ability:
+        return self.ability_handler.get_ability(id)
+    
+    def remove_ability(self, abil : Ability):
+        self.ability_handler.remove_ability(abil)
 
 class RoomObject(Actor):
     def add_to_action_queue(self, action_queue : list) -> None:
@@ -468,7 +480,7 @@ class Weapon(Equipment):
             return ""
 
     def attack(self, dungeon, target : Entity):
-        copy.deepcopy(self.effect).execute_with_statics(dungeon, dungeon.actor, target)
+        copy.deepcopy(self.effect).execute_with_statics(dungeon, self, target)
 
 class MeleeWeapon(Weapon):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None) -> None:

@@ -1,9 +1,6 @@
 from classes.ability import *
 import utility
 
-def get_ability(ability_id : str) -> "Ability":
-    return copy.deepcopy(abilities[ability_id])
-
 abilities : dict[str:Ability] = {
     "melee":Ability(
         id="melee",
@@ -19,12 +16,21 @@ abilities : dict[str:Ability] = {
         id="goblin",
         name=("goblin","Goblin"),
         desc="Goblins are creatures with a knack for cooperation and collateral damage."
-    ),
+    )
 }
+
+def get_ability(ability_id : str) -> "Ability":
+    return copy.deepcopy(abilities[ability_id])
 
 abilities["goblin_boss"]= BattleCry(
         id="goblin_boss",
         name=utility.alternate_colors("Big Goblin",["goblin","fire"]),
         tag_id=get_ability("goblin"),
         strength=5
+    )
+abilities["stun"]=Stunned(
+        id="stun",
+        name=("stunned","Stunned"),
+        tag_id=get_ability("melee"),
+        damage_mod=2
     )

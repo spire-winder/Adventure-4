@@ -27,7 +27,7 @@ standard_map : dict = {
         [
             copy.deepcopy(player),
             get_enemy("wise_figure"),
-            Container(utility.alternate_colors("Wooden Chest", ["wood", "iron"]), AbilityHandler(), [get_item("wooden_sword"),get_item("wooden_bo"),get_item("shiv")])
+            Container(utility.alternate_colors("Wooden Chest", ["wood", "iron"]), AbilityHandler(), [get_item("wooden_sword"),get_item("wooden_bo"),get_item("shiv"),get_item("iron_axe")])
         ]
     ),
     "goblin_room": Room(

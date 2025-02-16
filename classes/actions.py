@@ -3,6 +3,8 @@ import sys
 import typing
 import utility
 import copy
+import math
+import random
 if typing.TYPE_CHECKING:
     from collections.abc import Callable, Hashable, MutableSequence
     from classes.interactable import *
@@ -22,6 +24,7 @@ class Effect:
         raise NotImplementedError("Subclasses must implement execute()")
     def get_desc(self):
         return []
+
 
 class Notif:
     def __init__(self, effect : Effect):
@@ -48,8 +51,16 @@ class AddAbilityEffect(Effect):
     def get_desc(self):
         return ["Apply"]
     def execute(self, dungeon, source, target):
-        dungeon.add_to_message_queue_if_actor_visible(source, [source.get_name(), " gained ", target.get_name(), "."])
-        source.add_ability(target)
+        if target.has_ability(source.id):
+            existing_ability = target.get_ability(source.id)
+            if source > existing_ability:
+                utility.log("remove old ability")
+                target.remove_ability(existing_ability)
+            else:
+                return
+        dungeon.add_to_message_queue_if_actor_visible(target, [target.get_name(), " gained ", source.get_name(), "."])
+        target.add_ability(source)
+            
 
 class SetDialogueEffect(Effect):
     def execute(self, dungeon, source, target):
@@ -65,6 +76,14 @@ class EffectSequence(Effect):
             effect_text.append(x.get_desc())
         return utility.combine_text(effect_text)
     
+    def execute_with_statics(self, dungeon, source, target):
+        self.dungeon = dungeon
+        self.source = source
+        self.target = target
+        dungeon.apply_statics(self)
+        for x in self.effects:
+            x.execute_with_statics(dungeon, source, target)
+
     def execute(self, dungeon, source, target):
         for x in self.effects:
             x.execute(dungeon, source, target)
@@ -93,15 +112,16 @@ class DeathEvent(Effect):
             RemoveRoomObjEffect().execute(dungeon, death_room, target)
 
 class DamageEvent(Effect):
-    def __init__(self, damage : int):
+    def __init__(self, damage : int, armor_penetrate : int = 0):
         self.damage : int = damage
+        self.armor_penetrate : int = armor_penetrate
     def get_desc(self):
         return ["Deal ", str(self.damage), " damage"]
     
     def execute(self, dungeon, source, target):
         if self.damage < 1:
             self.damage = 1
-        dungeon.add_to_message_queue_if_actor_visible(source,["Dealt ", str(self.damage), " damage."])
+        dungeon.add_to_message_queue_if_actor_visible(target,["Dealt ", ("damage", str(self.damage)), " damage."])
         target.stathandler.get_stat("HP").damage(self.damage)
         target.notify(dungeon, Notif(self))
         if target.stathandler.get_stat("HP").is_dead():
@@ -125,6 +145,25 @@ class RepeatEvent(Effect):
         for x in range(self.amount):
             if dungeon.get_location_of_actor(target) != None:
                 copy.deepcopy(self.effect).execute_with_statics(dungeon, source, target)
+
+class ProbabilityEvent(Effect):
+    def __init__(self, effect : Effect, chance : float):
+        self.effect : Effect = effect
+        self.chance : int = chance
+    def get_desc(self):
+        percent : int = math.floor(self.chance * 100)
+        return utility.combine_text([["(",str(percent),"%) "], self.effect.get_desc()], False)
+    
+    def execute(self, dungeon, source, target):
+        if random.random() <= self.chance:
+            copy.deepcopy(self.effect).execute(dungeon, source, target)
+    def execute_with_statics(self, dungeon, source, target):
+        self.dungeon = dungeon
+        self.source = source
+        self.target = target
+        dungeon.apply_statics(self)
+        if random.random() <= self.chance:
+            copy.deepcopy(self.effect).execute_with_statics(dungeon, source, target)
 
 class HealEvent(Effect):
     def __init__(self, healing : int):
@@ -172,11 +211,24 @@ class EffectSelectorPredefinedTarget(EffectSelector):
     def execute_with_statics(self, dungeon, source, target):
         self.dungeon = dungeon
         self.source = source
-        self.target = target
         dungeon.apply_statics(self)
         self.effect.execute_with_statics(dungeon, source, self.target)
     def get_desc(self):
         return [self.effect.get_desc(), " " ,self.target.get_name()]
+
+class EffectSelectorPredefinedSource(EffectSelector):
+    def __init__(self, effect, source):
+        super().__init__(effect)
+        self.source = source
+    def execute(self, dungeon, source, target):
+        self.effect.execute(dungeon, self.source, target)
+    def execute_with_statics(self, dungeon, source, target):
+        self.dungeon = dungeon
+        self.target = target
+        dungeon.apply_statics(self)
+        self.effect.execute_with_statics(dungeon, self.source, target)
+    def get_desc(self):
+        return [self.effect.get_desc(), " " ,self.source.get_name()]
 
 class InteractionAction:
     def execute(self, dungeon):
