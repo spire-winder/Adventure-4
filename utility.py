@@ -21,3 +21,16 @@ def tab_text(text : list[str | tuple[Hashable, str]]) -> list[str | tuple[Hashab
         if x == "\n":
             new_list.append("    ")
     return new_list
+
+def alternate_colors(text : str | list[str], color_sequence : list[str]) -> list[tuple[Hashable, str]]:
+    new_text : list[tuple[Hashable, str]] = []
+    counter : int = 0
+    for x in text:
+        if isinstance(x, str):
+            for y in x:
+                new_text.append((color_sequence[counter % len(color_sequence)], y))
+                counter += 1
+        else:
+            new_text.append((color_sequence[counter % len(color_sequence)], x))
+            counter += 1
+    return new_text

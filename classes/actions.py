@@ -23,6 +23,10 @@ class Effect:
     def get_desc(self):
         return ""
 
+class Notif:
+    def __init__(self, effect : Effect):
+        self.effect : Effect = effect
+
 class RemoveRoomObjEffect(Effect):
     def execute(self, dungeon, source, target):
         source.remove_roomobject(target)
@@ -94,8 +98,9 @@ class DamageEvent(Effect):
         if self.damage < 1:
             self.damage = 1
         dungeon.add_to_message_queue_if_actor_visible(source,["Dealt ", str(self.damage), " damage."])
-        new_hp = target.stathandler.get_stat("HP").damage(self.damage)
-        if new_hp <= 0:
+        target.stathandler.get_stat("HP").damage(self.damage)
+        target.notify(dungeon, Notif(self))
+        if target.stathandler.get_stat("HP").is_dead():
             DeathEvent().execute(dungeon, source, target)
 
 class RepeatEvent(Effect):
@@ -223,15 +228,24 @@ class PlayerInventoryInteractAction(PlayerInteractAction):
     def __init__(self, interactable : "Item"):
         super().__init__(interactable)
     
-    def get_name(self):
-        return self.interactable.get_name()
-
     def get_choices(self, dungeon) -> list[InteractionAction]:
         actions = []
         if hasattr(self.interactable, "equipment_slot") and dungeon.actor.can_equip(self.interactable):
             actions.append(EquipItemAction(self.interactable))
         return actions
 
+class DialogueAction(InteractionAction):
+    def __init__(self, manager , dialogue):
+        self.manager = manager
+        self.dialogue = dialogue
+    
+    def get_name(self):
+        return self.dialogue.get_response_text()
+
+    def execute(self, dungeon):
+        self.manager.root_dialogue = self.dialogue
+        dungeon.player_interact(PlayerInteractAction(self.manager))
+    
 class EnterPassageAction(InteractionAction):
     def __init__(self, passage):
         self.passage = passage
@@ -266,13 +280,18 @@ class PlayerCampfireInteractAction(PlayerInteractAction):
         return actions
 
 class TakeItemAction(InteractionAction):
-    def __init__(self, item):
+    def __init__(self, item, source = None):
         self.item = item
+        self.source = source
     
     def execute(self, dungeon) -> None:
         if not dungeon.actor.can_take_item(self.item):
             return
-        RemoveRoomObjEffect().execute(dungeon, dungeon.place, self.item)
+        if hasattr(self, "prev"):
+            source = self.prev.interactable
+        else:
+            source = self.source
+        RemoveRoomObjEffect().execute(dungeon, source, self.item)
         AddtoInventoryEvent().execute(dungeon, dungeon.actor, self.item)
         dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " picks up the ", self.item.get_name(), "."])
         dungeon.end_current_turn()

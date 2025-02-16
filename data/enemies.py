@@ -2,6 +2,7 @@ from classes.interactable import *
 from classes.actions import *
 from classes.ability import *
 from classes.states import *
+import utility
 import copy
 
 items : dict[str:Item] = {
@@ -30,7 +31,7 @@ abilities : dict[str:Ability] = {
     ),
     "goblin_boss":BattleCry(
         id="goblin_boss",
-        name=("goblin","Big Goblin"),
+        name=utility.alternate_colors("Big Goblin",["goblin","fire"]),
         tag_id="Goblin",
         strength=5
     ),
@@ -60,6 +61,7 @@ enemies : dict[str:StateEntity] = {
             })
         ), 
         StatHandler({"HP":HPContainer(12)}),
+        DialogueManager(),
         IdleState()
     ),
     "goblin_boss" : StateEntity(
@@ -71,8 +73,21 @@ enemies : dict[str:StateEntity] = {
             })
         ), 
         StatHandler({"HP":HPContainer(40)}),
+        DialogueManager(),
         IdleState()
-    )
+    ),
+    "wise_figure" : StateEntity(
+        ("wood","Wise Figure"), 
+        AbilityHandler(),
+        Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("iron_axe")
+            })
+        ), 
+        StatHandler({"HP":HPContainer(40)}),
+        DialogueManager("wise_figure_1"),
+        PeacefulState()
+    ),
 }
 
 def get_enemy(enemy_id : str) -> StateEntity:

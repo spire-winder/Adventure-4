@@ -18,10 +18,18 @@ player : Player = Player(
 
 standard_map : dict = {
     "starting_room": Room(
-        "Starting room", 
+        "Ruins of the Sun", 
         AbilityHandler(), 
         [
             copy.deepcopy(player),
+            get_enemy("wise_figure"),
+            Container(utility.alternate_colors("Wooden Chest", ["wood", "iron"]), AbilityHandler(), [get_item("wooden_sword"),get_item("wooden_bo")])
+        ]
+    ),
+    "goblin_room": Room(
+        "Starting room", 
+        AbilityHandler(), 
+        [
             get_enemy("goblin_1"),
             get_enemy("goblin_2"),
             get_enemy("goblin_boss"),

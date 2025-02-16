@@ -6,6 +6,9 @@ class Event:
     def subscribe(self, listener):
         self.subscribers.append(listener)
 
+    def unsubscribe(self, listener):
+        self.subscribers.remove(listener)
+
     def emit(self, *args, **kwargs):
         for subscriber in self.subscribers:
             subscriber(*args, **kwargs)

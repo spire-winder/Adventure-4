@@ -39,12 +39,14 @@ class Game:
         self.dungeon.player.name = name
 
     def player_interact(self, inter: classes.actions.PlayerInteractAction):
+        self.dungeon.previous_interactable = self.dungeon.current_interactable
+        self.dungeon.current_interactable = inter.interactable
         room_list = []
         room_list.append(urwid.Text(inter.get_name()))
         room_list.append(urwid.Text(inter.get_description()))
         room_list.append(urwid.Divider())
         for x in inter.get_choices(self.dungeon):
-            if isinstance(x, classes.actions.PlayerInteractAction):
+            if hasattr(x, "prev"):
                 x.prev = inter
             room_list.append(InteractableActionButton(self.dungeon, x))
         room_list.append(urwid.Divider())

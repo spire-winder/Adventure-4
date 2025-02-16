@@ -2,58 +2,69 @@ import random
 import classes.actions
 
 class State:
-    def decide(self, dungeon, actor):
+    def register(self, state_entity):
+        self.state_entity = state_entity
+        self.state_entity.notif.subscribe(self.state_entity_event)
+    def unregister(self, state_entity):
+        self.state_entity.notif.unsubscribe(self.state_entity_event)
+    def state_entity_event(self, dungeon, notif ):
+        pass
+    def decide(self, dungeon):
         raise NotImplementedError("Subclasses must implement decide()")
 
+class PeacefulState(State):
+    def state_entity_event(self, dungeon, notif ):
+        if hasattr(notif.effect, "damage"):
+            dungeon.add_to_message_queue_if_actor_visible(self.state_entity, [self.state_entity.get_name(), " moves to attack."])
+            self.state_entity.change_state(AttackingState())
+
+    def decide(self, dungeon):
+        self.state_entity.event.emit(action=None)
+
 class IdleState(State):
-    def decide(self, dungeon, actor ):
-        current_room = dungeon.get_location_of_actor(actor)
+    def decide(self, dungeon ):
+        current_room = dungeon.get_location_of_actor(self.state_entity)
         if dungeon.player in current_room.room_contents:
-            dungeon.add_to_message_queue_if_actor_visible(actor, [actor.get_name(), " notices ", dungeon.player.get_name(), "."])
-            actor.state = AttackingState()
-            actor.state.decide(dungeon, actor)
-        actor.event.emit(action=None)
+            dungeon.add_to_message_queue_if_actor_visible(self.state_entity, [self.state_entity.get_name(), " notices ", dungeon.player.get_name(), "."])
+            self.state_entity.change_state(AttackingState(), dungeon)
+        self.state_entity.event.emit(action=None)
 
 class AttackingState(State):
-    def find_weapon(self, dungeon, actor) -> bool:
-        current_room = dungeon.get_location_of_actor(actor)
+    def find_weapon(self, dungeon) -> bool:
+        current_room = dungeon.get_location_of_actor(self.state_entity)
         weapons = current_room.get_roomobjects(lambda item : hasattr(item, "attack"))
         if weapons != []:
             weapon = random.choice(weapons)
-            actor.event.emit(action=classes.actions.TakeItemAction(weapon))
+            self.state_entity.event.emit(action=classes.actions.TakeItemAction(weapon, current_room))
             return True
         return False
     
-    def decide(self, dungeon, actor ):
-        current_room = dungeon.get_location_of_actor(actor)
+    def decide(self, dungeon ):
+        current_room = dungeon.get_location_of_actor(self.state_entity)
         if dungeon.player in current_room.room_contents:
-            if not actor.has_weapon():
-                self.find_weapon(dungeon, actor)
+            if not self.state_entity.has_weapon():
+                self.find_weapon(dungeon, self.state_entity)
                 return
-            actor.event.emit(action=classes.actions.AttackAction(dungeon.player))
+            self.state_entity.event.emit(action=classes.actions.AttackAction(dungeon.player))
         else:
-            actor.state = WanderState(3)
-            actor.state.decide(dungeon, actor)
+            self.state_entity.change_state(WanderState(3), dungeon)
 
 class WanderState(State):
-    def __init__(self, time : int):
+    def __init__(self,time : int):
         self.time : int = time
 
-    def decide(self, dungeon, actor ):
-        current_room = dungeon.get_location_of_actor(actor)
+    def decide(self, dungeon ):
+        current_room = dungeon.get_location_of_actor(self.state_entity)
         if dungeon.player in current_room.room_contents:
-            actor.state = AttackingState()
-            actor.state.decide(dungeon, actor)
+            self.state_entity.change_state(AttackingState(), dungeon)
         else:
             if self.time > 0:
                 self.time -= 1
                 passages = current_room.get_roomobjects(lambda item : hasattr(item, "destination_id"))
                 if len(passages) >= 1:
                     passage = random.choice(passages)
-                    actor.event.emit(action=classes.actions.EnterPassageAction(passage))
+                    self.state_entity.event.emit(action=classes.actions.EnterPassageAction(passage))
                 else:
-                    actor.state = IdleState()
-                    actor.state.decide(dungeon, actor)
+                    self.state_entity.change_to_default_state(dungeon)
             else:
-                actor.state = IdleState()
-                actor.state.decide(dungeon, actor)
+                self.state_entity.change_to_default_state(dungeon)

@@ -61,6 +61,8 @@ class Dungeon:
     def start_round(self) -> None:
         self.messagequeue = []
         self.generate_action_queue()
+        self.current_interactable : Interactable = None
+        self.previous_interactable : Interactable = None
         self.actor : Actor = self.player
         self.place = self.get_location_of_actor(self.actor)
         self.place.interact()
