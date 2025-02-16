@@ -3,10 +3,8 @@ from collections.abc import Callable, Hashable, MutableSequence
 from systems.event_system import Event
 from classes.actions import *
 from classes.actions import Effect
-from classes.actions import EndStatusEffect
-from classes.interactable import DamageEvent
-from classes.interactable import EffectSelectorTarget
 from classes.states import *
+from classes.ability import Ability
 import classes.actions
 import copy
 import utility
@@ -27,56 +25,6 @@ class Interactable:
         self.event.subscribe(dungeon.interaction_event)
     def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
         return self.name
-
-class Ability:
-    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]):
-        self.name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]= name
-    def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        return self.name
-    def get_desc(self):
-        return None
-    def get_full(self):
-        return utility.combine_text([self.get_name(), utility.tab_text([self.get_desc()])])
-    def apply(self, owner, effect : Effect):
-        raise NotImplementedError("Subclasses must implement apply()")
-    def end_of_round(self, dungeon, owner):
-        pass
-
-class Status(Ability):
-    def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        return self.ability.get_name()
-    def get_desc(self):
-        status_color : str
-        duration_percent : float = self.current_duration / self.duration
-        if duration_percent >= 0.666:
-            status_color = "status_full"
-        elif duration_percent >= 0.333:
-            status_color = "status_depleted"
-        else:
-            status_color = "status_empty"
-        return utility.combine_text([self.ability.get_desc(), ["(", (status_color, str(self.current_duration)), " rounds remaining)"]])
-    def apply(self, owner, effect : Effect):
-        self.ability.apply(owner, effect)
-    def __init__(self, ability : Ability, duration : int):
-        super().__init__("")
-        self.ability = ability
-        self.duration : int = duration
-        self.current_duration : int = duration
-    def end_of_round(self, dungeon, owner):
-        self.ability.end_of_round(dungeon, owner)
-        self.current_duration -= 1
-        if self.current_duration <= 0:
-            EndStatusEffect().execute_with_statics(dungeon, owner, self)
-
-class Armor(Ability):
-    def get_desc(self):
-        return ("iron", "+" + str(self.armor_value) + " Armor")
-    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], armor_value : int = 1):
-        super().__init__(name)
-        self.armor_value = armor_value
-    def apply(self, owner, effect : Effect):
-        if isinstance(effect, DamageEvent) and effect.target == owner:
-            effect.damage -= self.armor_value
 
 class AbilityHandler(Interactable):
     def __init__(self, abilities : list[Ability] = []):
@@ -105,6 +53,12 @@ class AbilityHandler(Interactable):
     def end_of_round(self, dungeon, owner):
         for x in self.ability_list:
             x.end_of_round(dungeon, owner)
+    
+    def has_ability(self, id) -> bool:
+        for x in self.ability_list:
+            if x.is_id(id):
+                return True
+        return False
 
 class Actor(Interactable):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = AbilityHandler()) -> None:
@@ -119,6 +73,9 @@ class Actor(Interactable):
     
     def apply_statics(self, effect : Effect):
         self.ability_handler.apply(self, effect)
+    
+    def has_ability(self, id : str) -> bool:
+        return self.ability_handler.has_ability(id)
 
 class RoomObject(Actor):
     def add_to_action_queue(self, action_queue : list) -> None:
@@ -156,8 +113,9 @@ class Stat:
         raise NotImplementedError("Subclasses must implement get_text()")
 
 class HPContainer(Stat):
-    def __init__(self, current : int, max : int):
-        self.max : int = max
+    def __init__(self, current : int, max : int = -1):
+        if max == -1:
+            self.max : int = current
         self.current : int = current
     def get_text(self):
         status_color : str
@@ -379,6 +337,9 @@ class Entity(RoomObject):
     def get_items_in_bag(self, condition = lambda item : True) -> list["Item"]:
         return self.inventory.get_items_in_bag(condition)
     
+    def remove_item(self, remove : Item):
+        self.inventory.bag.remove_item(remove)
+
     def remove_ability(self, remove : Ability):
         self.ability_handler.remove_ability(remove)
     
@@ -395,7 +356,12 @@ class Entity(RoomObject):
             return self.inventory.get_item_in_slot("Weapon")
     
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
-        return [classes.actions.AttackAction(self), classes.actions.PlayerInteractAction(self.stathandler), classes.actions.PlayerInteractAction(self.ability_handler)]
+        choices : list[classes.actions.InteractionAction] = []
+        if dungeon.actor.has_weapon():
+            choices.append(classes.actions.AttackAction(self))
+        choices.append(classes.actions.PlayerInteractAction(self.stathandler))
+        choices.append(classes.actions.PlayerInteractAction(self.ability_handler))
+        return choices
 
     def apply_statics(self, effect : Effect):
         super().apply_statics(effect)

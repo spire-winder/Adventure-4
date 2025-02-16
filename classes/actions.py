@@ -315,6 +315,7 @@ class EatAction(InteractionAction):
             dungeon.actor.get_name(), " ate the ", 
             self.food.get_name(), "."])
         self.food.eat(dungeon, dungeon.actor)
+        dungeon.actor.remove_item(self.food)
         dungeon.end_current_turn()
     
     def get_name(self):

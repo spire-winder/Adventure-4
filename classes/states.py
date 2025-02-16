@@ -28,8 +28,8 @@ class AttackingState(State):
         current_room = dungeon.get_location_of_actor(actor)
         if dungeon.player in current_room.room_contents:
             if not actor.has_weapon():
-                if self.find_weapon(dungeon, actor):
-                    return
+                self.find_weapon(dungeon, actor)
+                return
             actor.event.emit(action=classes.actions.AttackAction(dungeon.player))
         else:
             actor.state = WanderState(3)
@@ -48,8 +48,12 @@ class WanderState(State):
             if self.time > 0:
                 self.time -= 1
                 passages = current_room.get_roomobjects(lambda item : hasattr(item, "destination_id"))
-                passage = random.choice(passages)
-                actor.event.emit(action=classes.actions.EnterPassageAction(passage))
+                if len(passages) >= 1:
+                    passage = random.choice(passages)
+                    actor.event.emit(action=classes.actions.EnterPassageAction(passage))
+                else:
+                    actor.state = IdleState()
+                    actor.state.decide(dungeon, actor)
             else:
                 actor.state = IdleState()
                 actor.state.decide(dungeon, actor)
