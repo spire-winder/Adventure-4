@@ -37,6 +37,16 @@ items : dict[str:Item] = {
         ability_handler=AbilityHandler([Armor("armor",None,2)]),
         slot="Ring"
     ),
+    "magic_ring":Equipment(
+        name=("magic","Magic Ring"),
+        ability_handler=AbilityHandler([DamageTypeBuff("magic_aura","Magic Aura","magic",3)]),
+        slot="Ring"
+    ),
+    "magic_wand":MagicWeapon(
+        name=("magic", "Magic Wand"),
+        effect=EffectSelectorTarget(RepeatEvent(DamageEvent(3,"magic",2),4)),
+        mana_cost=20
+    )
 }
 
 def get_item(item_id : str) -> Item:

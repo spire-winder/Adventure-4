@@ -52,6 +52,33 @@ class Status(Ability):
     def __gt__(self, a : "Status") -> bool:
         return self.current_duration > a.current_duration
 
+class Sharpness(Ability):
+    def get_desc(self):
+        percent : int = math.floor(self.sharpness * 100)
+        return [str(percent),"%"]
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], sharpness : float = 1):
+        super().__init__(id,name)
+        self.sharpness = sharpness
+    def apply(self, owner, effect : Effect):
+        if owner.has_weapon():
+            if hasattr(effect, "damage") and effect.source == owner.get_weapon():
+                effect.damage *= self.sharpness
+                effect.damage = math.ceil(effect.damage)
+    def dull(self, amount : float):
+        self.sharpness *= amount
+
+class ManaCost(Ability):
+    def get_desc(self):
+        return [("magic",str(self.mpcost))," MP"]
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], mpcost : float = 1):
+        super().__init__(id,name)
+        self.mpcost = mpcost
+    def apply(self, owner, effect : Effect):
+        if isinstance(effect, AttackEffect) and effect.source == owner:
+            if not owner.stathandler.get_stat("MP").spend(self.mpcost):
+                effect.dungeon.add_to_message_queue_if_actor_visible(owner, [owner.get_name(), "'s mana ran out!"])
+                effect.cancel()
+
 class Armor(Ability):
     def get_desc(self):
         return ("iron", "+" + str(self.armor_value) + " Armor")
@@ -78,8 +105,6 @@ class Stunned(Ability):
         self.tag = tag_id
         self.damage_mod = damage_mod
     def apply(self, owner, effect : Effect):
-        utility.log(self.tag.id)
-        utility.log(effect.source.get_name())
         if hasattr(effect, "damage") and effect.target == owner and effect.source.has_ability(self.tag.id):
             effect.damage += self.damage_mod
         if hasattr(effect, "damage") and effect.dungeon.actor == owner and effect.source.has_ability(self.tag.id):
@@ -94,6 +119,17 @@ class BattleCry(Ability):
         self.strength = strength
     def apply(self, owner, effect : Effect):
         if hasattr(effect, "damage") and effect.dungeon.actor.has_ability(self.tag.id):
+            effect.damage += self.strength
+
+class DamageTypeBuff(Ability):
+    def get_desc(self):
+        return utility.combine_text(["Deal ", ("damage","+" + str(self.strength) + " damage")," with ",(self.damage_type, self.damage_type)," attacks."], False)
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], damage_type : str, strength : int):
+        super().__init__(id,name)
+        self.damage_type = damage_type
+        self.strength = strength
+    def apply(self, owner, effect : Effect):
+        if hasattr(effect, "damage") and effect.dungeon.actor == owner and effect.damage_type == self.damage_type:
             effect.damage += self.strength
 
 class SelectiveBuff(Ability):

@@ -18,13 +18,16 @@ class Effect:
         self.dungeon = dungeon
         self.source = source
         self.target = target
+        self.cancelled = False
         dungeon.apply_statics(self)
-        self.execute(self.dungeon, self.source, self.target)
+        if not self.cancelled:
+            self.execute(self.dungeon, self.source, self.target)
     def execute(self, dungeon, source, target):
         raise NotImplementedError("Subclasses must implement execute()")
     def get_desc(self):
         return []
-
+    def cancel(self):
+        self.cancelled = True
 
 class Notif:
     def __init__(self, effect : Effect):
@@ -54,13 +57,11 @@ class AddAbilityEffect(Effect):
         if target.has_ability(source.id):
             existing_ability = target.get_ability(source.id)
             if source > existing_ability:
-                utility.log("remove old ability")
                 target.remove_ability(existing_ability)
             else:
                 return
         dungeon.add_to_message_queue_if_actor_visible(target, [target.get_name(), " gained ", source.get_name(), "."])
         target.add_ability(source)
-            
 
 class SetDialogueEffect(Effect):
     def execute(self, dungeon, source, target):
@@ -80,9 +81,11 @@ class EffectSequence(Effect):
         self.dungeon = dungeon
         self.source = source
         self.target = target
+        self.cancelled = False
         dungeon.apply_statics(self)
-        for x in self.effects:
-            x.execute_with_statics(dungeon, source, target)
+        if not self.cancelled:
+            for x in self.effects:
+                x.execute_with_statics(dungeon, source, target)
 
     def execute(self, dungeon, source, target):
         for x in self.effects:
@@ -102,26 +105,34 @@ class DeathEvent(Effect):
     def execute(self, dungeon, source, target):
         death_room = dungeon.get_location_of_actor(target)
         if death_room != None:
-            dungeon.add_to_message_queue_if_actor_visible(source, [target.get_name(), " dies."])
+            dungeon.add_to_message_queue_if_actor_visible(target, [target.get_name(), " dies."])
             if target == dungeon.player:
                 dungeon.game_over = True
             else:
                 for x in target.get_drops():
                     AddRoomObjEffect().execute(dungeon, death_room, x)
-                    dungeon.add_to_message_queue_if_actor_visible(source, [target.get_name(), " dropped the ", x.get_name(), "."])
+                    dungeon.add_to_message_queue_if_actor_visible(target, [target.get_name(), " dropped the ", x.get_name(), "."])
             RemoveRoomObjEffect().execute(dungeon, death_room, target)
 
 class DamageEvent(Effect):
-    def __init__(self, damage : int, armor_penetrate : int = 0):
+    def __init__(self, damage : int, damage_type : str = "", armor_penetrate : int = 0):
         self.damage : int = damage
+        self.damage_type : str = damage_type
         self.armor_penetrate : int = armor_penetrate
     def get_desc(self):
-        return ["Deal ", str(self.damage), " damage"]
+        desc = []
+        damage_text = str(self.damage)
+        if self.damage_type != "":
+            damage_text += " " + self.damage_type
+        desc.append(["Deal ", (self.damage_type, damage_text), " damage"])
+        if self.armor_penetrate > 0:
+            desc.append([str(self.armor_penetrate), " armor penetration"])
+        return utility.combine_text(desc)
     
     def execute(self, dungeon, source, target):
         if self.damage < 1:
             self.damage = 1
-        dungeon.add_to_message_queue_if_actor_visible(target,["Dealt ", ("damage", str(self.damage)), " damage."])
+        dungeon.add_to_message_queue_if_actor_visible(target,["Dealt ", (self.damage_type, str(self.damage)), " damage."])
         target.stathandler.get_stat("HP").damage(self.damage)
         target.notify(dungeon, Notif(self))
         if target.stathandler.get_stat("HP").is_dead():
@@ -141,10 +152,12 @@ class RepeatEvent(Effect):
         self.dungeon = dungeon
         self.source = source
         self.target = target
+        self.cancelled = False
         dungeon.apply_statics(self)
-        for x in range(self.amount):
-            if dungeon.get_location_of_actor(target) != None:
-                copy.deepcopy(self.effect).execute_with_statics(dungeon, source, target)
+        if not self.cancelled:
+            for x in range(self.amount):
+                if dungeon.get_location_of_actor(target) != None:
+                    copy.deepcopy(self.effect).execute_with_statics(dungeon, source, target)
 
 class ProbabilityEvent(Effect):
     def __init__(self, effect : Effect, chance : float):
@@ -161,18 +174,50 @@ class ProbabilityEvent(Effect):
         self.dungeon = dungeon
         self.source = source
         self.target = target
+        self.cancelled = False
         dungeon.apply_statics(self)
-        if random.random() <= self.chance:
-            copy.deepcopy(self.effect).execute_with_statics(dungeon, source, target)
+        if not self.cancelled:
+            if random.random() <= self.chance:
+                copy.deepcopy(self.effect).execute_with_statics(dungeon, source, target)
 
 class HealEvent(Effect):
     def __init__(self, healing : int):
         self.healing : int = healing
     def get_desc(self):
-        return ["Heal ",str(self.healing), " damage"]
+        return ["Heal ",str(self.healing), " HP"]
     def execute(self, dungeon, source, target):
-        dungeon.add_to_message_queue_if_actor_visible(target, ["Healed ", str(self.healing), " damage."])
+        dungeon.add_to_message_queue_if_actor_visible(target, ["Healed ", str(self.healing), " HP."])
         new_hp = target.stathandler.get_stat("HP").heal(self.healing)
+
+class DullWeaponEvent(Effect):
+    def execute(self, dungeon, source, target):
+        target.dull(random.random() * 0.1 + 0.9)
+
+class SpendMPEvent(Effect):
+    def __init__(self, spending : int):
+        self.spending : int = spending
+    def get_desc(self):
+        return ["Spend ",str(self.spending), " MP"]
+    def execute(self, dungeon, source, target):
+        dungeon.add_to_message_queue_if_actor_visible(target, ["Spent ", str(self.spending), " MP."])
+        target.stathandler.get_stat("MP").spend(self.spending)
+
+class RestoreMPEvent(Effect):
+    def __init__(self, healing : int):
+        self.healing : int = healing
+    def get_desc(self):
+        return ["Restore ",str(self.healing), " MP"]
+    def execute(self, dungeon, source, target):
+        dungeon.add_to_message_queue_if_actor_visible(target, ["Restored ", str(self.healing), " MP."])
+        target.stathandler.get_stat("MP").restore(self.healing)
+
+class AttackEffect(Effect):
+    def execute(self, dungeon, source, target) -> None:
+        dungeon.add_to_message_queue_if_visible([
+            source.get_name(), " attacked ", 
+            target.get_name(), " with the ", 
+            source.get_weapon().get_name(), "."])
+        source.get_weapon().attack(dungeon, target)
 
 class EffectSelector(Effect):
     def __init__(self, effect:Effect):
@@ -185,8 +230,10 @@ class EffectSelectorTarget(EffectSelector):
         self.dungeon = dungeon
         self.source = source
         self.target = target
+        self.cancelled = False
         dungeon.apply_statics(self)
-        self.effect.execute_with_statics(dungeon, source, target)
+        if not self.cancelled:
+            self.effect.execute_with_statics(dungeon, source, target)
     def get_desc(self):
         return utility.combine_text(["Target:",utility.tab_text(self.effect.get_desc())])
 
@@ -197,8 +244,10 @@ class EffectSelectorSelf(EffectSelector):
         self.dungeon = dungeon
         self.source = source
         self.target = target
+        self.cancelled = False
         dungeon.apply_statics(self)
-        self.effect.execute_with_statics(dungeon, source, source)
+        if not self.cancelled:
+            self.effect.execute_with_statics(dungeon, source, source)
     def get_desc(self):
         return utility.combine_text(["User:",utility.tab_text(self.effect.get_desc())])
 
@@ -211,8 +260,10 @@ class EffectSelectorPredefinedTarget(EffectSelector):
     def execute_with_statics(self, dungeon, source, target):
         self.dungeon = dungeon
         self.source = source
+        self.cancelled = False
         dungeon.apply_statics(self)
-        self.effect.execute_with_statics(dungeon, source, self.target)
+        if not self.cancelled:
+            self.effect.execute_with_statics(dungeon, source, self.target)
     def get_desc(self):
         return [self.effect.get_desc(), " " ,self.target.get_name()]
 
@@ -225,8 +276,10 @@ class EffectSelectorPredefinedSource(EffectSelector):
     def execute_with_statics(self, dungeon, source, target):
         self.dungeon = dungeon
         self.target = target
+        self.cancelled = False
         dungeon.apply_statics(self)
-        self.effect.execute_with_statics(dungeon, self.source, target)
+        if not self.cancelled:
+            self.effect.execute_with_statics(dungeon, self.source, target)
     def get_desc(self):
         return [self.effect.get_desc(), " " ,self.source.get_name()]
 
@@ -403,11 +456,7 @@ class AttackAction(InteractionAction):
         self.entity = entity
     
     def execute(self, dungeon) -> None:
-        dungeon.add_to_message_queue_if_visible([
-            dungeon.actor.get_name(), " attacked ", 
-            self.entity.get_name(), " with the ", 
-            dungeon.actor.get_weapon().get_name(), "."])
-        dungeon.actor.get_weapon().attack(dungeon, self.entity)
+        AttackEffect().execute_with_statics(dungeon, dungeon.actor, self.entity)
         dungeon.end_current_turn()
     
     def get_name(self):

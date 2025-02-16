@@ -5,6 +5,8 @@ from classes.actions import *
 from classes.actions import Effect
 from classes.states import *
 from classes.ability import Ability
+from classes.ability import Sharpness
+from classes.ability import ManaCost
 from data.dialogue import DialogueNode
 from data.dialogue import get_dialogue
 from data.abilities import get_ability
@@ -161,6 +163,26 @@ class HPContainer(Stat):
         if self.current > self.max:
             self.current = self.max
         return self.current
+
+class MPContainer(Stat):
+    def __init__(self, current : int, max : int = -1):
+        if max == -1:
+            self.max : int = current
+        self.current : int = current
+    def get_text(self):
+        return utility.combine_text([("magic", str(self.current)), " / ", ("magic", str(self.max))], False)
+    def get_current_mp(self) -> int:
+        return self.current
+    def spend(self, amount : int) -> bool:
+        self.current -= amount
+        if self.current < 0:
+            self.current = 0
+            return False
+        return True
+    def restore(self, amount : int) -> int:
+        self.current += amount
+        if self.current > self.max:
+            self.current = self.max
 
 class StatHandler(Interactable):
     def __init__(self, stats : dict[str:] = None):
@@ -414,7 +436,11 @@ class Entity(RoomObject):
         self.ability_handler.add_ability(addition)
 
     def has_weapon(self) -> bool:
-        return self.inventory.get_item_in_slot("Weapon") != None
+        weapon = self.inventory.get_item_in_slot("Weapon")
+        if weapon != None:
+            return True
+        else:
+            return False
 
     def get_weapon(self) -> Equipment:
         if self.inventory.get_item_in_slot("Weapon") == None:
@@ -483,14 +509,23 @@ class Weapon(Equipment):
         copy.deepcopy(self.effect).execute_with_statics(dungeon, self, target)
 
 class MeleeWeapon(Weapon):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None) -> None:
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None, sharpness : float = 1.0) -> None:
         super().__init__(name, ability_handler, drop_chance, effect)
         self.ability_handler.add_ability(get_ability("melee"))
+        self.ability_handler.add_ability(Sharpness("sharpness","Sharpness",sharpness))
+    
+    def attack(self, dungeon, target : Entity):
+        super().attack(dungeon, target)
+        DullWeaponEvent().execute(dungeon, target, self)
+     
+    def dull(self, amount : float):
+        self.ability_handler.get_ability("sharpness").dull(amount)
 
 class MagicWeapon(Weapon):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None) -> None:
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None, mana_cost : int = 10) -> None:
         super().__init__(name, ability_handler, drop_chance, effect)
         self.ability_handler.add_ability(get_ability("magic"))
+        self.ability_handler.add_ability(ManaCost("manacost","Mana Cost", mana_cost))
 
 class Food(Item):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, effect : classes.actions.Effect = None) -> None:

@@ -77,6 +77,8 @@ class Dungeon:
 
     def actor_visible(self, actor : Actor):
         loc = self.get_location_of_actor(actor)
+        if loc == None:
+            return False
         return loc == self.get_location_of_actor(self.player) or (self.get_location_of_actor(self.player)) in loc.get_roomobjects()
 
     def add_to_message_queue(self, msg : str | tuple["Hashable", str] | list[str | tuple["Hashable", str]]):

@@ -17,7 +17,10 @@ player : Player = Player(
             "Boots":None,
             "Ring":None,
         })),
-    StatHandler({"HP":HPContainer(50,50)})
+    StatHandler({
+        "HP":HPContainer(50),
+        "MP":MPContainer(50),
+    })
 )
 
 standard_map : dict = {
@@ -27,7 +30,14 @@ standard_map : dict = {
         [
             copy.deepcopy(player),
             get_enemy("wise_figure"),
-            Container(utility.alternate_colors("Wooden Chest", ["wood", "iron"]), AbilityHandler(), [get_item("wooden_sword"),get_item("wooden_bo"),get_item("shiv"),get_item("iron_axe")])
+            Container(utility.alternate_colors("Wooden Chest", ["wood", "iron"]), AbilityHandler(), [
+                get_item("wooden_sword"),
+                get_item("wooden_bo"),
+                get_item("shiv"),
+                get_item("iron_axe"),
+                get_item("magic_wand"),
+                get_item("magic_ring"),
+            ])
         ]
     ),
     "goblin_room": Room(
