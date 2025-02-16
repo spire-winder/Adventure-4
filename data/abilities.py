@@ -16,6 +16,16 @@ abilities : dict[str:Ability] = {
         id="goblin",
         name=("goblin","Goblin"),
         desc="Goblins are creatures with a knack for cooperation and collateral damage."
+    ),
+    "regen":EndOfTurnEffect(
+        id="regen",
+        name=("healing","Regeneration"),
+        effect=HealEvent(5)
+    ),
+    "poison":EndOfTurnEffect(
+        id="regen",
+        name=("poison","Regeneration"),
+        effect=DamageEvent(5,"poison",-1)
     )
 }
 

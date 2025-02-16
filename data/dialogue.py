@@ -45,12 +45,43 @@ dialogue_nodes : dict[str:DialogueNode] = {
     "wise_figure_4" : DialogueNode(
         "Subterra?",
         ["\"Yes, that's what we call this.\"\nThe figure gestures around to an abandoned temple.\n\"These are the Ruins of the Sun.\nBefore, we were a mighty religion, but we've crumbled to dust.\""],
-        None,
-        EffectSelectorPredefinedTarget(SetDialogueEffect(),"wise_figure_5")
+        "wise_figure_5",
     ),
     "wise_figure_5" : DialogueNode(
+        "How can I leave?",
+        ["\"Well, this won't be easy for you to hear...\nThere is no way out. As far as we know, at least.\nFor now, why don't you take some supplies from that wooden chest and explore around for a bit.\""],
+        None,
+        EffectSelectorPredefinedTarget(SetDialogueEffect(),"wise_figure_done")
+    ),
+    "wise_figure_done" : DialogueNode(
         None,
         ["\"Good luck out there.\""],
+        None,
+    ),
+    "fellow_traveller_1" : DialogueNode(
+        None,
+        ["\"Hail! I haven't seen you before.\nI hate to ask, but did you just fall down?\""],
+        "fellow_traveller_2"
+    ),
+    "fellow_traveller_2" : DialogueNode(
+        "How did you know?",
+        ["\"You've got all the gear that old man gives everyone.\nBy the way, watch out in this area\""],
+        ["fellow_traveller_3", "fellow_traveller_4"]
+    ),
+    "fellow_traveller_3" : DialogueNode(
+        "Why?",
+        ["\"There's a goblin cave to the north of here. I'd hate to lose another human down here.\""],
+        None
+    ),
+    "fellow_traveller_4" : DialogueNode(
+        "I'll be fine",
+        ["\"Suit yourself.\""],
+        None,
+        EffectSelectorPredefinedTarget(SetDialogueEffect(),"fellow_traveller_done")
+    ),
+    "fellow_traveller_done" : DialogueNode(
+        None,
+        ["\"Remember, goblin cave up north!\""],
         None,
     ),
 }

@@ -26,7 +26,7 @@ class IdleState(State):
         current_room = dungeon.get_location_of_actor(self.state_entity)
         if dungeon.player in current_room.room_contents:
             dungeon.add_to_message_queue_if_actor_visible(self.state_entity, [self.state_entity.get_name(), " notices ", dungeon.player.get_name(), "."])
-            self.state_entity.change_state(AttackingState(), dungeon)
+            self.state_entity.change_state(AttackingState())
         self.state_entity.event.emit(action=None)
 
 class AttackingState(State):
@@ -36,16 +36,16 @@ class AttackingState(State):
         if weapons != []:
             weapon = random.choice(weapons)
             self.state_entity.event.emit(action=classes.actions.TakeItemAction(weapon, current_room))
-            return True
-        return False
+        else:
+            self.state_entity.event.emit(action=None)
     
     def decide(self, dungeon ):
         current_room = dungeon.get_location_of_actor(self.state_entity)
         if dungeon.player in current_room.room_contents:
             if not self.state_entity.has_weapon():
-                self.find_weapon(dungeon, self.state_entity)
-                return
-            self.state_entity.event.emit(action=classes.actions.AttackAction(dungeon.player))
+                self.find_weapon(dungeon)
+            else:
+                self.state_entity.event.emit(action=classes.actions.AttackAction(dungeon.player))
         else:
             self.state_entity.change_state(WanderState(3), dungeon)
 

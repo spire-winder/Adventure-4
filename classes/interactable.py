@@ -58,13 +58,17 @@ class AbilityHandler(Interactable):
             full_list.append(x.get_full())
         return utility.combine_text(full_list)
 
-    def apply(self, owner, effect : Effect):
+    def apply(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
         for x in self.ability_list:
-            x.apply(owner, effect)
+            x.apply(new_chain, effect)
     
-    def end_of_round(self, dungeon, owner):
+    def end_of_round(self, chain):
+        new_chain = chain.copy()
+        new_chain.append(self)
         for x in self.ability_list:
-            x.end_of_round(dungeon, owner)
+            x.end_of_round(new_chain)
     
     def has_ability(self, id) -> bool:
         for x in self.ability_list:
@@ -86,11 +90,15 @@ class Actor(Interactable):
     def take_turn(self, dungeon) -> None:
         self.event.emit(action=None)
     
-    def end_of_round(self, dungeon) -> None:
-        self.ability_handler.end_of_round(dungeon, self)
+    def end_of_round(self, chain) -> None:
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.ability_handler.end_of_round(new_chain)
     
-    def apply_statics(self, effect : Effect):
-        self.ability_handler.apply(self, effect)
+    def apply_statics(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.ability_handler.apply(new_chain, effect)
     
     def has_ability(self, id : str) -> bool:
         return self.ability_handler.has_ability(id)
@@ -121,6 +129,39 @@ class Item(RoomObject):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
         return [classes.actions.TakeItemAction(self, dungeon.previous_interactable)]
 
+class UsableItem(Item):
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None) -> None:
+        super().__init__(name, ability_handler, drop_chance)
+        self.effect = effect or Effect()
+    
+    def get_targets(self, dungeon):
+        return dungeon.place.get_roomobjects()
+
+    def can_use(self, dungeon) -> bool:
+        return len(self.get_targets(dungeon)) > 0
+
+    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        if hasattr(self.effect, "get_desc"):
+            return utility.combine_text([self.effect.get_desc(), self.ability_handler.get_description()])
+        else:
+            return None
+
+    def use(self, dungeon, target):
+        copy.deepcopy(self.effect).execute_with_statics(dungeon, self, target)
+
+class Potion(UsableItem):
+    def get_targets(self, dungeon):
+        return dungeon.place.get_roomobjects(lambda x : isinstance(x, Player))
+
+class Sharpener(UsableItem):
+    def get_targets(self, dungeon):
+        all_items = dungeon.actor.inventory.get_all_items()
+        targets = []
+        for x in all_items:
+            if hasattr(x, "sharpen"):
+                targets.append(x)
+        return targets
+
 class Equipment(Item):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, slot : str = "?") -> None:
         super().__init__(name, ability_handler, drop_chance)
@@ -128,9 +169,6 @@ class Equipment(Item):
     
     def get_description(self):
         return self.ability_handler.get_description()
-    
-    def apply_statics_regarding(self, owner, effect : Effect):
-        self.ability_handler.apply(owner, effect)
 
 class Stat:
     def get_text():
@@ -266,10 +304,12 @@ class EquipmentHandler(Interactable):
                 choices.append(classes.actions.PlayerEquippedInteractAction(self.equipment_dict[x]))
         return choices
     
-    def apply_statics_regarding(self, owner : Actor, effect : Effect):
+    def apply_statics(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
         for x in self.equipment_dict.values():
             if not x == None:
-                x.apply_statics_regarding(owner, effect)
+                x.apply_statics(new_chain, effect)
     
     def get_items(self) -> list[Equipment]:
         equips : list[Equipment] = []
@@ -305,9 +345,15 @@ class Bag(Interactable):
     def get_choices(self, dungeon) -> list[classes.actions.InteractionAction]:
         choices = []
         for x in self.items_list:
-            choices.append(classes.actions.PlayerInventoryInteractAction(x))
+            choices.append(classes.actions.PlayerBagInteractAction(x))
         return choices
     
+    def apply_statics(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in self.items_list:
+            x.apply_statics(new_chain, effect)
+
     def get_items_in_bag(self, condition = lambda item : True) -> list["Item"]:
         roomobjets : list["Item"] = []
         for x in self.items_list:
@@ -362,8 +408,11 @@ class Inventory(Interactable):
     def get_all_items(self) -> list[Item]:
         return self.equipment_handler.get_items() + self.bag.get_items()
 
-    def apply_statics_regarding(self, owner : Actor, effect : Effect):
-        self.equipment_handler.apply_statics_regarding(owner, effect)
+    def apply_statics(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.equipment_handler.apply_statics(new_chain, effect)
+        self.bag.apply_statics(new_chain, effect)
     
     def get_items_in_bag(self, condition = lambda item : True) -> list["Item"]:
         return self.bag.get_items_in_bag(condition)
@@ -459,9 +508,11 @@ class Entity(RoomObject):
             choices.append(classes.actions.PlayerInteractAction(self.ability_handler))
         return choices
 
-    def apply_statics(self, effect : Effect):
-        super().apply_statics(effect)
-        self.inventory.apply_statics_regarding(self, effect)
+    def apply_statics(self, chain : list, effect : Effect):
+        super().apply_statics(chain, effect)
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.inventory.apply_statics(new_chain, effect)
 
 class Player(Entity):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
@@ -503,7 +554,7 @@ class Weapon(Equipment):
         if hasattr(self.effect, "get_desc"):
             return utility.combine_text([self.effect.get_desc(), self.ability_handler.get_description()])
         else:
-            return ""
+            return None
 
     def attack(self, dungeon, target : Entity):
         copy.deepcopy(self.effect).execute_with_statics(dungeon, self, target)
@@ -520,6 +571,8 @@ class MeleeWeapon(Weapon):
      
     def dull(self, amount : float):
         self.ability_handler.get_ability("sharpness").dull(amount)
+    def sharpen(self, amount : float):
+        self.ability_handler.get_ability("sharpness").sharpen(amount)
 
 class MagicWeapon(Weapon):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None, mana_cost : int = 10) -> None:
@@ -583,14 +636,18 @@ class Room(Actor):
 
     def add_to_action_queue(self, action_queue : list) -> None:
         action_queue.append(self)
-        for x in self.room_contents:
+        for x in self.get_roomobjects(lambda item : not isinstance(item, Player)):
             x.add_to_action_queue(action_queue)
     
-    def apply_statics(self, effect : Effect):
-        super().apply_statics(effect)
+    def apply_statics(self, chain : list, effect : Effect):
+        super().apply_statics(chain, effect)
+        new_chain = chain.copy()
+        new_chain.append(self)
         for x in self.room_contents:
-            x.apply_statics(effect)
-    def end_of_round(self, dungeon) -> None:
-        super().end_of_round(dungeon)
+            x.apply_statics(new_chain, effect)
+    def end_of_round(self, chain) -> None:
+        super().end_of_round(chain)
+        new_chain = chain.copy()
+        new_chain.append(self)
         for x in self.room_contents:
-            x.end_of_round(dungeon)
+            x.end_of_round(new_chain)

@@ -19,6 +19,11 @@ base_palette = [
     ("damage", "dark red", ""),
     ("melee", "dark red", ""),
     ("stunned", "yellow", ""),
+    ("healing", "light green", ""),
+    ("arcane", "dark magenta", ""),
+    ("meat", "light red", ""),
+    ("food", "brown", ""),
+    ("poison", "dark green", ""),
 ]
 
 unique_palette = [

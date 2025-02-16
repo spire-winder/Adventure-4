@@ -63,6 +63,7 @@ class Dungeon:
         self.generate_action_queue()
         self.current_interactable : Interactable = None
         self.previous_interactable : Interactable = None
+        utility.log("starting round!")
         self.actor : Actor = self.player
         self.place = self.get_location_of_actor(self.actor)
         self.place.interact()
@@ -100,26 +101,32 @@ class Dungeon:
 
     def start_next_turn(self):
         if len(self.action_queue) == 0:
-            self.actor : Actor = None
+            utility.log("we're ending the round!")
+            #self.actor : Actor = None
             self.end_of_round()
+            utility.log("we're showing the queue!")
             self.show_message_queue()
         else:
             self.actor : Actor = self.action_queue.pop()
             self.update_location()
-            if self.place != None:
+            if self.actor != None and self.place != None:
+                utility.log(str(self.actor.get_name()) + " taking turn")
                 self.actor.take_turn(self)
             else:
-                self.start_next_turn()
+                self.end_current_turn()
 
     def end_of_round(self):
+        chain : list = [self]
         for x in self.map:
-            self.map[x].end_of_round(self)
+            self.map[x].end_of_round(chain)
 
     def end_current_turn(self):
+        utility.log("turn ended!")
         self.start_next_turn()
 
     def player_interact(self, inter : classes.actions.PlayerInteractAction):
         self.ui_event.emit(classes.actions.InteractAction(inter))
     
     def apply_statics(self, effect : Effect):
-        self.place.apply_statics(effect)
+        chain : list = [self]
+        self.place.apply_statics(chain, effect)

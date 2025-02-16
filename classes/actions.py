@@ -38,8 +38,12 @@ class RemoveRoomObjEffect(Effect):
         source.remove_roomobject(target)
 
 class AddRoomObjEffect(Effect):
+    def __init__(self, needs_to_connect:bool = True):
+        self.needs_to_connect : bool = needs_to_connect
     def execute(self, dungeon, source, target):
         source.add_roomobject(target)
+        if self.needs_to_connect:
+            target.handle_connecting_signals(dungeon)
 
 class EndStatusEffect(Effect):
     def execute(self, dungeon, source, target):
@@ -125,14 +129,19 @@ class DamageEvent(Effect):
         if self.damage_type != "":
             damage_text += " " + self.damage_type
         desc.append(["Deal ", (self.damage_type, damage_text), " damage"])
-        if self.armor_penetrate > 0:
-            desc.append([str(self.armor_penetrate), " armor penetration"])
-        return utility.combine_text(desc)
+        if self.armor_penetrate == -1:
+            desc.append([" ignoring armor"])
+        elif self.armor_penetrate > 0:
+            desc.append([" with ", str(self.armor_penetrate), " armor penetration"])
+        return utility.combine_text(desc, False)
     
     def execute(self, dungeon, source, target):
         if self.damage < 1:
             self.damage = 1
-        dungeon.add_to_message_queue_if_actor_visible(target,["Dealt ", (self.damage_type, str(self.damage)), " damage."])
+        damage_text = str(self.damage)
+        if self.damage_type != "":
+            damage_text += " " + self.damage_type
+        dungeon.add_to_message_queue_if_actor_visible(target,["Dealt ", (self.damage_type, damage_text), " damage."])
         target.stathandler.get_stat("HP").damage(self.damage)
         target.notify(dungeon, Notif(self))
         if target.stathandler.get_stat("HP").is_dead():
@@ -184,14 +193,23 @@ class HealEvent(Effect):
     def __init__(self, healing : int):
         self.healing : int = healing
     def get_desc(self):
-        return ["Heal ",str(self.healing), " HP"]
+        return ["Heal ",("healing",str(self.healing)), " HP"]
     def execute(self, dungeon, source, target):
-        dungeon.add_to_message_queue_if_actor_visible(target, ["Healed ", str(self.healing), " HP."])
+        dungeon.add_to_message_queue_if_actor_visible(target, ["Healed ", ("healing",str(self.healing)), " HP."])
         new_hp = target.stathandler.get_stat("HP").heal(self.healing)
 
 class DullWeaponEvent(Effect):
     def execute(self, dungeon, source, target):
         target.dull(random.random() * 0.1 + 0.9)
+
+class SharpenEvent(Effect):
+    def get_desc(self):
+        percent : int = math.floor(self.sharpening * 100)
+        return ["Sharpen an item ",("iron",str(percent) + "%")]
+    def __init__(self, sharp : float):
+        self.sharpening : float= sharp
+    def execute(self, dungeon, source, target):
+        target.sharpen(self.sharpening)
 
 class SpendMPEvent(Effect):
     def __init__(self, spending : int):
@@ -218,6 +236,14 @@ class AttackEffect(Effect):
             target.get_name(), " with the ", 
             source.get_weapon().get_name(), "."])
         source.get_weapon().attack(dungeon, target)
+
+class UseEffect(Effect):
+    def execute(self, dungeon, source, target) -> None:
+        dungeon.add_to_message_queue_if_visible([
+            dungeon.actor.get_name(), " used the ", 
+            source.get_name(), " on ", 
+            target.get_name(), "."])
+        source.use(dungeon, target)
 
 class EffectSelector(Effect):
     def __init__(self, effect:Effect):
@@ -333,7 +359,7 @@ class PlayerEquippedInteractAction(PlayerInteractAction):
             actions.append(UnequipItemAction(self.interactable))
         return actions
 
-class PlayerInventoryInteractAction(PlayerInteractAction):
+class PlayerBagInteractAction(PlayerInteractAction):
     def __init__(self, interactable : "Item"):
         super().__init__(interactable)
     
@@ -341,6 +367,8 @@ class PlayerInventoryInteractAction(PlayerInteractAction):
         actions = []
         if hasattr(self.interactable, "equipment_slot") and dungeon.actor.can_equip(self.interactable):
             actions.append(EquipItemAction(self.interactable))
+        if hasattr(self.interactable, "use") and self.interactable.can_use(dungeon) :
+            actions.append(UseItemAction(self.interactable))
         return actions
 
 class DialogueAction(InteractionAction):
@@ -362,17 +390,18 @@ class EnterPassageAction(InteractionAction):
         self.passage = passage
 
     def execute(self, dungeon):
-        if not dungeon.actor == dungeon.player:
-            dungeon.add_to_message_queue_if_actor_visible(dungeon.actor, [dungeon.actor.get_name(), " entered the ", self.passage.get_name(), "."])
+        actor = dungeon.actor
+        if not actor == dungeon.player:
+            dungeon.add_to_message_queue_if_actor_visible(actor, [actor.get_name(), " entered the ", self.passage.get_name(), "."])
         source_room = dungeon.place
         target_room = dungeon.map[self.passage.destination_id]
-        RemoveRoomObjEffect().execute(dungeon, source_room, dungeon.actor)
-        AddRoomObjEffect().execute(dungeon, target_room, dungeon.actor)
+        RemoveRoomObjEffect().execute(dungeon, source_room, actor)
+        AddRoomObjEffect(False).execute(dungeon, target_room, actor)
         dungeon.update_location()
-        if not dungeon.actor == dungeon.player:
-            dungeon.add_to_message_queue_if_actor_visible(dungeon.actor, [dungeon.actor.get_name(), " exited the ", self.passage.get_name(), "."])
-        if dungeon.actor == dungeon.player:
-            dungeon.add_to_message_queue([dungeon.actor.get_name(), " passes through the ", self.passage.get_name(), "."])
+        if not actor == dungeon.player:
+            dungeon.add_to_message_queue_if_actor_visible(actor, [actor.get_name(), " exited the ", self.passage.get_name(), "."])
+        if actor == dungeon.player:
+            dungeon.add_to_message_queue([actor.get_name(), " passes through the ", self.passage.get_name(), "."])
         dungeon.end_current_turn()
     def get_name(self):
         return "Enter"
@@ -424,6 +453,24 @@ class UnequipItemAction(InteractionAction):
     def get_name(self):
         return "Unequip"
 
+class UseItemAction(PlayerInteractAction):
+    def execute(self, dungeon):
+        if len(self.interactable.get_targets(dungeon)) == 1:
+            choices = self.interactable.get_targets(dungeon)
+            UseAction(self.interactable, choices[0]).execute(dungeon)
+        else:
+            dungeon.player_interact(self)
+
+    def get_choices(self, dungeon) -> list[InteractionAction]:
+        actions = []
+        targets = self.interactable.get_targets(dungeon)
+        for x in targets:
+            actions.append(UseAction(self.interactable, x))
+        return actions
+
+    def get_name(self):
+        return "Use"
+
 class EquipItemAction(InteractionAction):
     def __init__(self, item : "Equipment"):
         self.item = item
@@ -450,6 +497,18 @@ class EatAction(InteractionAction):
     
     def get_name(self):
         return ["Eat the ", self.food.get_name()]
+
+class UseAction(InteractionAction):
+    def __init__(self, item, target):
+        self.item = item
+        self.target = target
+    
+    def execute(self, dungeon) -> None:
+        UseEffect().execute_with_statics(dungeon, self.item, self.target)
+        dungeon.end_current_turn()
+    
+    def get_name(self):
+        return self.target.get_name()
 
 class AttackAction(InteractionAction):
     def __init__(self, entity):
