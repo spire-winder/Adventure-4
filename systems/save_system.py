@@ -27,6 +27,7 @@ def has_saves() -> bool:
 def save_game(filename : str, game):
     with open(get_save_filepath(filename), 'wb') as f:
         pickle.dump(game,f)
+        f.close()
 
 def delete_game(filename : str):
     try:
@@ -40,6 +41,7 @@ def has_save_of_name(filename : str) -> bool:
 def load_save(filename : str):
     with open(get_save_filepath(filename), 'rb') as f:
         loaded_game = pickle.load(f)
+        f.close()
         return loaded_game
 
 def get_map_filepath(filename : str) -> str:
@@ -48,10 +50,12 @@ def get_map_filepath(filename : str) -> str:
 def save_map(filename : str, game):
     with open(get_map_filepath(filename), 'wb') as f:
         pickle.dump(game,f)
+        f.close()
 
 def load_map(filename : str):
     with open(get_map_filepath(filename), 'rb') as f:
         loaded_game = pickle.load(f)
+        f.close()
         return loaded_game
 
 def create_folder(folder_name):

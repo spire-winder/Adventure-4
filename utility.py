@@ -1,22 +1,36 @@
 from collections.abc import Callable, Hashable, MutableSequence
 
+def log(msg):
+    with open("log.txt", 'a') as f:
+        f.write(str(msg) + "\n")
+        f.close()
+
 def combine_text(text : list[str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]], add_newlines : bool = True) -> list[str | tuple[Hashable, str]]:
+    if text == None:
+        return None
+    if isinstance(text, str):
+        return [text]
     new_list : list[str | tuple[Hashable, str]] = []
     for x in text:
+        if x == None:
+            continue
         if add_newlines and x != text[0]:
             new_list.append("\n")
         if isinstance(x, str) or isinstance(x, tuple):
             new_list.append(x)
-        elif x == None:
-            continue
         else:
             for y in x:
-                new_list.append(y)
+                if y != None:
+                    new_list.append(y)
     return new_list
 
 def tab_text(text : list[str | tuple[Hashable, str]]) -> list[str | tuple[Hashable, str]]:
+    if text == None or len(text) == 0 or text == [] or text == [None]:
+        return None
     new_list : list[str | tuple[Hashable, str]] = ["    "]
     for x in text:
+        if x == None:
+            continue
         new_list.append(x)
         if x == "\n":
             new_list.append("    ")

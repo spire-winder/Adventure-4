@@ -21,7 +21,7 @@ class Effect:
     def execute(self, dungeon, source, target):
         raise NotImplementedError("Subclasses must implement execute()")
     def get_desc(self):
-        return ""
+        return []
 
 class Notif:
     def __init__(self, effect : Effect):
@@ -46,10 +46,14 @@ class RemoveAbilityEffect(Effect):
 
 class AddAbilityEffect(Effect):
     def get_desc(self):
-        return "Apply"
+        return ["Apply"]
     def execute(self, dungeon, source, target):
         dungeon.add_to_message_queue_if_actor_visible(source, [source.get_name(), " gained ", target.get_name(), "."])
         source.add_ability(target)
+
+class SetDialogueEffect(Effect):
+    def execute(self, dungeon, source, target):
+        source.set_dialogue(target)
 
 class EffectSequence(Effect):
     def __init__(self, effects : list[Effect]):
@@ -67,14 +71,14 @@ class EffectSequence(Effect):
 
 class AddtoInventoryEvent(Effect):
     def get_desc(self):
-        return "Adds to inventory"
+        return ["Adds to inventory"]
     
     def execute(self, dungeon, source, target):
         source.take_item(target)
 
 class DeathEvent(Effect):
     def get_desc(self):
-        return "Dies"
+        return ["Dies"]
     
     def execute(self, dungeon, source, target):
         death_room = dungeon.get_location_of_actor(target)
@@ -92,7 +96,7 @@ class DamageEvent(Effect):
     def __init__(self, damage : int):
         self.damage : int = damage
     def get_desc(self):
-        return "Deal " + str(self.damage) + " damage"
+        return ["Deal ", str(self.damage), " damage"]
     
     def execute(self, dungeon, source, target):
         if self.damage < 1:
@@ -126,7 +130,7 @@ class HealEvent(Effect):
     def __init__(self, healing : int):
         self.healing : int = healing
     def get_desc(self):
-        return "Heal " + str(self.healing) + " damage"
+        return ["Heal ",str(self.healing), " damage"]
     def execute(self, dungeon, source, target):
         dungeon.add_to_message_queue_if_actor_visible(target, ["Healed ", str(self.healing), " damage."])
         new_hp = target.stathandler.get_stat("HP").heal(self.healing)
@@ -172,7 +176,7 @@ class EffectSelectorPredefinedTarget(EffectSelector):
         dungeon.apply_statics(self)
         self.effect.execute_with_statics(dungeon, source, self.target)
     def get_desc(self):
-        return self.effect.get_desc() + " " + self.target.get_name()
+        return [self.effect.get_desc(), " " ,self.target.get_name()]
 
 class InteractionAction:
     def execute(self, dungeon):
@@ -245,6 +249,8 @@ class DialogueAction(InteractionAction):
     def execute(self, dungeon):
         self.manager.root_dialogue = self.dialogue
         dungeon.player_interact(PlayerInteractAction(self.manager))
+        if self.dialogue.get_effect() != None:
+            self.dialogue.get_effect().execute(dungeon, self.manager, self.dialogue)
     
 class EnterPassageAction(InteractionAction):
     def __init__(self, passage):

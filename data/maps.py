@@ -10,8 +10,12 @@ player : Player = Player(
     AbilityHandler(),
     Inventory(
         EquipmentHandler({
-            "Weapon":None, 
-            "Offhand":None
+            "Weapon":None,
+            "Offhand":None,
+            "Helmet":None,
+            "Armor":None,
+            "Boots":None,
+            "Ring":None,
         })),
     StatHandler({"HP":HPContainer(50,50)})
 )
@@ -23,7 +27,7 @@ standard_map : dict = {
         [
             copy.deepcopy(player),
             get_enemy("wise_figure"),
-            Container(utility.alternate_colors("Wooden Chest", ["wood", "iron"]), AbilityHandler(), [get_item("wooden_sword"),get_item("wooden_bo")])
+            Container(utility.alternate_colors("Wooden Chest", ["wood", "iron"]), AbilityHandler(), [get_item("wooden_sword"),get_item("wooden_bo"),get_item("shiv")])
         ]
     ),
     "goblin_room": Room(

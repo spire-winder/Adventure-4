@@ -49,11 +49,12 @@ class Game:
             if hasattr(x, "prev"):
                 x.prev = inter
             room_list.append(InteractableActionButton(self.dungeon, x))
-        room_list.append(urwid.Divider())
-        if inter.prev != None:
-            room_list.append(InteractableActionButton(self.dungeon, inter.prev))
-        else:
-            room_list.append(ActionButton("Save and Quit", self.save_and_quit))
+        if inter.interactable.include_back:
+            room_list.append(urwid.Divider())
+            if inter.prev != None:
+                room_list.append(InteractableActionButton(self.dungeon, inter.prev))
+            else:
+                room_list.append(ActionButton("Save and Quit", self.save_and_quit))
         center_widget : urwid.ListBox = urwid.ListBox(urwid.SimpleFocusListWalker(room_list))
         self.set_center_event.emit(new_center=center_widget)
 

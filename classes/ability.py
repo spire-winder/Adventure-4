@@ -12,7 +12,7 @@ class Ability:
     def get_desc(self):
         return self.desc
     def get_full(self):
-        return utility.combine_text([self.get_name(), utility.tab_text([self.get_desc()])])
+        return utility.combine_text([self.get_name(), utility.tab_text(self.get_desc())])
     def apply(self, owner, effect : Effect):
         pass
     def end_of_round(self, dungeon, owner):
@@ -60,11 +60,22 @@ class Armor(Ability):
 
 class BattleCry(Ability):
     def get_desc(self):
-        return utility.combine_text([self.tag, " enemies deal ", ("damage","+" + str(self.strength) + " damage.")], False)
+        return utility.combine_text([self.tag.get_name(), " enemies deal ", ("damage","+" + str(self.strength) + " damage"),"."], False)
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], tag_id : Ability, strength : int):
         super().__init__(id,name)
         self.tag = tag_id
         self.strength = strength
     def apply(self, owner, effect : Effect):
         if hasattr(effect, "damage") and effect.source.has_ability(self.tag):
+            effect.damage += self.strength
+
+class SelectiveBuff(Ability):
+    def get_desc(self):
+        return utility.combine_text(["Your ",self.tag.get_name()," attacks deal ", ("damage","+" + str(self.strength) + " damage"),"."], False)
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], tag_id : Ability, strength : int):
+        super().__init__(id,name)
+        self.tag = tag_id
+        self.strength = strength
+    def apply(self, owner, effect : Effect):
+        if hasattr(effect, "damage") and effect.dungeon.actor == owner and effect.source.has_ability(self.tag):
             effect.damage += self.strength
