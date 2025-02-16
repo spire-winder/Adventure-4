@@ -60,7 +60,6 @@ class Game:
         self.set_center_event.emit(new_center=center_widget)
 
     def show_message_queue(self, queue : list):
-        utility.log("about to show the message queue")
         li : list = []
         for x in queue:
             li.append(urwid.Text(x))
@@ -69,9 +68,7 @@ class Game:
             li.append(ActionButton(["Okay"], self.end_round))
         else:
             li.append(ActionButton(["Return to menu"], self.delete_and_quit))
-        utility.log("about to make the listbox")
         notif_widget = urwid.ListBox(urwid.SimpleFocusListWalker(li))
-        utility.log("setting the center")
         self.set_center_event.emit(new_center=notif_widget)
 
 

@@ -32,6 +32,8 @@ class Interactable:
         self.notif.emit(dungeon, notif)
     def handle_connecting_signals(self, dungeon):
         self.event.subscribe(dungeon.interaction_event)
+    def handle_disconnecting_signals(self, dungeon):
+        self.event.unsubscribe(dungeon.interaction_event)
     def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
         return self.name
 
@@ -227,6 +229,9 @@ class StatHandler(Interactable):
         super().__init__("Stats")
         self.stat_dict : dict[str:] = stats or {}
     
+    def has_stat(self, stat : str):
+        return stat in self.stat_dict
+
     def get_stat(self, stat : str):
         return self.stat_dict[stat]
 
@@ -441,6 +446,11 @@ class Container(RoomObject):
             self.contents.remove(obj_to_remove)
             return True
         return False
+    
+    def handle_connecting_signals(self, dungeon):
+        self.event.subscribe(dungeon.interaction_event)
+        for object in self.contents:
+            object.handle_connecting_signals(dungeon)
 
 class Entity(RoomObject):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, inventory : Inventory = None, stathandler : StatHandler = None, dialogue_manager : DialogueManager = None):

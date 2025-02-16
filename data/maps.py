@@ -70,7 +70,7 @@ standard_map : dict = {
             get_enemy("mage_hater"),
             get_item("regen_potion"),
             Passage(("stone", "Northern Trailhead"), destination_id="ruins_crossroad"),
-            Passage(("magic", "Southern Clearning"), destination_id="forest_crossroad")
+            Passage(("magic", "Southern Crossroad"), destination_id="forest_crossroad")
         ]
     ),
     "forest_crossroad": Room(
@@ -81,7 +81,27 @@ standard_map : dict = {
             get_item("bone_marrow_stew"),
             get_item("sharpening_stone"),
             Campfire(utility.alternate_colors("Magical Campfire",["magic","fire"])),
-            Passage(("stone", "Northern Trail"), destination_id="magic_woods_entrance")
+            Passage(("magic", "Northern Trail"), destination_id="magic_woods_entrance"),
+            Passage(("magic", "Western Clearing"), destination_id="forest_clearing"),
+            Passage(("magic", "Southern Trail"), destination_id="forest_library")
+        ]
+    ),
+    "forest_clearing": Room(
+        ("magic", "Enchanted Woods Clearing"), 
+        AbilityHandler(), 
+        [
+            get_enemy("helmet_snail"),
+            get_item("magic_ring"),
+            Passage(("magic", "Eastern Crossroad"), destination_id="forest_crossroad")
+        ]
+    ),
+    "forest_library": Room(
+        ("magic", "Overgrown Library"), 
+        AbilityHandler(), 
+        [
+            Container(("magic", "Overgrown Bookcase"), contents=[get_item("fire_tome")]),
+            get_enemy("forest_mage"),
+            Passage(("magic", "Northern Trail"), destination_id="forest_crossroad")
         ]
     ),
     "goblin_cave_entrance": Room(
@@ -91,7 +111,8 @@ standard_map : dict = {
             get_item("roast_beef"),
             get_enemy("fellow_traveller"),
             Campfire(("fire", "Small Campfire")),
-            Passage(("stone", "Goblin Cave"), destination_id="goblin_cave")
+            Passage(("stone", "Goblin Cave"), destination_id="goblin_cave"),
+            Passage(("stone", "Stony Crossroads"), destination_id="ruins_crossroad")
         ]
     ),
     "goblin_cave": Room(
@@ -100,6 +121,7 @@ standard_map : dict = {
         [
             get_enemy("goblin_boss"),
             get_enemy("goblin_mage"),
+            get_enemy("goblin_3"),
             get_item("magic_boots"),
             Passage(("stone", "Entrance"), destination_id="goblin_cave_entrance")
         ]

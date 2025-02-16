@@ -36,14 +36,12 @@ class Notif:
 class RemoveRoomObjEffect(Effect):
     def execute(self, dungeon, source, target):
         source.remove_roomobject(target)
+        target.handle_disconnecting_signals(dungeon)
 
 class AddRoomObjEffect(Effect):
-    def __init__(self, needs_to_connect:bool = True):
-        self.needs_to_connect : bool = needs_to_connect
     def execute(self, dungeon, source, target):
         source.add_roomobject(target)
-        if self.needs_to_connect:
-            target.handle_connecting_signals(dungeon)
+        target.handle_connecting_signals(dungeon)
 
 class EndStatusEffect(Effect):
     def execute(self, dungeon, source, target):
@@ -369,6 +367,7 @@ class PlayerBagInteractAction(PlayerInteractAction):
             actions.append(EquipItemAction(self.interactable))
         if hasattr(self.interactable, "use") and self.interactable.can_use(dungeon) :
             actions.append(UseItemAction(self.interactable))
+        actions.append(DiscardItemAction(self.interactable))
         return actions
 
 class DialogueAction(InteractionAction):
@@ -396,7 +395,7 @@ class EnterPassageAction(InteractionAction):
         source_room = dungeon.place
         target_room = dungeon.map[self.passage.destination_id]
         RemoveRoomObjEffect().execute(dungeon, source_room, actor)
-        AddRoomObjEffect(False).execute(dungeon, target_room, actor)
+        AddRoomObjEffect().execute(dungeon, target_room, actor)
         dungeon.update_location()
         if not actor == dungeon.player:
             dungeon.add_to_message_queue_if_actor_visible(actor, [actor.get_name(), " exited the ", self.passage.get_name(), "."])
@@ -412,6 +411,10 @@ class PlayerCampfireInteractAction(PlayerInteractAction):
     
     def get_name(self):
         return "Rest"
+
+    def execute(self, dungeon):
+        RestoreMPEvent(10).execute(dungeon,self.interactable,dungeon.actor)
+        super().execute(dungeon)
 
     def get_choices(self, dungeon) -> list[InteractionAction]:
         actions = []
@@ -482,6 +485,19 @@ class EquipItemAction(InteractionAction):
     
     def get_name(self):
         return "Equip"
+
+class DiscardItemAction(InteractionAction):
+    def __init__(self, item : "Equipment"):
+        self.item = item
+    
+    def execute(self, dungeon) -> None:
+        dungeon.actor.remove_item(self.item)
+        AddRoomObjEffect().execute(dungeon, dungeon.place, self.item)
+        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " discarded the ", self.item.get_name(), "."])
+        dungeon.end_current_turn()
+    
+    def get_name(self):
+        return "Discard"
 
 class EatAction(InteractionAction):
     def __init__(self, food):

@@ -23,8 +23,8 @@ abilities : dict[str:Ability] = {
         effect=HealEvent(5)
     ),
     "poison":EndOfTurnEffect(
-        id="regen",
-        name=("poison","Regeneration"),
+        id="poison",
+        name=("poison","Poison"),
         effect=DamageEvent(5,"poison",-1)
     )
 }

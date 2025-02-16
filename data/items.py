@@ -114,9 +114,10 @@ magic_items : dict[str:Item] = {
         name=("magic","Magic Sword"),
         effect=EffectSequence([DamageEvent(8,"slashing"),DamageEvent(8,"arcane")])
     ),
-    "magic_staff":MeleeWeapon(
+    "magic_staff":MagicWeapon(
         name=("magic","Magic Staff"),
-        effect=RepeatEvent(DamageEvent(5,"arcane",2),3)
+        effect=RepeatEvent(DamageEvent(5,"arcane",3),3),
+        mana_cost=5
     ),
     "magic_axe":MeleeWeapon(
         name=("magic","Magic Axe"),
@@ -159,6 +160,30 @@ magic_items : dict[str:Item] = {
 }
 
 items.update(magic_items)
+
+magic_weapon_items : dict[str:Item] = {
+    "fire_tome":MagicWeapon(
+        name=("fire","Fire Tome"),
+        effect=DamageEvent(15,"fire"),
+        mana_cost=10
+    ),
+    "poison_tome":MagicWeapon(
+        name=("poison","Poison Tome"),
+        effect=EffectSequence([DamageEvent(5,"poison"),EffectSelectorPredefinedSource(AddAbilityEffect(), Status(get_ability("poison"),3))]),
+        mana_cost=10
+    ),
+    "lightning_tome":MagicWeapon(
+        name=("lightning","Lightning Tome"),
+        effect=EffectSequence([DamageEvent(10,"lightning"),EffectSelectorPredefinedSource(AddAbilityEffect(), Status(get_ability("stun"),5))]),
+        mana_cost=10
+    ),
+    "ultra_death":MeleeWeapon(
+        name=("lightning","Lightning Tome"),
+        effect=DamageEvent(110,"lightning"),
+    ),
+}
+
+items.update(magic_weapon_items)
 
 consumeable_items : dict[str:Item] = {
     "sharpening_stone":Sharpener(

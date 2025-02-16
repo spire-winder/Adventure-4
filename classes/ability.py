@@ -77,9 +77,12 @@ class ManaCost(Ability):
         super().__init__(id,name)
         self.mpcost = mpcost
     def apply(self, chain : list, effect : Effect):
-        if ((isinstance(effect, AttackEffect) and effect.source.get_weapon() == chain[5]) or
+        if len(chain)>=6 and ((isinstance(effect, AttackEffect) and effect.source.get_weapon() == chain[5]) or
             effect.source == chain[5] and isinstance(effect, UseEffect)):
-            if not chain[2].stathandler.get_stat("MP").spend(self.mpcost):
+            if not chain[2].stathandler.has_stat("MP"):
+                effect.dungeon.add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), " can't use mana!"])
+                effect.cancel()
+            elif not chain[2].stathandler.get_stat("MP").spend(self.mpcost):
                 effect.dungeon.add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), "'s mana ran out!"])
                 effect.cancel()
 
@@ -98,7 +101,7 @@ class MultiUse(Ability):
         super().__init__("multiuse","Multi Use")
         self.uses = uses
     def apply(self, chain : list, effect : Effect):
-        if ((isinstance(effect, AttackEffect) and effect.source.get_weapon() == chain[5]) or
+        if len(chain) >= 6 and ((isinstance(effect, AttackEffect) and effect.source.get_weapon() == chain[5]) or
             effect.source == chain[5] and isinstance(effect, UseEffect)):
             self.uses -= 1
             if self.uses <= 0:
@@ -166,7 +169,6 @@ class BattleCry(Ability):
         self.tag = tag_id
         self.strength = strength
     def apply(self, chain : list, effect : Effect):
-        utility.log(effect.dungeon.actor.has_ability(self.tag.id))
         if hasattr(effect, "damage") and effect.dungeon.actor.has_ability(self.tag.id):
             effect.damage += self.strength
 
@@ -194,7 +196,7 @@ class SelectiveBuff(Ability):
 
 class EndOfTurnEffect(Ability):
     def get_desc(self):
-        return utility.combine_text([self.effect.get_desc(), " each round."], False)
+        return utility.combine_text([self.effect.get_desc(), " each round"], False)
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], effect : Effect):
         super().__init__(id,name)
         self.effect = effect

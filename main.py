@@ -82,17 +82,14 @@ class Program:
         pass
 
     def set_center(self, new_center : urwid.Widget):
-        utility.log("actually setting the center")
         self.top.body = urwid.SolidFill(" ")
         self.center = new_center
         if 'loop' in globals():
-            utility.log("start timer")
             loop.set_alarm_in(0.1, self.set_body)
         else:
             self.top.body = self.center
 
     def set_body(self, a, b):
-        utility.log("now set it")
         self.top.body = self.center
 
     def exit_game(self, button : classes.ui.ActionButton) -> typing.NoReturn:

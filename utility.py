@@ -27,8 +27,9 @@ def combine_text(text : list[str | tuple[Hashable, str] | list[str | tuple[Hasha
 def tab_text(text : list[str | tuple[Hashable, str]]) -> list[str | tuple[Hashable, str]]:
     if text == None:
         return None
-    while None in text:
-        text.remove(None)
+    if isinstance(text, list):
+        while None in text:
+            text.remove(None)
     if len(text) == 0:
         return None
     new_list : list[str | tuple[Hashable, str]] = ["    "]

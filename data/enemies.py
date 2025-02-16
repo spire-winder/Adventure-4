@@ -24,6 +24,7 @@ enemies : dict[str:StateEntity] = {
         inventory=Inventory(
             EquipmentHandler({
                 "Weapon":None,
+                "Offhand":get_item("wooden_dagger"),
                 "Armor":get_item("leather_armor")
             })
         ), 
@@ -71,12 +72,12 @@ enemies : dict[str:StateEntity] = {
         AbilityHandler([get_ability("goblin")]),
         Inventory(
             EquipmentHandler({
-                "Weapon":get_item("magic_barbs"),
+                "Weapon":get_item("magic_staff"),
                 "Offhand":get_item("clarity_crystal"),
                 "Armor":get_item("magic_armor")
             })
         ), 
-        StatHandler({"HP":HPContainer(20)}),
+        StatHandler({"HP":HPContainer(20),"MP":MPContainer(20)}),
         DialogueManager(),
         IdleState()
     ),
@@ -85,11 +86,26 @@ enemies : dict[str:StateEntity] = {
         AbilityHandler([get_ability("goblin"),get_ability("goblin_boss")]),
         Inventory(
             EquipmentHandler({
-                "Weapon":get_item("magic_sword")
+                "Weapon":get_item("magic_sword"),
+                "Offhand":get_item("iron_shiv"),
             }),
             Bag(-1,[get_item("roast_beef")])
         ), 
         StatHandler({"HP":HPContainer(30)}),
+        DialogueManager(),
+        IdleState()
+    ),
+    "forest_mage" : StateEntity(
+        utility.alternate_colors("Forest Mage",["poison","magic"]), 
+        AbilityHandler(),
+        Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("poison_tome"),
+                "Armor":get_item("magic_helmet"),
+                "Boots":get_item("iron_boots")
+            })
+        ), 
+        StatHandler({"HP":HPContainer(30),"MP":MPContainer(50)}),
         DialogueManager(),
         IdleState()
     ),
