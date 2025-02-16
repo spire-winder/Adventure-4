@@ -29,7 +29,10 @@ def save_game(filename : str, game):
         pickle.dump(game,f)
 
 def delete_game(filename : str):
-    os.remove(get_save_filepath(filename))
+    try:
+        os.remove(get_save_filepath(filename))
+    except:
+        pass
 
 def has_save_of_name(filename : str) -> bool:
     return os.path.isfile(get_save_filepath(filename))
