@@ -74,7 +74,7 @@ enemies : dict[str:StateEntity] = {
             EquipmentHandler({
                 "Weapon":get_item("magic_staff"),
                 "Offhand":get_item("clarity_crystal"),
-                "Armor":get_item("magic_armor")
+                "Helmet":get_item("magic_helmet")
             })
         ), 
         StatHandler({"HP":HPContainer(20),"MP":MPContainer(20)}),
@@ -101,8 +101,7 @@ enemies : dict[str:StateEntity] = {
         Inventory(
             EquipmentHandler({
                 "Weapon":get_item("poison_tome"),
-                "Armor":get_item("magic_helmet"),
-                "Boots":get_item("iron_boots")
+                "Boots":get_item("magic_boots")
             })
         ), 
         StatHandler({"HP":HPContainer(30),"MP":MPContainer(50)}),
@@ -128,7 +127,8 @@ enemies : dict[str:StateEntity] = {
         Inventory(
             EquipmentHandler({
                 "Weapon":get_item("iron_axe"),
-                "Offhand":get_item("iron_shield")
+                "Offhand":get_item("iron_shield"),
+                "Armor":get_item("iron_armor")
             })
         ), 
         StatHandler({"HP":HPContainer(40)}),

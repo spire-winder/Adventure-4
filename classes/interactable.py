@@ -32,8 +32,6 @@ class Interactable:
         self.notif.emit(dungeon, notif)
     def handle_connecting_signals(self, dungeon):
         self.event.subscribe(dungeon.interaction_event)
-    def handle_disconnecting_signals(self, dungeon):
-        self.event.unsubscribe(dungeon.interaction_event)
     def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
         return self.name
 
@@ -448,7 +446,7 @@ class Container(RoomObject):
         return False
     
     def handle_connecting_signals(self, dungeon):
-        self.event.subscribe(dungeon.interaction_event)
+        super().handle_connecting_signals(dungeon)
         for object in self.contents:
             object.handle_connecting_signals(dungeon)
 
@@ -539,18 +537,21 @@ class StateEntity(Entity):
         self.default_state : State= state or IdleState()
         self.state : State = None
         
-        self.change_to_default_state()
+        self.change_to_default_state(None, False)
     
-    def change_to_default_state(self, dungeon = None):
-        self.change_state(self.default_state, dungeon)
+    def change_to_default_state(self, dungeon = None, act : bool = True):
+        self.change_state(self.default_state, dungeon, act)
 
-    def change_state(self, new_state : State, dungeon = None):
+    def change_state(self, new_state : State, dungeon = None, act : bool = True):
         if self.state != None:
             self.state.unregister(self)
         self.state : State = new_state
         self.state.register(self)
-        if dungeon != None:
-            self.state.decide(dungeon)
+        if act:
+            if dungeon != None:
+                self.state.decide(dungeon)
+            else:
+                self.event.emit(action=None)
 
     def take_turn(self, dungeon) -> None:
         self.state.decide(dungeon)

@@ -116,7 +116,7 @@ magic_items : dict[str:Item] = {
     ),
     "magic_staff":MagicWeapon(
         name=("magic","Magic Staff"),
-        effect=RepeatEvent(DamageEvent(5,"arcane",3),3),
+        effect=RepeatEvent(DamageEvent(8,"arcane",2),2),
         mana_cost=5
     ),
     "magic_axe":MeleeWeapon(
@@ -187,7 +187,7 @@ items.update(magic_weapon_items)
 
 consumeable_items : dict[str:Item] = {
     "sharpening_stone":Sharpener(
-        name="Sharpening Stone",
+        name=("iron","Sharpening Stone"),
         ability_handler=AbilityHandler([MultiUse(3)]),
         effect=SharpenEvent(0.5)
     ),
@@ -195,6 +195,11 @@ consumeable_items : dict[str:Item] = {
         name=("healing","Healing Potion"),
         ability_handler=AbilityHandler([SingleUse()]),
         effect=HealEvent(20)
+    ),
+    "restoration_potion":Potion(
+        name=("magic","Restoration Potion"),
+        ability_handler=AbilityHandler([SingleUse()]),
+        effect=RestoreMPEvent(20)
     ),
     "healing_potion_with_magic":Potion(
         name=utility.alternate_colors("Infused Healing Potion",["healing"*2,"magic"*2]),

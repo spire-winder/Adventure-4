@@ -59,6 +59,7 @@ class Dungeon:
         self.start_round()
 
     def start_round(self) -> None:
+        self.round_ended = False
         self.messagequeue = []
         self.generate_action_queue()
         self.current_interactable : Interactable = None
@@ -68,7 +69,7 @@ class Dungeon:
         self.place.interact()
     
     def generate_action_queue(self):
-        self.action_queue : list = []
+        self.action_queue : list[Actor] = []
         for x in self.map:
             self.map[x].add_to_action_queue(self.action_queue)
     
@@ -101,18 +102,19 @@ class Dungeon:
     def start_next_turn(self):
         if len(self.action_queue) == 0:
             #self.actor : Actor = None
-            self.end_of_round()
-            self.show_message_queue()
+            if not self.round_ended:
+                self.end_of_round()
+                self.show_message_queue()
         else:
             self.actor : Actor = self.action_queue.pop()
             self.update_location()
             if self.actor != None and self.place != None:
-                utility.log(self.actor.get_name())
                 self.actor.take_turn(self)
             else:
                 self.end_current_turn()
 
     def end_of_round(self):
+        self.round_ended = True
         chain : list = [self]
         for x in self.map:
             self.map[x].end_of_round(chain)

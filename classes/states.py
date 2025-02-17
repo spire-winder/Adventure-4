@@ -1,5 +1,6 @@
 import random
 import classes.actions
+import utility
 
 class State:
     def register(self, state_entity):
@@ -16,7 +17,7 @@ class PeacefulState(State):
     def state_entity_event(self, dungeon, notif ):
         if hasattr(notif.effect, "damage"):
             dungeon.add_to_message_queue_if_actor_visible(self.state_entity, [self.state_entity.get_name(), " moves to attack."])
-            self.state_entity.change_state(AttackingState())
+            self.state_entity.change_state(AttackingState(), None, False)
 
     def decide(self, dungeon):
         self.state_entity.event.emit(action=None)
@@ -56,7 +57,7 @@ class WanderState(State):
     def decide(self, dungeon ):
         current_room = dungeon.get_location_of_actor(self.state_entity)
         if dungeon.player in current_room.room_contents:
-            self.state_entity.change_state(AttackingState(), dungeon)
+            self.state_entity.change_state(AttackingState())
         else:
             if self.time > 0:
                 self.time -= 1
@@ -65,6 +66,6 @@ class WanderState(State):
                     passage = random.choice(passages)
                     self.state_entity.event.emit(action=classes.actions.EnterPassageAction(passage))
                 else:
-                    self.state_entity.change_to_default_state(dungeon)
+                    self.state_entity.change_to_default_state()
             else:
-                self.state_entity.change_to_default_state(dungeon)
+                self.state_entity.change_to_default_state()

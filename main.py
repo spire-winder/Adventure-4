@@ -3,10 +3,8 @@ import systems.save_system
 import typing
 import urwid
 from classes.game import Game
-import utility
-
-import data.maps
 import classes.ui
+import data.maps
 
 import os
 os.system('title Adventure 4')

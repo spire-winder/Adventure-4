@@ -99,7 +99,7 @@ standard_map : dict = {
         ("magic", "Overgrown Library"), 
         AbilityHandler(), 
         [
-            Container(("magic", "Overgrown Bookcase"), contents=[get_item("fire_tome")]),
+            Container(("magic", "Overgrown Bookcase"), contents=[get_item("fire_tome"),get_item("magic_armor"), get_item("restoration_potion")]),
             get_enemy("forest_mage"),
             Passage(("magic", "Northern Trail"), destination_id="forest_crossroad")
         ]
@@ -110,6 +110,7 @@ standard_map : dict = {
         [
             get_item("roast_beef"),
             get_enemy("fellow_traveller"),
+            get_item("iron_boots"),
             Campfire(("fire", "Small Campfire")),
             Passage(("stone", "Goblin Cave"), destination_id="goblin_cave"),
             Passage(("stone", "Stony Crossroads"), destination_id="ruins_crossroad")
@@ -122,7 +123,6 @@ standard_map : dict = {
             get_enemy("goblin_boss"),
             get_enemy("goblin_mage"),
             get_enemy("goblin_3"),
-            get_item("magic_boots"),
             Passage(("stone", "Entrance"), destination_id="goblin_cave_entrance")
         ]
     ),

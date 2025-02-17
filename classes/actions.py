@@ -36,7 +36,6 @@ class Notif:
 class RemoveRoomObjEffect(Effect):
     def execute(self, dungeon, source, target):
         source.remove_roomobject(target)
-        target.handle_disconnecting_signals(dungeon)
 
 class AddRoomObjEffect(Effect):
     def execute(self, dungeon, source, target):
@@ -112,8 +111,11 @@ class DeathEvent(Effect):
                 dungeon.game_over = True
             else:
                 for x in target.get_drops():
+                    x.drop_chance = 1
                     AddRoomObjEffect().execute(dungeon, death_room, x)
                     dungeon.add_to_message_queue_if_actor_visible(target, [target.get_name(), " dropped the ", x.get_name(), "."])
+                if target.has_ability("goblin_boss"):
+                    dungeon.add_to_message_queue(["You've completed the demo! Feel free to continue to explore, or try to fight the travellers as well for more items."])
             RemoveRoomObjEffect().execute(dungeon, death_room, target)
 
 class DamageEvent(Effect):
@@ -429,6 +431,7 @@ class TakeItemAction(InteractionAction):
     
     def execute(self, dungeon) -> None:
         if not dungeon.actor.can_take_item(self.item):
+            dungeon.end_current_turn()
             return
         if hasattr(self, "prev"):
             source = self.prev.interactable

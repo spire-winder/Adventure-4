@@ -1,10 +1,12 @@
+import utility
 
 class Event:
     def __init__(self):
         self.subscribers = []
 
     def subscribe(self, listener):
-        self.subscribers.append(listener)
+        if not listener in self.subscribers:
+            self.subscribers.append(listener)
 
     def unsubscribe(self, listener):
         self.subscribers.remove(listener)
