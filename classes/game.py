@@ -1,5 +1,6 @@
 from classes.ui import ActionButton
 from classes.ui import InteractableActionButton
+from classes.ui import BackActionButton
 import sys
 import urwid
 from systems.event_system import Event
@@ -53,7 +54,7 @@ class Game:
         if inter.interactable.include_back:
             room_list.append(urwid.Divider())
             if inter.prev != None:
-                room_list.append(InteractableActionButton(self.dungeon, inter.prev))
+                room_list.append(BackActionButton(self.dungeon, inter.prev))
             else:
                 room_list.append(ActionButton("Save and Quit", self.save_and_quit))
         center_widget : urwid.ListBox = urwid.ListBox(urwid.SimpleFocusListWalker(room_list))

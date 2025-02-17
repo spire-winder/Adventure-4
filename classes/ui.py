@@ -83,6 +83,15 @@ class InteractableActionButton(urwid.Button):
     def execute(self, button):
         self.action.execute(self.dungeon)
 
+class BackActionButton(InteractableActionButton):
+    def __init__(
+        self,
+        dungeon,
+        action : InteractionAction
+    ) -> None:
+        super().__init__(dungeon, action)
+        self._w = urwid.AttrMap(urwid.SelectableIcon("Back", 0), None, focus_map=focus_dict)
+
 class QuestionBox(urwid.Edit):
     def __init__(
         self,

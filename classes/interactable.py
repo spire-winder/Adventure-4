@@ -435,6 +435,8 @@ class Container(RoomObject):
         choices = []
         for x in self.contents:
             choices.append(PlayerInteractAction(x))
+        if len(choices) == 0:
+            choices.append(classes.actions.DummyAction(["There is nothing in the ", self.name, "."]))
         return choices
     def add_roomobject(self, obj_to_add : "RoomObject") -> None:
         self.contents.append(obj_to_add)

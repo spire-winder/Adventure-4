@@ -174,3 +174,9 @@ cython_debug/
 /maps
 /saves
 log.txt
+/main.build
+/main.dist
+/main.onefile-build
+/test.build
+/test.dist
+nuitka-crash-report.xml
