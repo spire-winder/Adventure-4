@@ -304,7 +304,10 @@ class EquipmentHandler(Interactable):
             if self.equipment_dict[x] == None:
                 choices.append(classes.actions.DummyAction([x, ": None"]))
             else:
-                choices.append(classes.actions.PlayerEquippedInteractAction(self.equipment_dict[x]))
+                if dungeon.actor.inventory.equipment_handler == self:
+                    choices.append(classes.actions.PlayerEquippedInteractAction(self.equipment_dict[x], True))
+                else:
+                    choices.append(classes.actions.PlayerEquippedInteractAction(self.equipment_dict[x], False))
         return choices
     
     def apply_statics(self, chain : list, effect : Effect):
@@ -516,6 +519,7 @@ class Entity(RoomObject):
         choices.append(classes.actions.PlayerInteractAction(self.stathandler))
         if self.ability_handler.has_abilities():
             choices.append(classes.actions.PlayerInteractAction(self.ability_handler))
+        choices.append(classes.actions.PlayerInteractAction(self.inventory.equipment_handler))
         return choices
 
     def apply_statics(self, chain : list, effect : Effect):

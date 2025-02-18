@@ -347,16 +347,18 @@ class PlayerInteractAction(InteractionAction):
 
 
 class PlayerEquippedInteractAction(PlayerInteractAction):
-    def __init__(self, interactable : "Equipment"):
+    def __init__(self, interactable : "Equipment", player_inv : bool):
         super().__init__(interactable)
+        self.player_inv = player_inv
     
     def get_name(self):
         return [self.interactable.equipment_slot, ": ", self.interactable.get_name()]
 
     def get_choices(self, dungeon) -> list[InteractionAction]:
         actions = []
-        if dungeon.actor.can_take_item(self.interactable):
-            actions.append(UnequipItemAction(self.interactable))
+        if self.player_inv:
+            if dungeon.actor.can_take_item(self.interactable):
+                actions.append(UnequipItemAction(self.interactable))
         return actions
 
 class PlayerBagInteractAction(PlayerInteractAction):
