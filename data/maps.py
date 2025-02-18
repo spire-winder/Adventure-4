@@ -128,6 +128,15 @@ standard_map : dict = {
     ),
 }
 
+map : dict[str:Room] = {}
+
+ruins_of_the_sun : dict[str:Room] = {
+    "starting_room": Room(
+        name=("stone", "Sky Chamber")
+    )
+}
+
+map.update(ruins_of_the_sun)
 
 systems.save_system.create_folder(systems.save_system.map_dir_name)
 systems.save_system.save_map("standard", standard_map)

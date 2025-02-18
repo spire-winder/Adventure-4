@@ -5,18 +5,18 @@ import urwid
 from classes.game import Game
 import classes.ui
 import data.maps
+import utility
 
 import os
 os.system('title Adventure 4')
-
 
 class Program:
     def __init__(self) -> None:
         self.load_ui()
         self.load_main_menu()
-    
+
     def load_ui(self):
-        self.header : urwid.Widget = urwid.AttrMap(urwid.Text("Adventure 4", align="center"), "header")
+        self.header : urwid.Widget = urwid.AttrMap(urwid.Text("Adventure 4 - DEMO", align="center"), "header")
         self.center : urwid.Widget = urwid.Text("")
         self.top : urwid.Frame = urwid.Frame(self.center, header=self.header)
 
