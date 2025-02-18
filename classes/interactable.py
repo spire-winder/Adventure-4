@@ -129,6 +129,15 @@ class Item(RoomObject):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
         return [classes.actions.TakeItemAction(self, dungeon.previous_interactable)]
 
+class DestructionTool(Item):
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, quality : float = 1.0) -> None:
+        super().__init__(name, ability_handler, drop_chance)
+        self.quality = quality
+
+class Shovel(DestructionTool):
+    def dig(self):
+        pass
+
 class UsableItem(Item):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None) -> None:
         super().__init__(name, ability_handler, drop_chance)
@@ -455,6 +464,39 @@ class Container(RoomObject):
         for object in self.contents:
             object.handle_connecting_signals(dungeon)
 
+class Destructible(RoomObject):
+    def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = None, contents : list[RoomObject] = None, action_type : str = "dig"):
+        super().__init__(name, ability_handler)
+        self.contents : list[RoomObject] = contents or []
+        self.action_type : str = action_type
+    
+    def get_choices(self, dungeon) -> MutableSequence[classes.actions.InteractionAction]:
+        if len(dungeon.actor.get_items_in_bag(lambda item : hasattr(item,self.action_type))) > 0:
+            return [classes.actions.PlayerDestructibleInteractAction(self)]
+        else:
+            return [classes.actions.DummyAction(["You need an item that can ", self.action_type, " the ", self.name, "."])]
+
+    def add_roomobject(self, obj_to_add : "RoomObject") -> None:
+        self.contents.append(obj_to_add)
+
+    def remove_roomobject(self, obj_to_remove : "RoomObject") -> bool:
+        if self.contents.__contains__(obj_to_remove):
+            self.contents.remove(obj_to_remove)
+            return True
+        return False
+    
+    def handle_connecting_signals(self, dungeon):
+        super().handle_connecting_signals(dungeon)
+        for object in self.contents:
+            object.handle_connecting_signals(dungeon)
+    
+    def get_drops(self, item : Item) -> list[Item]:
+        drops : list[Item] = []
+        for x in self.contents:
+            if random.random() ** item.quality <= (x.drop_chance):
+                drops.append(x)
+        return drops
+
 class Entity(RoomObject):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, inventory : Inventory = None, stathandler : StatHandler = None, dialogue_manager : DialogueManager = None):
         super().__init__(name, ability_handler)
@@ -479,7 +521,7 @@ class Entity(RoomObject):
     
     def get_drops(self) -> list[Item]:
         all_items : list[Item] = self.inventory.get_all_items()
-        drops : list[Equipment] = []
+        drops : list[Item] = []
         for x in all_items:
             if random.random() <= x.drop_chance:
                 drops.append(x)

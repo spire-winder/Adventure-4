@@ -259,5 +259,14 @@ enemy_items : dict[str:Item] = {
 
 items.update(enemy_items)
 
+tools : dict[str:Item] = {
+    "shovel":Shovel(
+        name=("iron","Shovel"),
+        drop_chance=0
+    )
+}
+
+items.update(tools)
+
 def get_item(item_id : str) -> Item:
     return copy.deepcopy(items[item_id])

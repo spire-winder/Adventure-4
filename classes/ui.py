@@ -5,29 +5,40 @@ if typing.TYPE_CHECKING:
     from classes.actions import InteractionAction
     from collections.abc import Callable, Hashable, MutableSequence
 
-base_palette = [
-    ("stone", "light gray", ""),
-    ("iron", "dark gray", ""),
-    ("wood", "brown", ""),
-    ("magic", "light magenta", ""),
-    ("goblin", "light green", ""),
-    ("fire", "light red", ""),
+ui_palette = [
     ("header", "white", "dark gray"),
     ("status_full", "light green", ""),
     ("status_depleted", "yellow", ""),
     ("status_empty", "light red", ""),
-    ("damage", "dark red", ""),
-    ("melee", "dark red", ""),
-    ("bashing", "dark red", ""),
-    ("slashing", "dark red", ""),
+]
+
+material_palette = [
+    ("sand", "yellow", ""),
+    ("stone", "light gray", ""),
+    ("iron", "dark gray", ""),
+    ("wood", "brown", ""),
+    ("goblin", "light green", ""),
     ("stunned", "yellow", ""),
     ("healing", "light green", ""),
-    ("arcane", "dark magenta", ""),
     ("meat", "light red", ""),
     ("food", "brown", ""),
-    ("poison", "dark green", ""),
-    ("lightning", "yellow", ""),
 ]
+
+damage_types = [
+    ("damage", "dark red", ""),
+    ("melee", "dark red", ""),
+    ("magic", "light magenta", ""),
+    ("slashing", "dark red", ""),
+    ("bashing", "dark red", ""),
+    ("arcane", "dark magenta", ""),
+    ("heat", "light red", ""),
+    ("cold", "light cyan", ""),
+    ("celestial", "light blue", ""),
+    ("shadow", "black", "white"),
+    ("toxic", "dark green", ""),
+]
+
+base_palette = ui_palette + material_palette + damage_types
 
 unique_palette = [
     ("reversed", "standout", "")

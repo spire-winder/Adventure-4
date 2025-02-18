@@ -1,7 +1,8 @@
 from classes.interactable import *
 from classes.actions import *
 from classes.states import *
-from data.enemies import *
+from data.enemies import get_enemy
+from data.items import get_item
 import systems.save_system
 import copy
 
@@ -15,7 +16,7 @@ player : Player = Player(
             "Helmet":None,
             "Armor":None,
             "Boots":None,
-            "Ring":None,
+            "Ring":None
         }),
         Bag(10)),
     StatHandler({
@@ -32,10 +33,12 @@ standard_map : dict = {
             copy.deepcopy(player),
             get_enemy("wise_figure"),
             Container(("wood","Wooden Chest"), AbilityHandler(), [
+                get_item("shovel"),
                 get_item("wooden_bo"),
                 get_item("roast_chicken"),
                 get_item("healing_potion")
             ]),
+            Destructible("Sand Pile", contents=[get_item("magic_helmet")],action_type="dig"),
             Campfire(("fire", "Roaring Bonfire")),
             Passage(("stone","Eastern Crumbling Doorway"), destination_id="ruins_exit")
         ]
@@ -130,13 +133,63 @@ standard_map : dict = {
 
 map : dict[str:Room] = {}
 
-ruins_of_the_sun : dict[str:Room] = {
+"""ruins_of_the_sun : dict[str:Room] = {
     "starting_room": Room(
-        name=("stone", "Sky Chamber")
-    )
+        name=[("celestial", "Sky"),("stone", " Chamber")],
+        room_contents=[
+            get_enemy("wise_figure")
+        ]
+    ),
+    "decrepit_cellar": Room(
+        name=("stone", "Decrepit Cellar"),
+        room_contents=[
+            get_enemy("greedling")
+        ]
+    ),
+    "stone_rotunda": Room(
+        name=("stone", "Stone Rotunda"),
+        room_contents=[
+            get_enemy("large_greedling")
+        ]
+    ),
+    "western_hallway": Room(
+        name=("stone", "Western Hallway"),
+        room_contents=[
+            get_enemy("greedling"),
+            get_enemy("arcane_greedling")
+        ]
+    ),
+    "emptied_armory": Room(
+        name=("stone", "Emptied Armory"),
+        room_contents=[
+            get_enemy("greedling")
+        ]
+    ),
+    "crypt_of_the_sunblessed": Room(
+        name=[("stone", "Crypt of the "), ("celestial", "Sunblessed")],
+        room_contents=[
+            get_enemy("shadow_greedling")
+        ]
+    ),
+    "sandy_chapel": Room(
+        name=[("sand", "Sandy "), ("stone", "Chapel")],
+        room_contents=[
+        ]
+    ),
+    "ransacked_vault": Room(
+        name=("stone", "Ransacked Vault"),
+        room_contents=[
+            get_enemy("starved_greedling")
+        ]
+    ),
+    "crumbling_entrance": Room(
+        name=("stone", "Crumbling Entrance"),
+        room_contents=[
+        ]
+    ),
 }
 
 map.update(ruins_of_the_sun)
-
+"""
 systems.save_system.create_folder(systems.save_system.map_dir_name)
 systems.save_system.save_map("standard", standard_map)

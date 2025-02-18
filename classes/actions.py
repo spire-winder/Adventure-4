@@ -12,6 +12,7 @@ if typing.TYPE_CHECKING:
     from classes.interactable import Equipment
     from classes.interactable import Item
     from classes.interactable import Campfire
+    from classes.interactable import Destructible
 
 class Effect:
     def execute_with_statics(self, dungeon, source, target):
@@ -426,6 +427,19 @@ class PlayerCampfireInteractAction(PlayerInteractAction):
             actions.append(EatAction(x))
         return actions
 
+class PlayerDestructibleInteractAction(PlayerInteractAction):
+    def __init__(self, interactable : "Destructible"):
+        super().__init__(interactable)
+    
+    def get_name(self):
+        return self.interactable.action_type.capitalize()
+
+    def get_choices(self, dungeon) -> list[InteractionAction]:
+        actions = []
+        for x in dungeon.actor.get_items_in_bag(lambda item : hasattr(item,self.interactable.action_type)):
+            actions.append(DestroyAction(x, self.interactable))
+        return actions
+
 class TakeItemAction(InteractionAction):
     def __init__(self, item, source = None):
         self.item = item
@@ -518,6 +532,25 @@ class EatAction(InteractionAction):
     
     def get_name(self):
         return ["Eat the ", self.food.get_name()]
+
+class DestroyAction(InteractionAction):
+    def __init__(self, tool, destructible):
+        self.tool = tool
+        self.destructible = destructible
+    
+    def execute(self, dungeon) -> None:
+        destruction_room = dungeon.get_location_of_actor(self.destructible)
+        dungeon.add_to_message_queue_if_visible([
+            dungeon.actor.get_name(), " destroyed the ", 
+            self.destructible.get_name()," using the ", self.tool.get_name(), "."])
+        for x in self.destructible.get_drops(self.tool):
+            x.drop_chance = 1
+            AddRoomObjEffect().execute(dungeon, destruction_room, x)
+        RemoveRoomObjEffect().execute(dungeon, destruction_room, self.destructible)
+        dungeon.end_current_turn()
+    
+    def get_name(self):
+        return [self.destructible.action_type, " with the ", self.tool.get_name()]
 
 class UseAction(InteractionAction):
     def __init__(self, item, target):
