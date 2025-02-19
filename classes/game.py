@@ -5,10 +5,6 @@ import sys
 import urwid
 from systems.event_system import Event
 import systems.save_system
-from classes.interactable import Interactable
-from classes.interactable import Player
-from classes.interactable import RoomObject
-from classes.interactable import Room
 import classes.dungeon
 import classes.actions
 import utility
@@ -80,7 +76,6 @@ class Game:
         systems.save_system.delete_game(self.save_file)
 
     def delete_and_quit(self, button : ActionButton) -> None:
-        self.delete_save()
         self.quit_event.emit()
 
     def save_and_quit(self, button : ActionButton) -> None:

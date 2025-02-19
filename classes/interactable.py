@@ -7,8 +7,6 @@ from classes.states import *
 from classes.ability import Ability
 from classes.ability import Sharpness
 from classes.ability import ManaCost
-from data.dialogue import DialogueNode
-from data.dialogue import get_dialogue
 from data.abilities import get_ability
 import classes.actions
 import copy
@@ -179,6 +177,55 @@ class Equipment(Item):
     def get_description(self):
         return self.ability_handler.get_description()
 
+class Weapon(Equipment):
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None) -> None:
+        super().__init__(name, ability_handler, drop_chance, "Weapon")
+        self.effect = effect or Effect()
+    
+    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        if hasattr(self.effect, "get_desc"):
+            return utility.combine_text([self.effect.get_desc(), self.ability_handler.get_description()])
+        else:
+            return None
+
+    def attack(self, dungeon, target):
+        copy.deepcopy(self.effect).execute_with_statics(dungeon, self, target)
+
+class MeleeWeapon(Weapon):
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None, sharpness : float = 1.0) -> None:
+        super().__init__(name, ability_handler, drop_chance, effect)
+        self.ability_handler.add_ability(get_ability("melee"))
+        self.ability_handler.add_ability(Sharpness("sharpness","Sharpness",sharpness))
+    
+    def attack(self, dungeon, target):
+        super().attack(dungeon, target)
+        DullWeaponEvent().execute(dungeon, target, self)
+     
+    def dull(self, amount : float):
+        self.ability_handler.get_ability("sharpness").dull(amount)
+    def sharpen(self, amount : float):
+        self.ability_handler.get_ability("sharpness").sharpen(amount)
+
+class MagicWeapon(Weapon):
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None, mana_cost : int = 10) -> None:
+        super().__init__(name, ability_handler, drop_chance, effect)
+        self.ability_handler.add_ability(get_ability("magic"))
+        self.ability_handler.add_ability(ManaCost("manacost","Mana Cost", mana_cost))
+
+class Food(Item):
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, effect : classes.actions.Effect = None) -> None:
+        super().__init__(name, ability_handler)
+        self.effect = effect or Effect()
+    
+    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        if hasattr(self.effect, "get_desc"):
+            return self.effect.get_desc()
+        else:
+            return []
+
+    def eat(self, dungeon, target):
+        copy.deepcopy(self.effect).execute_with_statics(dungeon, dungeon.actor, target)
+
 class Stat:
     def get_text():
         raise NotImplementedError("Subclasses must implement get_text()")
@@ -250,6 +297,9 @@ class StatHandler(Interactable):
         for p in self.stat_dict:
             text_list.append([p,": ", self.stat_dict[p].get_text()])
         return utility.combine_text(text_list)
+
+from data.dialogue import DialogueNode
+from data.dialogue import get_dialogue
 
 class DialogueManager(Interactable):
     def __init__(self, root_dialogue_id : str = None):
@@ -603,55 +653,6 @@ class StateEntity(Entity):
 
     def take_turn(self, dungeon) -> None:
         self.state.decide(dungeon)
-
-class Weapon(Equipment):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None) -> None:
-        super().__init__(name, ability_handler, drop_chance, "Weapon")
-        self.effect = effect or Effect()
-    
-    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        if hasattr(self.effect, "get_desc"):
-            return utility.combine_text([self.effect.get_desc(), self.ability_handler.get_description()])
-        else:
-            return None
-
-    def attack(self, dungeon, target : Entity):
-        copy.deepcopy(self.effect).execute_with_statics(dungeon, self, target)
-
-class MeleeWeapon(Weapon):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None, sharpness : float = 1.0) -> None:
-        super().__init__(name, ability_handler, drop_chance, effect)
-        self.ability_handler.add_ability(get_ability("melee"))
-        self.ability_handler.add_ability(Sharpness("sharpness","Sharpness",sharpness))
-    
-    def attack(self, dungeon, target : Entity):
-        super().attack(dungeon, target)
-        DullWeaponEvent().execute(dungeon, target, self)
-     
-    def dull(self, amount : float):
-        self.ability_handler.get_ability("sharpness").dull(amount)
-    def sharpen(self, amount : float):
-        self.ability_handler.get_ability("sharpness").sharpen(amount)
-
-class MagicWeapon(Weapon):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, effect : classes.actions.Effect = None, mana_cost : int = 10) -> None:
-        super().__init__(name, ability_handler, drop_chance, effect)
-        self.ability_handler.add_ability(get_ability("magic"))
-        self.ability_handler.add_ability(ManaCost("manacost","Mana Cost", mana_cost))
-
-class Food(Item):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, effect : classes.actions.Effect = None) -> None:
-        super().__init__(name, ability_handler)
-        self.effect = effect or Effect()
-    
-    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        if hasattr(self.effect, "get_desc"):
-            return self.effect.get_desc()
-        else:
-            return []
-
-    def eat(self, dungeon, target : Entity):
-        copy.deepcopy(self.effect).execute_with_statics(dungeon, dungeon.actor, target)
 
 class Room(Actor):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = None, room_contents : list["RoomObject"] = None) -> None:

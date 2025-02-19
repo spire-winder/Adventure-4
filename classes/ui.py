@@ -36,6 +36,7 @@ damage_types = [
     ("celestial", "light blue", ""),
     ("shadow", "black", "white"),
     ("toxic", "dark green", ""),
+    ("lightning", "yellow", ""),
 ]
 
 base_palette = ui_palette + material_palette + damage_types

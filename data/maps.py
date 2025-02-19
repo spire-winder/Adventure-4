@@ -33,13 +33,11 @@ standard_map : dict = {
             copy.deepcopy(player),
             get_enemy("wise_figure"),
             Container(("wood","Wooden Chest"), AbilityHandler(), [
-                get_item("shovel"),
                 get_item("wooden_bo"),
                 get_item("roast_chicken"),
                 get_item("healing_potion")
             ]),
-            Destructible("Sand Pile", contents=[get_item("magic_helmet")],action_type="dig"),
-            Campfire(("fire", "Roaring Bonfire")),
+            Campfire(("heat", "Roaring Bonfire")),
             Passage(("stone","Eastern Crumbling Doorway"), destination_id="ruins_exit")
         ]
     ),
@@ -83,7 +81,7 @@ standard_map : dict = {
             get_item("iron_ring"),
             get_item("bone_marrow_stew"),
             get_item("sharpening_stone"),
-            Campfire(utility.alternate_colors("Magical Campfire",["magic","fire"])),
+            Campfire(utility.alternate_colors("Magical Campfire",["magic","heat"])),
             Passage(("magic", "Northern Trail"), destination_id="magic_woods_entrance"),
             Passage(("magic", "Western Clearing"), destination_id="forest_clearing"),
             Passage(("magic", "Southern Trail"), destination_id="forest_library")
@@ -114,7 +112,7 @@ standard_map : dict = {
             get_item("roast_beef"),
             get_enemy("fellow_traveller"),
             get_item("iron_boots"),
-            Campfire(("fire", "Small Campfire")),
+            Campfire(("heat", "Small Campfire")),
             Passage(("stone", "Goblin Cave"), destination_id="goblin_cave"),
             Passage(("stone", "Stony Crossroads"), destination_id="ruins_crossroad")
         ]

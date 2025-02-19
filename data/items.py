@@ -163,13 +163,13 @@ items.update(magic_items)
 
 magic_weapon_items : dict[str:Item] = {
     "fire_tome":MagicWeapon(
-        name=("fire","Fire Tome"),
-        effect=DamageEvent(15,"fire"),
+        name=("heat","Fire Tome"),
+        effect=DamageEvent(15,"heat"),
         mana_cost=10
     ),
     "poison_tome":MagicWeapon(
         name=("poison","Poison Tome"),
-        effect=EffectSequence([DamageEvent(5,"poison"),EffectSelectorPredefinedSource(AddAbilityEffect(), Status(get_ability("poison"),3))]),
+        effect=EffectSequence([DamageEvent(5,"toxic"),EffectSelectorPredefinedSource(AddAbilityEffect(), Status(get_ability("poison"),3))]),
         mana_cost=10
     ),
     "lightning_tome":MagicWeapon(

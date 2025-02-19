@@ -98,7 +98,10 @@ class AddtoInventoryEvent(Effect):
         return ["Adds to inventory"]
     
     def execute(self, dungeon, source, target):
-        source.take_item(target)
+        if source.can_take_item(target):
+            source.take_item(target)
+        else:
+            AddRoomObjEffect().execute(dungeon, dungeon.place, target)
 
 class DeathEvent(Effect):
     def get_desc(self):
@@ -263,6 +266,18 @@ class EffectSelectorTarget(EffectSelector):
             self.effect.execute_with_statics(dungeon, source, target)
     def get_desc(self):
         return utility.combine_text(["Target:",utility.tab_text(self.effect.get_desc())])
+
+class EffectSelectorPlayerSource(EffectSelector):
+    def execute(self, dungeon, source, target):
+        self.effect.execute(dungeon, dungeon.player, target)
+    def execute_with_statics(self, dungeon, source, target):
+        self.dungeon = dungeon
+        self.source = source
+        self.target = target
+        self.cancelled = False
+        dungeon.apply_statics(self)
+        if not self.cancelled:
+            self.effect.execute_with_statics(dungeon, dungeon.player, target)
 
 class EffectSelectorSelf(EffectSelector):
     def execute(self, dungeon, source, target):

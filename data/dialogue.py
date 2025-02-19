@@ -1,5 +1,6 @@
 from classes.actions import *
 from collections.abc import Callable, Hashable, MutableSequence
+from data.items import get_item
 
 class DialogueNode:
     def __init__(self, response_text : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], text : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], choices : str | list[str] = None, effect : Effect = None):
@@ -71,11 +72,17 @@ dialogue_nodes : dict[str:DialogueNode] = {
     "fellow_traveller_3" : DialogueNode(
         "Why?",
         ["\"There's a goblin cave to the north of here. I'd hate to lose another human down here.\""],
-        None
+        "fellow_traveller_4"
     ),
     "fellow_traveller_4" : DialogueNode(
         "I'll be fine",
-        ["\"Suit yourself.\""],
+        ["\"Well, no matter what happens, why don't you take this. Hopefully it will help.\""],
+        "fellow_traveller_5",
+        EffectSelectorPlayerSource(EffectSelectorPredefinedTarget(AddtoInventoryEvent(), get_item("lightning_tome")))
+    ),
+    "fellow_traveller_5" : DialogueNode(
+        "Thank you!",
+        ["\"Well, no matter what happens, why don't you take this. Hopefully it will help.\""],
         None,
         EffectSelectorPredefinedTarget(SetDialogueEffect(),"fellow_traveller_done")
     ),
