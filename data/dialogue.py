@@ -1,6 +1,7 @@
 from classes.actions import *
 from collections.abc import Callable, Hashable, MutableSequence
 from data.items import get_item
+from functools import partial
 
 class DialogueNode:
     def __init__(self, response_text : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], text : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], choices : str | list[str] = None, effect : Effect = None):
@@ -46,17 +47,17 @@ dialogue_nodes : dict[str:DialogueNode] = {
     "wise_figure_4" : DialogueNode(
         "Subterra?",
         ["\"Yes, that's what we call this.\"\nThe figure gestures around to an abandoned temple.\n\"These are the Ruins of the Sun.\nBefore, we were a mighty religion, but we've crumbled to dust.\""],
-        "wise_figure_5",
+        "wise_figure_5"
     ),
     "wise_figure_5" : DialogueNode(
         "How can I leave?",
         ["\"Well, this won't be easy for you to hear...\nThere is no way out. As far as we know, at least.\nFor now, why don't you take some supplies from that wooden chest and explore around for a bit.\""],
         None,
-        EffectSelectorPredefinedTarget(SetDialogueEffect(),"wise_figure_done")
+        SetDialogueEffect(source="wise_figure_done",target="speaker")
     ),
     "wise_figure_done" : DialogueNode(
         None,
-        ["\"Good luck out there.\""],
+        ["\"Good luck out there. Live long, friend.\""],
         None,
     ),
     "fellow_traveller_1" : DialogueNode(
@@ -78,13 +79,13 @@ dialogue_nodes : dict[str:DialogueNode] = {
         "I'll be fine",
         ["\"Well, no matter what happens, why don't you take this. Hopefully it will help.\""],
         "fellow_traveller_5",
-        EffectSelectorPlayerSource(EffectSelectorPredefinedTarget(AddtoInventoryEvent(), get_item("lightning_tome")))
+        AddtoInventoryEvent("player",get_item("lightning_tome"))
     ),
     "fellow_traveller_5" : DialogueNode(
         "Thank you!",
-        ["\"Well, no matter what happens, why don't you take this. Hopefully it will help.\""],
+        ["\"Live long, friend.\""],
         None,
-        EffectSelectorPredefinedTarget(SetDialogueEffect(),"fellow_traveller_done")
+        SetDialogueEffect(source="fellow_traveller_done",target="speaker")
     ),
     "fellow_traveller_done" : DialogueNode(
         None,

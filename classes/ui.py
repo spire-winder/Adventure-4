@@ -2,7 +2,7 @@ from __future__ import annotations
 import urwid
 import typing
 if typing.TYPE_CHECKING:
-    from classes.actions import InteractionAction
+    from classes.actions import PlayerAction
     from collections.abc import Callable, Hashable, MutableSequence
 
 ui_palette = [
@@ -85,7 +85,7 @@ class InteractableActionButton(urwid.Button):
     def __init__(
         self,
         dungeon,
-        action : InteractionAction
+        action : PlayerAction
     ) -> None:
         self.dungeon = dungeon
         self.action = action
@@ -99,7 +99,7 @@ class BackActionButton(InteractableActionButton):
     def __init__(
         self,
         dungeon,
-        action : InteractionAction
+        action : PlayerAction
     ) -> None:
         super().__init__(dungeon, action)
         self._w = urwid.AttrMap(urwid.SelectableIcon("Back", 0), None, focus_map=focus_dict)

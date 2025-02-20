@@ -96,7 +96,7 @@ enemies : dict[str:StateEntity] = {
         IdleState()
     ),
     "forest_mage" : StateEntity(
-        utility.alternate_colors("Forest Mage",["poison","magic"]), 
+        utility.alternate_colors("Forest Mage",["toxic","magic"]), 
         AbilityHandler(),
         Inventory(
             EquipmentHandler({
@@ -109,8 +109,8 @@ enemies : dict[str:StateEntity] = {
         IdleState()
     ),
     "wise_figure" : StateEntity(
-        ("wood","Wise Figure"), 
-        AbilityHandler([ImmuneToAbility("wise","Wise", get_ability("stun"))]),
+        ("celestial","Wise Figure"), 
+        AbilityHandler([ImmuneToAbility("wise",("celestial","Wise"), get_ability("stun"))]),
         Inventory(
             EquipmentHandler({
                 "Weapon":get_item("magic_axe"),
@@ -122,8 +122,8 @@ enemies : dict[str:StateEntity] = {
         PeacefulState()
     ),
     "fellow_traveller" : StateEntity(
-        ("wood","Fellow Traveller"), 
-        AbilityHandler([ImmuneToAbility("tough","Tough", get_ability("poison"))]),
+        ("iron","Fellow Traveller"), 
+        AbilityHandler([ImmuneToAbility("tough",("iron","Tough"), get_ability("poison"))]),
         Inventory(
             EquipmentHandler({
                 "Weapon":get_item("iron_axe"),

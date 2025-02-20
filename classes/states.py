@@ -17,28 +17,25 @@ class PeacefulState(State):
     def state_entity_event(self, dungeon, notif ):
         if hasattr(notif.effect, "damage"):
             dungeon.add_to_message_queue_if_actor_visible(self.state_entity, [self.state_entity.get_name(), " moves to attack."])
-            self.state_entity.change_state(AttackingState(), None, False)
+            self.state_entity.change_state(AttackingState(), dungeon, False)
 
     def decide(self, dungeon):
-        self.state_entity.event.emit(action=None)
+        pass
 
 class IdleState(State):
     def decide(self, dungeon ):
         current_room = dungeon.get_location_of_actor(self.state_entity)
         if dungeon.player in current_room.room_contents:
             dungeon.add_to_message_queue_if_actor_visible(self.state_entity, [self.state_entity.get_name(), " notices ", dungeon.player.get_name(), "."])
-            self.state_entity.change_state(AttackingState())
-        self.state_entity.event.emit(action=None)
+            self.state_entity.change_state(AttackingState(), dungeon)
 
 class AttackingState(State):
     def find_weapon(self, dungeon) -> bool:
         current_room = dungeon.get_location_of_actor(self.state_entity)
-        weapons = current_room.get_roomobjects(lambda item : hasattr(item, "attack"))
+        weapons = current_room.get_roomobjects(lambda item : hasattr(item, "attackeffect"))
         if weapons != []:
             weapon = random.choice(weapons)
-            self.state_entity.event.emit(action=classes.actions.TakeItemAction(weapon, current_room))
-        else:
-            self.state_entity.event.emit(action=None)
+            classes.actions.TakeItemEffect(current_room, self.state_entity, weapon).execute_with_statics(dungeon)
     
     def decide(self, dungeon ):
         current_room = dungeon.get_location_of_actor(self.state_entity)
@@ -46,9 +43,9 @@ class AttackingState(State):
             if not self.state_entity.has_weapon():
                 self.find_weapon(dungeon)
             else:
-                self.state_entity.event.emit(action=classes.actions.AttackAction(dungeon.player))
+                classes.actions.UseEffect(self.state_entity, dungeon.player, self.state_entity.get_weapon(), "attacks").execute_with_statics(dungeon)
         else:
-            self.state_entity.change_state(WanderState(3), dungeon)
+            self.state_entity.change_state(WanderState(3), dungeon, True)
 
 class WanderState(State):
     def __init__(self,time : int):
@@ -57,14 +54,14 @@ class WanderState(State):
     def decide(self, dungeon ):
         current_room = dungeon.get_location_of_actor(self.state_entity)
         if dungeon.player in current_room.room_contents:
-            self.state_entity.change_state(AttackingState())
+            self.state_entity.change_state(AttackingState(), dungeon)
         else:
             if self.time > 0:
                 self.time -= 1
                 passages = current_room.get_roomobjects(lambda item : hasattr(item, "destination_id"))
                 if len(passages) >= 1:
                     passage = random.choice(passages)
-                    self.state_entity.event.emit(action=classes.actions.EnterPassageAction(passage))
+                    classes.actions.EnterPassageEffect(self.state_entity, passage).execute_with_statics(dungeon)
                 else:
                     self.state_entity.change_to_default_state()
             else:

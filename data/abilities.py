@@ -20,12 +20,12 @@ abilities : dict[str:Ability] = {
     "regen":EndOfTurnEffect(
         id="regen",
         name=("healing","Regeneration"),
-        effect=HealEvent(5)
+        effect=HealEvent("self","user",5)
     ),
     "poison":EndOfTurnEffect(
         id="poison",
-        name=("poison","Poison"),
-        effect=DamageEvent(5,"poison",-1)
+        name=("toxic","Poison"),
+        effect=DamageEvent("self","user",5,"toxic",-1)
     )
 }
 

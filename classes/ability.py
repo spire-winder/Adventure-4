@@ -46,7 +46,7 @@ class Status(Ability):
         self.ability.end_of_round(chain)
         self.current_duration -= 1
         if self.current_duration <= 0:
-            EndStatusEffect().execute_with_statics(chain[0], chain[2], self)
+            EndStatusEffect(chain[2], self).execute_with_statics(chain[0])
     def is_id(self, the_id : str) -> bool:
         return the_id == self.ability.id
     def __gt__(self, a : "Status") -> bool:
@@ -60,9 +60,11 @@ class Sharpness(Ability):
         super().__init__(id,name)
         self.sharpness : float = sharpness
     def apply(self, chain : list, effect : Effect):
-        if hasattr(effect, "damage") and len(chain)>=6 and effect.source == chain[5]:
+        if hasattr(effect, "damage") and effect.source == chain[-2]:
             effect.damage *= self.sharpness
             effect.damage = math.ceil(effect.damage)
+        if isinstance(effect, UseEffect) and effect.item == chain[-2]:
+            self.dull(random.random() * 0.1 + 0.9)
     def dull(self, amount : float):
         self.sharpness *= amount
     def sharpen(self, amount : float):
@@ -77,35 +79,35 @@ class ManaCost(Ability):
         super().__init__(id,name)
         self.mpcost = mpcost
     def apply(self, chain : list, effect : Effect):
-        if len(chain)>=6 and ((isinstance(effect, AttackEffect) and effect.source.get_weapon() == chain[5]) or
-            effect.source == chain[5] and isinstance(effect, UseEffect)):
+        if isinstance(effect, UseEffect) and effect.item == chain[-2]:
             if not chain[2].stathandler.has_stat("MP"):
-                effect.dungeon.add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), " can't use mana!"])
+                chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), " can't use mana!"])
                 effect.cancel()
             elif not chain[2].stathandler.get_stat("MP").spend(self.mpcost):
-                effect.dungeon.add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), "'s mana ran out!"])
+                chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), "'s mana ran out!"])
                 effect.cancel()
 
 class SingleUse(Ability):
     def __init__(self):
         super().__init__("singleuse","Single Use",None)
     def apply(self, chain : list, effect : Effect):
-        if len(chain) >= 6 and ((isinstance(effect, AttackEffect) and effect.source.get_weapon() == chain[5]) or
-            effect.source == chain[5] and isinstance(effect, UseEffect)):
-            chain[3].bag.remove_item(chain[5])
+        if isinstance(effect, UseEffect) and effect.item == chain[-2]:
+            chain[3].bag.remove_item(chain[-2])
 
 class MultiUse(Ability):
     def get_desc(self):
-        return ["Can only be used ", str(self.uses), " more times"]
+        if self.uses == 1:
+            return ["Can only be used ", str(self.uses), " more time"]
+        else:
+            return ["Can only be used ", str(self.uses), " more times"]
     def __init__(self, uses : int):
-        super().__init__("multiuse","Multi Use")
+        super().__init__("multiuse","Limited Uses")
         self.uses = uses
     def apply(self, chain : list, effect : Effect):
-        if len(chain) >= 6 and ((isinstance(effect, AttackEffect) and effect.source.get_weapon() == chain[5]) or
-            effect.source == chain[5] and isinstance(effect, UseEffect)):
+        if isinstance(effect, UseEffect) and effect.item == chain[-2]:
             self.uses -= 1
             if self.uses <= 0:
-                chain[3].bag.remove_item(chain[5])
+                chain[3].bag.remove_item(chain[-2])
 
 class Armor(Ability):
     def get_desc(self):
@@ -129,7 +131,7 @@ class Armor(Ability):
 
 class SelectiveArmor(Ability):
     def get_desc(self):
-        return utility.combine_text([("iron","+" + str(self.armor_value) + " Armor")," against ",(self.damage_type, self.damage_type)," attacks."], False)
+        return utility.combine_text([("iron","+" + str(self.armor_value) + " Armor")," against ",(self.damage_type, self.damage_type)," attacks"], False)
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], damage_type : str, armor_value : int):
         super().__init__(id,name)
         self.damage_type = damage_type
@@ -150,7 +152,7 @@ class SelectiveArmor(Ability):
 
 class Stunned(Ability):
     def get_desc(self):
-        return [["Deal ",   "-", str(self.damage_mod), " damage with ",self.tag.get_name()," attacks."],"\n", ["Recieve +", str(self.damage_mod), " damage from ",self.tag.get_name()," attacks."]]
+        return [["Deal ",   "-", str(self.damage_mod), " damage with ",self.tag.get_name()," attacks"],"\n", ["Recieve +", str(self.damage_mod), " damage from ",self.tag.get_name()," attacks"]]
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], tag_id : Ability, damage_mod : int = 1):
         super().__init__(id,name)
         self.tag = tag_id
@@ -158,40 +160,40 @@ class Stunned(Ability):
     def apply(self, chain : list, effect : Effect):
         if hasattr(effect, "damage") and effect.target == chain[2] and effect.source.has_ability(self.tag.id):
             effect.damage += self.damage_mod
-        if hasattr(effect, "damage") and effect.dungeon.actor == chain[2] and effect.source.has_ability(self.tag.id):
+        if hasattr(effect, "damage") and chain[0].actor == chain[2] and effect.source.has_ability(self.tag.id):
             effect.damage -= self.damage_mod
 
 class BattleCry(Ability):
     def get_desc(self):
-        return utility.combine_text([self.tag.get_name(), " enemies deal ", ("damage","+" + str(self.strength) + " damage"),"."], False)
+        return utility.combine_text([self.tag.get_name(), " enemies deal ", ("damage","+" + str(self.strength) + " damage")], False)
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], tag_id : Ability, strength : int):
         super().__init__(id,name)
         self.tag = tag_id
         self.strength = strength
     def apply(self, chain : list, effect : Effect):
-        if hasattr(effect, "damage") and effect.dungeon.actor.has_ability(self.tag.id):
+        if hasattr(effect, "damage") and chain[0].actor.has_ability(self.tag.id):
             effect.damage += self.strength
 
 class DamageTypeBuff(Ability):
     def get_desc(self):
-        return utility.combine_text(["Deal ", ("damage","+" + str(self.strength) + " damage")," with ",(self.damage_type, self.damage_type)," attacks."], False)
+        return utility.combine_text(["Deal ", ("damage","+" + str(self.strength) + " damage")," with ",(self.damage_type, self.damage_type)," attacks"], False)
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], damage_type : str, strength : int):
         super().__init__(id,name)
         self.damage_type = damage_type
         self.strength = strength
     def apply(self, chain : list, effect : Effect):
-        if hasattr(effect, "damage") and effect.dungeon.actor == chain[2] and effect.damage_type == self.damage_type:
+        if hasattr(effect, "damage") and chain[0].actor == chain[2] and effect.damage_type == self.damage_type:
             effect.damage += self.strength
 
 class SelectiveBuff(Ability):
     def get_desc(self):
-        return utility.combine_text(["Deal ", ("damage","+" + str(self.strength) + " damage")," with ",self.tag.get_name()," attacks."], False)
+        return utility.combine_text(["Deal ", ("damage","+" + str(self.strength) + " damage")," with ",self.tag.get_name()," attacks"], False)
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], tag_id : Ability, strength : int):
         super().__init__(id,name)
         self.tag = tag_id
         self.strength = strength
     def apply(self, chain : list, effect : Effect):
-        if hasattr(effect, "damage") and effect.dungeon.actor == chain[2] and effect.source.has_ability(self.tag.id):
+        if hasattr(effect, "damage") and chain[0].actor == chain[2] and effect.source.has_ability(self.tag.id):
             effect.damage += self.strength
 
 class EndOfTurnEffect(Ability):
@@ -201,7 +203,12 @@ class EndOfTurnEffect(Ability):
         super().__init__(id,name)
         self.effect = effect
     def end_of_round(self, chain):
-        copy.deepcopy(self.effect).execute_with_statics(chain[0], self, chain[2])
+        reformat_dict = {
+            "user":chain[2], 
+            "self":self
+        }
+        new_effect : Effect = copy.deepcopy(self.effect)
+        new_effect.execute_with_statics_and_reformat(chain[0], reformat_dict, True)
 
 class ImmuneToAbility(Ability):
     def get_desc(self):
@@ -211,5 +218,5 @@ class ImmuneToAbility(Ability):
         self.abil = abil
     def apply(self, chain : list, effect : Effect):
         if isinstance(effect, AddAbilityEffect) and effect.target == chain[2] and effect.source.is_id(self.abil.id):
-            effect.dungeon.add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), " is immune to ", effect.source.get_name(), "!"])
+            chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), " is immune to ", effect.source.get_name(), "!"])
             effect.cancel()

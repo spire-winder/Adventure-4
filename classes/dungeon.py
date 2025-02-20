@@ -35,7 +35,7 @@ class Dungeon:
         for room in self.map.values():
             room.handle_connecting_signals(self)
 
-    def interaction_event(self, action : classes.actions.InteractionAction):
+    def interaction_event(self, action : classes.actions.PlayerAction):
         if action != None:
             action.execute(self)
         else:
@@ -50,7 +50,7 @@ class Dungeon:
         if isinstance(actor, Room):
             return actor
         for x in self.map.values():
-            if actor in x.room_contents:
+            if actor in x.get_roomobjects():
                 return x
         return None
         
@@ -80,7 +80,8 @@ class Dungeon:
         loc = self.get_location_of_actor(actor)
         if loc == None:
             return False
-        return loc == self.get_location_of_actor(self.player) or (self.get_location_of_actor(self.player)) in loc.get_roomobjects()
+        player_loc = self.get_location_of_actor(self.player)
+        return loc == player_loc
 
     def add_to_message_queue(self, msg : str | tuple["Hashable", str] | list[str | tuple["Hashable", str]]):
         self.messagequeue.append(msg)

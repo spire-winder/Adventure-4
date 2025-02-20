@@ -10,18 +10,18 @@ items : dict[str:Item] = {
 wooden_items : dict[str:Item] = {
     "wooden_sword":MeleeWeapon(
         name=("wood","Wooden Sword"),
-        effect=DamageEvent(6, "slashing")
+        attackeffect=DamageEvent(damage=6, damage_type="slashing")
     ),
     "wooden_bo":MeleeWeapon(
         name=("wood","Wooden Bo"),
-        effect=RepeatEvent(DamageEvent(4, "bashing"),2)
+        attackeffect=RepeatEvent(DamageEvent(damage=4, damage_type="bashing"),2)
     ),
     "wooden_axe":MeleeWeapon(
         name=("wood","Wooden Axe"),
-        effect=
+        attackeffect=
             EffectSequence([
-                DamageEvent(5, "slashing"),
-                ProbabilityEvent(EffectSelectorPredefinedSource(AddAbilityEffect(), Status(get_ability("stun"),3)),0.25)
+                DamageEvent(damage=5, damage_type="slashing"),
+                ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("stun"),3)),0.25)
             ]),
     ),
     "wooden_shield":Equipment(
@@ -61,18 +61,18 @@ items.update(wooden_items)
 iron_items : dict[str:Item] = {
     "iron_sword":MeleeWeapon(
         name=("iron","Iron Sword"),
-        effect=DamageEvent(10, "slashing")
+        attackeffect=DamageEvent(damage=10, damage_type="slashing")
     ),
     "iron_bo":MeleeWeapon(
         name=("iron","Iron Staff"),
-        effect=RepeatEvent(DamageEvent(7, "bashing"),2)
+        attackeffect=RepeatEvent(DamageEvent(damage=7, damage_type="bashing"),2)
     ),
     "iron_axe":MeleeWeapon(
         name=("iron","Iron Axe"),
-        effect=
+        attackeffect=
             EffectSequence([
-                DamageEvent(8, "slashing"),
-                ProbabilityEvent(EffectSelectorPredefinedSource(AddAbilityEffect(), Status(get_ability("stun"),5)),0.5)
+                DamageEvent(damage=8, damage_type="slashing"),
+                ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("stun"),5)),0.5)
             ]),
     ),
     "iron_shield":Equipment(
@@ -112,19 +112,19 @@ items.update(iron_items)
 magic_items : dict[str:Item] = {
     "magic_sword":MeleeWeapon(
         name=("magic","Magic Sword"),
-        effect=EffectSequence([DamageEvent(8,"slashing"),DamageEvent(8,"arcane")])
+        attackeffect=EffectSequence([DamageEvent(damage=8,damage_type="slashing"),DamageEvent(damage=8,damage_type="arcane")])
     ),
     "magic_staff":MagicWeapon(
         name=("magic","Magic Staff"),
-        effect=RepeatEvent(DamageEvent(8,"arcane",2),2),
+        attackeffect=RepeatEvent(DamageEvent(damage=8,damage_type="arcane",armor_penetrate=2),2),
         mana_cost=5
     ),
     "magic_axe":MeleeWeapon(
         name=("magic","Magic Axe"),
-        effect=
+        attackeffect=
             EffectSequence([
-                DamageEvent(10,"arcane"),
-                ProbabilityEvent(EffectSelectorPredefinedSource(AddAbilityEffect(), Status(get_ability("stun"),5)),0.75)
+                DamageEvent(damage=10,damage_type="arcane"),
+                ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("stun"),5)),0.75)
             ]),
     ),
     "magic_shield":Equipment(
@@ -164,23 +164,25 @@ items.update(magic_items)
 magic_weapon_items : dict[str:Item] = {
     "fire_tome":MagicWeapon(
         name=("heat","Fire Tome"),
-        effect=DamageEvent(15,"heat"),
+        attackeffect=DamageEvent(damage=15,damage_type="heat"),
         mana_cost=10
     ),
     "poison_tome":MagicWeapon(
-        name=("poison","Poison Tome"),
-        effect=EffectSequence([DamageEvent(5,"toxic"),EffectSelectorPredefinedSource(AddAbilityEffect(), Status(get_ability("poison"),3))]),
+        name=("toxic","Poison Tome"),
+        attackeffect=EffectSequence([
+            DamageEvent(damage=5,damage_type="toxic"),
+            AddAbilityEffect("target", Status(get_ability("poison"),3))
+        ]),
         mana_cost=10
     ),
     "lightning_tome":MagicWeapon(
         name=("lightning","Lightning Tome"),
-        effect=EffectSequence([DamageEvent(10,"lightning"),EffectSelectorPredefinedSource(AddAbilityEffect(), Status(get_ability("stun"),5))]),
+        attackeffect=EffectSequence([
+            DamageEvent(damage=10,damage_type="lightning"),
+            AddAbilityEffect("target", Status(get_ability("stun"),5))
+        ]),
         mana_cost=10
-    ),
-    "ultra_death":MeleeWeapon(
-        name=("lightning","Lightning Tome"),
-        effect=DamageEvent(110,"lightning"),
-    ),
+    )
 }
 
 items.update(magic_weapon_items)
@@ -189,32 +191,32 @@ consumeable_items : dict[str:Item] = {
     "sharpening_stone":Sharpener(
         name=("iron","Sharpening Stone"),
         ability_handler=AbilityHandler([MultiUse(3)]),
-        effect=SharpenEvent(0.5)
+        useeffect=SharpenEvent("item", "target", 0.5)
     ),
     "healing_potion":Potion(
         name=("healing","Healing Potion"),
         ability_handler=AbilityHandler([SingleUse()]),
-        effect=HealEvent(20)
+        useeffect=HealEvent("item","user",20)
     ),
     "restoration_potion":Potion(
         name=("magic","Restoration Potion"),
         ability_handler=AbilityHandler([SingleUse()]),
-        effect=RestoreMPEvent(20)
+        useeffect=RestoreMPEvent("item","user",20)
     ),
     "healing_potion_with_magic":Potion(
         name=utility.alternate_colors("Infused Healing Potion",["healing"*2,"magic"*2]),
         ability_handler=AbilityHandler([ManaCost("manacost","Mana Cost", 5),SingleUse()]),
-        effect=HealEvent(50)
+        useeffect=HealEvent("item","user",50)
     ),
     "regen_potion":Potion(
         name=("healing","Regeneration Potion"),
         ability_handler=AbilityHandler([SingleUse()]),
-        effect=EffectSelectorPredefinedSource(AddAbilityEffect(), Status(get_ability("regen"),10))
+        useeffect=AddAbilityEffect("user",Status(get_ability("regen"),10))
     ),
     "ironhide_potion":Potion(
         name=("iron","Ironhide Potion"),
         ability_handler=AbilityHandler([SingleUse()]),
-        effect=EffectSelectorPredefinedSource(AddAbilityEffect(), Status(Armor("iron_hide", ("iron", "Ironhide"),8),10))
+        useeffect=AddAbilityEffect("user",Status(Armor("iron_hide", ("iron", "Ironhide"),8),10))
     )
 }
 
@@ -223,21 +225,25 @@ items.update(consumeable_items)
 food_items : dict[str:Item] = {
     "roast_chicken":Food(
         name=("meat", "Roast Chicken"),
-        effect=HealEvent(15)
+        ability_handler=AbilityHandler([SingleUse()]),
+        foodeffect=HealEvent("item","user",15)
     ),
     "roast_pork":Food(
         name=("meat", "Roast Pork"),
-        effect=HealEvent(20)
+        ability_handler=AbilityHandler([SingleUse()]),
+        foodeffect=HealEvent("item","user",20)
     ),
     "roast_beef":Food(
         name=("meat", "Roast Beef"),
-        effect=HealEvent(25)
+        ability_handler=AbilityHandler([SingleUse()]),
+        foodeffect=HealEvent("item","user",25)
     ),
     "bone_marrow_stew":Food(
         name=("food", "Bone Marrow Stew"),
-        effect=EffectSequence([
-            HealEvent(20),
-            EffectSelectorPredefinedSource(AddAbilityEffect(), Status(Armor("strong_bones", ("iron", "Strong Bones"),2),20))
+        ability_handler=AbilityHandler([SingleUse()]),
+        foodeffect=EffectSequence([
+            HealEvent("item","user",20),
+            AddAbilityEffect("user",Status(Armor("strong_bones", ("iron", "Strong Bones"),2),20))
         ])
     )
 }
@@ -248,22 +254,18 @@ enemy_items : dict[str:Item] = {
     "magic_barbs":MeleeWeapon(
         name=("magic","Magic Barbs"),
         drop_chance=0,
-        effect=DamageEvent(7,"arcane",2)
+        attackeffect=DamageEvent(damage=7,damage_type="arcane",armor_penetrate=2)
     ),
     "eye_whip":MeleeWeapon(
         name=("meat","Eye Whip"),
         drop_chance=0,
-        effect=DamageEvent(5,"bashing",3)
+        attackeffect=DamageEvent(damage=5,damage_type="bashing",armor_penetrate=3)
     )
 }
 
 items.update(enemy_items)
 
 tools : dict[str:Item] = {
-    "shovel":Shovel(
-        name=("iron","Shovel"),
-        drop_chance=0
-    )
 }
 
 items.update(tools)
