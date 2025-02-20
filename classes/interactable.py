@@ -123,7 +123,10 @@ class Item(RoomObject):
         super().__init__(name, ability_handler)
         self.drop_chance = drop_chance
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
-        return [classes.actions.TakeItemAction(self, dungeon.previous_interactable)]
+        if dungeon.player.can_take_item(self):
+            return [classes.actions.TakeItemAction(self, dungeon.previous_interactable)]
+        else:
+            return [classes.actions.DummyAction("Your inventory is full.")]
 
 class UsableItem(Item):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, useeffect : classes.actions.Effect = None) -> None:
