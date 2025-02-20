@@ -17,6 +17,11 @@ abilities : dict[str:Ability] = {
         name=("goblin","Goblin"),
         desc="Goblins are creatures with a knack for cooperation and collateral damage."
     ),
+    "greedling":Ability(
+        id="greedling",
+        name=("meat","Greedling"),
+        desc=[("meat","Greedlings"), " are small pests that inhabit ancient ruins, scavenging for shiny objects which they love."]
+    ),
     "regen":EndOfTurnEffect(
         id="regen",
         name=("healing","Regeneration"),
@@ -26,6 +31,12 @@ abilities : dict[str:Ability] = {
         id="poison",
         name=("toxic","Poison"),
         effect=DamageEvent("self","user",5,"toxic",-1)
+    ),
+    "starved":DamageTypeBuff(
+        "starved",
+        ("meat", "Starved"),
+        "slashing",
+        3
     )
 }
 
@@ -34,7 +45,7 @@ def get_ability(ability_id : str) -> "Ability":
 
 abilities["goblin_boss"]= BattleCry(
         id="goblin_boss",
-        name=utility.alternate_colors("Big Goblin",["goblin","fire"]),
+        name=utility.alternate_colors("Big Goblin",["goblin","damage"]),
         tag_id=get_ability("goblin"),
         strength=5
     )
@@ -43,4 +54,10 @@ abilities["stun"]=Stunned(
         name=("stunned","Stunned"),
         tag_id=get_ability("melee"),
         damage_mod=2
+    )
+abilities["greedling_boss"]= BattleCry(
+        id="greedling_boss",
+        name=("meat","Greedling Boss"),
+        tag_id=get_ability("greedling"),
+        strength=3
     )

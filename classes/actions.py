@@ -176,12 +176,14 @@ class DeathEvent(Effect):
             if self.target == dungeon.player:
                 dungeon.game_over = True
             else:
+                if dungeon.actor == dungeon.player:
+                    if self.target.has_stat("Bones"):
+                        dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " dropped ", ("bone", str(self.target.get_stat("Bones").get_current_bones()) + " Bones "),"."])
+                        dungeon.player.get_stat("Bones").add(self.target.get_stat("Bones").get_current_bones())
                 for x in self.target.get_drops():
                     x.drop_chance = 1
                     AddRoomObjEffect(death_room, x).execute(dungeon)
                     dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " dropped ", x.get_name(), "."])
-                if self.target.has_ability("goblin_boss"):
-                    dungeon.add_to_message_queue(["You've completed the demo! Feel free to continue to explore, or try to fight the travellers as well for more items."])
             RemoveRoomObjEffect(death_room, self.target).execute(dungeon)
 
 class DamageEvent(Effect):
@@ -212,9 +214,9 @@ class DamageEvent(Effect):
         if self.damage_type != "":
             damage_text += " " + self.damage_type
         dungeon.add_to_message_queue_if_actor_visible(self.target,[self.target.get_name(), " is dealt ", (self.damage_type, damage_text + " damage"), " by ", self.source.get_name(), "."])
-        self.target.stathandler.get_stat("HP").damage(self.damage)
+        self.target.get_stat("HP").damage(self.damage)
         self.target.notify(dungeon, Notif(self))
-        if self.target.stathandler.get_stat("HP").is_dead():
+        if self.target.get_stat("HP").is_dead():
             DeathEvent(self.target).execute(dungeon)
 
 class RepeatEvent(Effect):
@@ -267,7 +269,7 @@ class HealEvent(Effect):
         return ["Heal ",("healing",str(self.healing)+ " HP")]
     def execute(self, dungeon):
         dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " is healed ", ("healing",str(self.healing)+ " HP"), " by ", self.source.get_name(), "."])
-        new_hp = self.target.stathandler.get_stat("HP").heal(self.healing)
+        new_hp = self.target.get_stat("HP").heal(self.healing)
 
 class DullWeaponEvent(Effect):
     """Dulls the target by an amount."""
@@ -305,7 +307,7 @@ class SpendMPEvent(Effect):
         return ["Spend ",("magic", str(self.spending) + " MP")]
     def execute(self, dungeon):
         dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " spent ", ("magic", str(self.spending) + " MP"), "."])
-        self.target.stathandler.get_stat("MP").spend(self.spending)
+        self.target.get_stat("MP").spend(self.spending)
 
 class RestoreMPEvent(Effect):
     """The target restores MP."""
@@ -318,7 +320,7 @@ class RestoreMPEvent(Effect):
         return ["Restore ",("magic", str(self.restoring) + " MP")]
     def execute(self, dungeon):
         dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " restored ", ("magic", str(self.restoring) + " MP"), "."])
-        self.target.stathandler.get_stat("MP").restore(self.restoring)
+        self.target.get_stat("MP").restore(self.restoring)
 
 class UseEffect(Effect):
     """The source uses the item against the target. Verb determines the context of usage."""
@@ -368,6 +370,37 @@ class EnterPassageEffect(Effect):
         elif self.source == dungeon.player:
             dungeon.add_to_message_queue([self.source.get_name(), " passes through ", self.target.get_name(), "."])
 
+class UnlockEffect(Effect):
+    """The source unlocks the target."""
+    def __init__(self, source, target):
+        super().__init__()
+        self.source = source
+        self.target = target
+
+    def execute(self, dungeon):
+        self.target.unlock()
+    def get_desc(self):
+        return "Unlocks something..."
+
+class DestroyEffect(Effect):
+    """The source destroys the target."""
+    def __init__(self, source, target):
+        super().__init__()
+        self.source = source
+        self.target = target
+
+    def execute(self, dungeon):
+        death_room = dungeon.get_location_of_actor(self.target)
+        if death_room != None:
+            dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " was destroyed."])
+            for x in self.target.get_drops():
+                x.drop_chance = 1
+                AddRoomObjEffect(death_room, x).execute(dungeon)
+                dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " dropped ", x.get_name(), "."])
+            RemoveRoomObjEffect(death_room, self.target).execute(dungeon)
+    def get_desc(self):
+        return "Can destroy objects"
+
 class TakeItemEffect(Effect):
     """The target takes the item from the source."""
     def __init__(self, source, target, item):
@@ -382,6 +415,20 @@ class TakeItemEffect(Effect):
         RemoveRoomObjEffect(self.source, self.item).execute(dungeon)
         AddtoInventoryEvent(self.target, self.item).execute(dungeon)
         dungeon.add_to_message_queue_if_actor_visible(self.source, [self.target.get_name(), " takes ", self.item.get_name(), "."])
+
+class GiveItemEffect(Effect):
+    """The source gives the target an item."""
+    def __init__(self, source, target, item):
+        super().__init__()
+        self.source = source
+        self.target = target
+        self.item = item
+    
+    def execute(self, dungeon) -> None:
+        if not self.target.can_take_item(self.item):
+            return
+        AddtoInventoryEvent(self.target, self.item).execute(dungeon)
+        dungeon.add_to_message_queue_if_actor_visible(self.source, [self.source.get_name(), " gives ",self.target.get_name()," ", self.item.get_name(), "."])
 
 class PlayerAction(ABC):
     """Effects which the player can call."""
@@ -407,6 +454,13 @@ class DummyAction(PlayerAction):
         pass
     def get_name(self):
         return self.name
+
+class EndRoundAction(PlayerAction):
+    """Used for ending the round."""
+    def execute(self, dungeon):
+        dungeon.end_current_turn()
+    def get_name(self):
+        return "Continue"
 
 class PlayerInteractAction(PlayerAction):
     """Interacting with the interactable."""
@@ -478,7 +532,7 @@ class PlayerDialogueAction(PlayerAction):
             new_effect.execute_with_statics_and_reformat(dungeon, reformat_dict, True)
 
 class EnterPassageAction(PlayerAction):
-    """Interacting with the interactable."""
+    """Entering a passage."""
     def __init__(self, target):
         super().__init__()
         self.target = target
@@ -487,6 +541,30 @@ class EnterPassageAction(PlayerAction):
         dungeon.end_current_turn()
     def get_name(self):
         return "Enter"
+
+class UnlockAction(PlayerAction):
+    """Interacting with the interactable."""
+    def __init__(self, target, key):
+        super().__init__()
+        self.target = target
+        self.key = key
+    def execute(self, dungeon):
+        UseEffect(dungeon.player, self.target, self.key, "unlocks").execute_with_statics(dungeon)
+        dungeon.end_current_turn()
+    def get_name(self):
+        return utility.combine_text(["Unlock using ",self.key.get_name()], False)
+
+class DestroyAction(PlayerAction):
+    """Destroying something."""
+    def __init__(self, target, tool):
+        super().__init__()
+        self.target = target
+        self.tool = tool
+    def execute(self, dungeon):
+        UseEffect(dungeon.player, self.target, self.tool, "destroys").execute_with_statics(dungeon)
+        dungeon.end_current_turn()
+    def get_name(self):
+        return utility.combine_text(["Use ",self.tool.get_name()], False)
 
 class CampfireAction(PlayerInteractAction):
     def get_name(self):
@@ -587,12 +665,13 @@ class EatAction(PlayerAction):
         return ["Eat the ", self.food.get_name()]
 
 class UseAction(PlayerAction):
-    def __init__(self, item, target):
+    def __init__(self, item, target, verb : str = "uses"):
         self.item = item
         self.target = target
+        self.verb = verb
     
     def execute(self, dungeon) -> None:
-        UseEffect(dungeon.player, self.target, self.item, "uses").execute_with_statics(dungeon)
+        UseEffect(dungeon.player, self.target, self.item, self.verb).execute_with_statics(dungeon)
         dungeon.end_current_turn()
     
     def get_name(self):

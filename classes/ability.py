@@ -21,6 +21,18 @@ class Ability:
         return the_id == self.id
     def __gt__(self, a : "Ability") -> bool:
         return False
+    def reformat_dict(self, chain) -> dict:
+        return {
+            "abilityhandler":chain[-1], 
+            "item":chain[-2], 
+            "bag":chain[-3], 
+            "equipmenthandler":chain[-3], 
+            "inventory":chain[3], 
+            "user":chain[2], 
+            "room":chain[1],
+            "dungeon":chain[0],
+            "self":self,
+        }
 
 class Status(Ability):
     def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
@@ -56,15 +68,19 @@ class Sharpness(Ability):
     def get_desc(self):
         percent : int = math.floor(self.sharpness * 100)
         return [str(percent),"%"]
-    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], sharpness : float = 1):
-        super().__init__(id,name)
+    def __init__(self, sharpness : float = 1.0, durability : float = 0.9):
+        super().__init__("sharpness","Sharpness")
         self.sharpness : float = sharpness
+        self.durability : float = durability
     def apply(self, chain : list, effect : Effect):
         if hasattr(effect, "damage") and effect.source == chain[-2]:
             effect.damage *= self.sharpness
             effect.damage = math.ceil(effect.damage)
         if isinstance(effect, UseEffect) and effect.item == chain[-2]:
-            self.dull(random.random() * 0.1 + 0.9)
+            self.dull(random.random() * (1 - self.durability) + self.durability)
+            if self.sharpness <= 0.05:
+                chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[-2].get_name(), " broke!"])
+                chain[3].bag.remove_item(chain[-2])
     def dull(self, amount : float):
         self.sharpness *= amount
     def sharpen(self, amount : float):
@@ -80,10 +96,10 @@ class ManaCost(Ability):
         self.mpcost = mpcost
     def apply(self, chain : list, effect : Effect):
         if isinstance(effect, UseEffect) and effect.item == chain[-2]:
-            if not chain[2].stathandler.has_stat("MP"):
+            if not chain[2].has_stat("MP"):
                 chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), " can't use mana!"])
                 effect.cancel()
-            elif not chain[2].stathandler.get_stat("MP").spend(self.mpcost):
+            elif not chain[2].get_stat("MP").spend(self.mpcost):
                 chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), "'s mana ran out!"])
                 effect.cancel()
 
@@ -107,6 +123,7 @@ class MultiUse(Ability):
         if isinstance(effect, UseEffect) and effect.item == chain[-2]:
             self.uses -= 1
             if self.uses <= 0:
+                chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[-2].get_name(), " broke!"])
                 chain[3].bag.remove_item(chain[-2])
 
 class Armor(Ability):
@@ -203,12 +220,19 @@ class EndOfTurnEffect(Ability):
         super().__init__(id,name)
         self.effect = effect
     def end_of_round(self, chain):
-        reformat_dict = {
-            "user":chain[2], 
-            "self":self
-        }
         new_effect : Effect = copy.deepcopy(self.effect)
-        new_effect.execute_with_statics_and_reformat(chain[0], reformat_dict, True)
+        new_effect.execute_with_statics_and_reformat(chain[0], self.reformat_dict(chain), True)
+
+class OnDeathEffect(Ability):
+    def get_desc(self):
+        return utility.combine_text([self.effect.get_desc(), " on death"], False)
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], effect : Effect):
+        super().__init__(id,name)
+        self.effect = effect
+    def apply(self, chain, effect):
+        if isinstance(effect, DeathEvent) and effect.target == chain[2]:
+            new_effect : Effect = copy.deepcopy(self.effect)
+            new_effect.execute_with_statics_and_reformat(chain[0], self.reformat_dict(chain), True)
 
 class ImmuneToAbility(Ability):
     def get_desc(self):

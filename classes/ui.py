@@ -22,6 +22,7 @@ material_palette = [
     ("healing", "light green", ""),
     ("meat", "light red", ""),
     ("food", "brown", ""),
+    ("bone", "light gray", ""),
 ]
 
 damage_types = [

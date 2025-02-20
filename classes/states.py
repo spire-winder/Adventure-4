@@ -13,6 +13,10 @@ class State:
     def decide(self, dungeon):
         raise NotImplementedError("Subclasses must implement decide()")
 
+class NothingState(State):
+    def decide(self, dungeon):
+        pass
+
 class PeacefulState(State):
     def state_entity_event(self, dungeon, notif ):
         if hasattr(notif.effect, "damage"):

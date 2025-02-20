@@ -260,12 +260,43 @@ enemy_items : dict[str:Item] = {
         name=("meat","Eye Whip"),
         drop_chance=0,
         attackeffect=DamageEvent(damage=5,damage_type="bashing",armor_penetrate=3)
+    ),
+    "greedling_tooth":MeleeWeapon(
+        name=("meat","Tooth"),
+        drop_chance=0.2,
+        attackeffect=DamageEvent(damage=2,damage_type="slashing",armor_penetrate=1)
+    ),
+    "magic_greedling_tooth":MeleeWeapon(
+        name=("magic","Arcane Tooth"),
+        drop_chance=0.1,
+        attackeffect=DamageEvent(damage=4,damage_type="arcane",armor_penetrate=2)
+    ),
+    "shadow_greedling_tooth":MeleeWeapon(
+        name=("shadow","Shadow Tooth"),
+        drop_chance=0.1,
+        attackeffect=DamageEvent(damage=6,damage_type="shadow")
     )
 }
 
 items.update(enemy_items)
 
 tools : dict[str:Item] = {
+    "iron_key":Key(
+        ("iron", "Iron Key"),
+        key_id="ironkey"
+    ),
+    "wooden_shovel":Tool(
+        ("wood", "Wooden Shovel"),
+        ability_handler=AbilityHandler([Sharpness(1,0.6)]),
+        tool_type="Shovel",
+        tool_strength=1
+    ),
+    "iron_shovel":Tool(
+        ("iron", "Iron Shovel"),
+        ability_handler=AbilityHandler([Sharpness()]),
+        tool_type="Shovel",
+        tool_strength=5
+    )
 }
 
 items.update(tools)

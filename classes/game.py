@@ -57,12 +57,15 @@ class Game:
         self.set_center_event.emit(new_center=center_widget)
 
     def show_message_queue(self, queue : list):
+        if len(queue) == 0:
+            self.end_round(ActionButton("", self.end_round))
+            return
         li : list = []
         for x in queue:
             li.append(urwid.Text(x))
         li.append(urwid.Divider())
         if not self.dungeon.game_over:
-            li.append(ActionButton(["Okay"], self.end_round))
+            li.append(ActionButton(["Continue"], self.end_round))
         else:
             li.append(ActionButton(["Return to menu"], self.delete_and_quit))
         notif_widget = urwid.ListBox(urwid.SimpleFocusListWalker(li))

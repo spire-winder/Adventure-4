@@ -1,7 +1,6 @@
 from classes.actions import *
 from collections.abc import Callable, Hashable, MutableSequence
 from data.items import get_item
-from functools import partial
 
 class DialogueNode:
     def __init__(self, response_text : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], text : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], choices : str | list[str] = None, effect : Effect = None):
@@ -28,8 +27,10 @@ class DialogueNode:
     def has_choices(self) -> bool:
         return len(self.choices) > 0
 
-dialogue_nodes : dict[str:DialogueNode] = {
-    "wise_figure_1" : DialogueNode(
+dialogue_nodes : dict[str:DialogueNode] = {}
+
+wise_figure : dict[str:DialogueNode] = {
+"wise_figure_1" : DialogueNode(
         None,
         ["\"Well hello there traveller...\nIt appears you've awoken from your fall.\""],
         "wise_figure_2"
@@ -51,15 +52,26 @@ dialogue_nodes : dict[str:DialogueNode] = {
     ),
     "wise_figure_5" : DialogueNode(
         "How can I leave?",
-        ["\"Well, this won't be easy for you to hear...\nThere is no way out. As far as we know, at least.\nFor now, why don't you take some supplies from that wooden chest and explore around for a bit.\""],
+        ["\"Well, this won't be easy for you to hear...\nThere is no way out. As far as we know, at least.\nFor now, why don't you take this.\""],
+        None,
+        EffectSequence([GiveItemEffect("speaker","player",get_item("wooden_sword")),SetDialogueEffect(source="wise_figure_6",target="speaker")])
+    ),
+    "wise_figure_6" : DialogueNode(
+        None,
+        ["\"Select the training dummy and attack it.\nProve to me you'll be able to survive.\""],
         None,
         SetDialogueEffect(source="wise_figure_done",target="speaker")
     ),
     "wise_figure_done" : DialogueNode(
         None,
-        ["\"Good luck out there. Live long, friend.\""],
+        ["\"Good luck out there. May you see the stars, friend.\""],
         None,
     ),
+}
+
+dialogue_nodes.update(wise_figure)
+
+fellow_traveller : dict[str:DialogueNode] = {
     "fellow_traveller_1" : DialogueNode(
         None,
         ["\"Hail! I haven't seen you before.\nI hate to ask, but did you just fall down?\""],
@@ -93,6 +105,8 @@ dialogue_nodes : dict[str:DialogueNode] = {
         None,
     ),
 }
+
+dialogue_nodes.update(fellow_traveller)
 
 def get_dialogue(dia_id : str) -> DialogueNode:
     return copy.deepcopy(dialogue_nodes[dia_id])

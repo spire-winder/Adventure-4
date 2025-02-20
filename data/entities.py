@@ -5,7 +5,7 @@ from data.abilities import *
 from data.items import *
 import copy
 
-enemies : dict[str:StateEntity] = {
+old_entities : dict[str:StateEntity] = {
     "goblin_1" : StateEntity(
         name=("goblin","Hairy Goblin"), 
         ability_handler=AbilityHandler([get_ability("goblin")]),
@@ -107,7 +107,78 @@ enemies : dict[str:StateEntity] = {
         StatHandler({"HP":HPContainer(30),"MP":MPContainer(50)}),
         DialogueManager(),
         IdleState()
+    )
+}
+
+entities : dict[str:StateEntity] = {}
+
+greedlings : dict[str:StateEntity] = {
+    "greedling" : StateEntity(
+        name=("meat","Greedling"), 
+        ability_handler=AbilityHandler([get_ability("greedling")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("greedling_tooth")
+            })
+        ),
+        stathandler=StatHandler({"HP":HPContainer(5), "Bones":BoneContainer(2)}),
+        dialogue_manager=None,
+        state=IdleState()
     ),
+    "large_greedling" : StateEntity(
+        name=("meat","Large Greedling"), 
+        ability_handler=AbilityHandler([get_ability("greedling"), get_ability("greedling_boss")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("greedling_tooth")
+            })
+        ),
+        stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "arcane_greedling" : StateEntity(
+        name=[("magic", "Arcane"), ("meat"," Greedling")], 
+        ability_handler=AbilityHandler([get_ability("greedling")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("magic_greedling_tooth")
+            })
+        ),
+        stathandler=StatHandler({"HP":HPContainer(8), "Bones":BoneContainer(2)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "shadow_greedling" : StateEntity(
+        name=[("shadow", "Shadow"), ("meat"," Greedling")], 
+        ability_handler=AbilityHandler([get_ability("greedling")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("shadow_greedling_tooth")
+            })
+        ),
+        stathandler=StatHandler({"HP":HPContainer(12), "Bones":BoneContainer(3)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "starved_greedling" : StateEntity(
+        name=("meat","Large Greedling"), 
+        ability_handler=AbilityHandler([get_ability("greedling"), get_ability("starved")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("greedling_tooth")
+            }),
+            Bag(items=[Key(("celestial"),"Sunforged Key",key_id="crumbling_entrance_key")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(20), "Bones":BoneContainer(1)}),
+        dialogue_manager=None,
+        state=IdleState()
+    )
+}
+
+entities.update(greedlings)
+
+npcs : dict[str:StateEntity] = {
     "wise_figure" : StateEntity(
         ("celestial","Wise Figure"), 
         AbilityHandler([ImmuneToAbility("wise",("celestial","Wise"), get_ability("stun"))]),
@@ -135,7 +206,15 @@ enemies : dict[str:StateEntity] = {
         DialogueManager("fellow_traveller_1"),
         PeacefulState()
     ),
+    "training_dummy" : StateEntity(
+        ("wood", "Training Dummy"),
+        inventory=Inventory(None, Bag=Bag(-1,[Key(("wood", "Wooden Key"),key_id="wooden_key")])),
+        stathandler=StatHandler({"HP":HPContainer(1)}),
+        state=NothingState()
+    )
 }
 
-def get_enemy(enemy_id : str) -> StateEntity:
-    return copy.deepcopy(enemies[enemy_id])
+entities.update(npcs)
+
+def get_entity(entity_id : str) -> StateEntity:
+    return copy.deepcopy(entities[entity_id])
