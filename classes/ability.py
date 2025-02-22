@@ -36,6 +36,23 @@ class Ability:
             "self":self,
         }
 
+class HiddenAbility(Ability):
+    def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        return None
+    def get_desc(self):
+        return None
+    def apply_from_bag(self, chain : list, effect : Effect):
+        self.ability.apply_from_bag(chain, effect)
+    def apply(self, chain : list, effect : Effect):
+        self.ability.apply(chain, effect)
+    def __init__(self, ability : Ability):
+        super().__init__(ability.id)
+        self.ability = ability
+    def end_of_round(self, chain):
+        self.ability.end_of_round(chain)
+    def is_id(self, the_id : str) -> bool:
+        return the_id == self.ability.id
+
 class Status(Ability):
     def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
         return self.ability.get_name()
@@ -49,6 +66,8 @@ class Status(Ability):
         else:
             status_color = "status_empty"
         return utility.combine_text([self.ability.get_desc(), ["(", (status_color, str(self.current_duration)), " rounds remaining)"]])
+    def apply_from_bag(self, chain : list, effect : Effect):
+        self.ability.apply_from_bag(chain, effect)
     def apply(self, chain : list, effect : Effect):
         self.ability.apply(chain, effect)
     def __init__(self, ability : Ability, duration : int):
@@ -115,6 +134,8 @@ class SingleUse(Ability):
     def apply(self, chain : list, effect : Effect):
         if isinstance(effect, UseEffect) and effect.item == chain[-2]:
             chain[3].bag.remove_item(chain[-2])
+    def apply_from_bag(self, chain, effect):
+        return self.apply(chain, effect)
 
 class MultiUse(Ability):
     def get_desc(self):

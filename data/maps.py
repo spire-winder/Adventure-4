@@ -141,25 +141,26 @@ ruins_of_the_sun : dict[str:Room] = {
             player,
             get_entity("wise_figure"),
             get_entity("training_dummy"),
-            LockedPassage(("stone", "Chamber Exit (north)"),destination_id="decrepit_cellar",key_id="wooden_key")
+            LockedPassage(("stone", "Chamber Exit"),destination_id="decrepit_cellar",key_id="wooden_key")
         ]
     ),
     "decrepit_cellar": Room(
         name=("stone", "Decrepit Cellar"),
         room_contents=[
             get_entity("greedling"),
-            Passage(("stone", "Chamber Entrance (south)"),destination_id="starting_room"),
-            Passage(("stone", "Cracked Steps (north)"),destination_id="stone_rotunda")
+            Container(("wood", "Wooden Chest"), contents=[get_item("rusty_sword"),get_item("leather_armor")]),
+            Passage(("stone", "Chamber Exit"),destination_id="starting_room"),
+            Passage(("stone", "Cracked Steps"),destination_id="stone_rotunda")
         ]
     ),
     "stone_rotunda": Room(
         name=("stone", "Stone Rotunda"),
         room_contents=[
             get_entity("large_greedling"),
-            LockedPassage(("celestial", "Gate (north)"),destination_id="crumbling_entrance",key_id="crumbling_entrance_key"),
-            LockedPassage(("celestial", "Vault Door (east)"),destination_id="ransacked_vault",key_id="ransacked_vault_key"),
-            Passage(("stone", "Cracked Steps (south)"),destination_id="decrepit_cellar"),
-            Passage(("stone", "Hallway (west)"),destination_id="western_hallway"),
+            LockedPassage(("celestial", "Temple Gate"),destination_id="crumbling_entrance",key_id="crumbling_entrance_key"),
+            LockedPassage(("celestial", "Vault Door"),destination_id="ransacked_vault",key_id="ransacked_vault_key"),
+            Passage(("stone", "Cracked Steps"),destination_id="decrepit_cellar"),
+            Passage(("stone", "Hallway"),destination_id="western_hallway"),
         ]
     ),
     "western_hallway": Room(
@@ -167,43 +168,46 @@ ruins_of_the_sun : dict[str:Room] = {
         room_contents=[
             get_entity("greedling"),
             get_entity("arcane_greedling"),
-            Passage(("iron", "Armory Entrance (north)"),destination_id="emptied_armory"),
-            Passage(("stone", "Rotunda (east)"),destination_id="stone_rotunda"),
-            Passage(("sand", "Sandy Doorway (south)"),destination_id="sandy_chapel"),
-            Passage(("stone", "Crypt Door (west)"),destination_id="crypt_of_the_sunblessed"),
+            Passage(("iron", "Armory Entrance"),destination_id="emptied_armory"),
+            Passage(("stone", "Rotunda"),destination_id="stone_rotunda"),
+            Passage(("sand", "Sandy Doorway"),destination_id="sandy_chapel"),
+            Passage(("stone", "Crypt Door"),destination_id="crypt_of_the_sunblessed"),
         ]
     ),
     "emptied_armory": Room(
         name=("stone", "Emptied Armory"),
         room_contents=[
             get_entity("greedling"),
-            Passage(("stone", "Hallway (south)"),destination_id="western_hallway"),
+            Container(("iron","Weapon Rack"),contents=[get_item("rusty_axe"), get_item("rusty_staff"),]),
+            Passage(("stone", "Hallway"),destination_id="western_hallway"),
         ]
     ),
     "crypt_of_the_sunblessed": Room(
         name=[("stone", "Crypt of the "), ("celestial", "Sunblessed")],
         room_contents=[
             get_entity("shadow_greedling"),
-            Passage(("stone", "Hallway (east)"),destination_id="western_hallway"),
+            Container(("stone", "Defiled Crypt"), contents=[get_item("wooden_shovel"),get_item("leather_helmet")]),
+            Passage(("stone", "Hallway"),destination_id="western_hallway"),
         ]
     ),
     "sandy_chapel": Room(
         name=[("sand", "Sandy "), ("stone", "Chapel")],
         room_contents=[
-            Passage(("stone", "Hallway (north)"),destination_id="western_hallway"),
+            Destructible(("sand", "Pile of Sand"), contents=[Key(name=("celestial", "Vault Key"), key_id="ransacked_vault_key")], tool_requirement="Shovel", tool_strength=1),
+            Passage(("stone", "Hallway"),destination_id="western_hallway"),
         ]
     ),
     "ransacked_vault": Room(
         name=("stone", "Ransacked Vault"),
         room_contents=[
             get_entity("starved_greedling"),
-            Passage(("stone", "Rotunda (west)"),destination_id="stone_rotunda"),
+            Passage(("stone", "Rotunda"),destination_id="stone_rotunda"),
         ]
     ),
     "crumbling_entrance": Room(
         name=("stone", "Crumbling Entrance"),
         room_contents=[
-            Passage(("celestial", "Ruins of the Sun Entrance (south)"),destination_id="stone_rotunda"),
+            Passage(("celestial", "Temple Gate"),destination_id="stone_rotunda"),
         ]
     ),
 }

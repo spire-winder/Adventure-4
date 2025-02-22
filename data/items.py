@@ -10,7 +10,8 @@ items : dict[str:Item] = {
 wooden_items : dict[str:Item] = {
     "wooden_sword":MeleeWeapon(
         name=("wood","Wooden Sword"),
-        attackeffect=DamageEvent(damage=6, damage_type="slashing")
+        attackeffect=DamageEvent(damage=6, damage_type="slashing"),
+        durability=0.7
     ),
     "wooden_bo":MeleeWeapon(
         name=("wood","Wooden Bo"),
@@ -57,6 +58,61 @@ wooden_items : dict[str:Item] = {
 }
 
 items.update(wooden_items)
+
+rusty_items : dict[str:Item] = {
+    "rusty_sword":MeleeWeapon(
+        name=[("rust","Rusty"),("iron"," Sword")],
+        attackeffect=DamageEvent(damage=8, damage_type="slashing"),
+        durability=0.75
+    ),
+    "rusty_staff":MeleeWeapon(
+        name=[("rust","Rusty"),("iron"," Staff")],
+        attackeffect=RepeatEvent(DamageEvent(damage=5, damage_type="bashing"),2),
+        durability=0.75
+    ),
+    "rusty_axe":MeleeWeapon(
+        name=[("rust","Rusty"),("iron"," Axe")],
+        attackeffect=
+            EffectSequence([
+                DamageEvent(damage=7, damage_type="slashing"),
+                ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("stun"),3)),0.25)
+            ]),
+        durability=0.75
+    ),
+    "iron_shield":Equipment(
+        name=("iron","Iron Shield"),
+        ability_handler=AbilityHandler([SelectiveArmor("magicarmor", "Magic Armor", "bashing", 4)]),
+        slot="Offhand"
+    ),
+    "iron_shiv":Equipment(
+        name=("iron","Iron Shiv"),
+        ability_handler=AbilityHandler([SelectiveBuff("meleebuff",None,get_ability("melee"),2)]),
+        slot="Offhand"
+    ),
+    "iron_helmet":Equipment(
+        name=("iron","Iron Helmet"),
+        ability_handler=AbilityHandler([Armor("armor",None,2)]),
+        slot="Helmet"
+    ),
+    "iron_armor":Equipment(
+        name=("iron","Iron Armor"),
+        ability_handler=AbilityHandler([Armor("armor",None,2)]),
+        slot="Armor"
+    ),
+    "iron_boots":Equipment(
+        name=("iron","Iron Boots"),
+        ability_handler=AbilityHandler([Armor("armor",None,2)]),
+        slot="Boots"
+    ),
+    "iron_ring":Equipment(
+        name=("iron","Iron Ring"),
+        ability_handler=AbilityHandler([SelectiveArmor("magicarmor", "Magic Armor", "slashing", 4)]),
+        slot="Ring"
+    ),
+}
+
+items.update(rusty_items)
+
 
 iron_items : dict[str:Item] = {
     "iron_sword":MeleeWeapon(
@@ -281,10 +337,7 @@ enemy_items : dict[str:Item] = {
 items.update(enemy_items)
 
 tools : dict[str:Item] = {
-    "iron_key":Key(
-        ("iron", "Iron Key"),
-        key_id="ironkey"
-    ),
+    "wooden_key":Key(("wood", "Wooden Key"),key_id="wooden_key"),
     "wooden_shovel":Tool(
         ("wood", "Wooden Shovel"),
         ability_handler=AbilityHandler([Sharpness(1,0.6)]),
@@ -300,6 +353,9 @@ tools : dict[str:Item] = {
 }
 
 items.update(tools)
+
+for x in items:
+    items[x].id = x
 
 def get_item(item_id : str) -> Item:
     return copy.deepcopy(items[item_id])

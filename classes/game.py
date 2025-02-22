@@ -36,7 +36,7 @@ class Game:
     def set_player_name(self, name):
         self.dungeon.player.name = name
 
-    def player_interact(self, inter: classes.actions.PlayerInteractAction):
+    def player_interact(self, inter: classes.actions.PlayerAction):
         self.dungeon.previous_interactable = self.dungeon.current_interactable
         self.dungeon.current_interactable = inter.interactable
         room_list = []
@@ -52,6 +52,10 @@ class Game:
             if inter.prev != None:
                 room_list.append(BackActionButton(self.dungeon, inter.prev))
             else:
+                player_inter = classes.actions.PlayerInteractAction(self.dungeon.player)
+                player_inter.prev = inter
+                room_list.append(InteractableActionButton(self.dungeon,player_inter))
+                room_list.append(urwid.Divider())
                 room_list.append(ActionButton("Save and Quit", self.save_and_quit))
         center_widget : urwid.ListBox = urwid.ListBox(urwid.SimpleFocusListWalker(room_list))
         self.set_center_event.emit(new_center=center_widget)

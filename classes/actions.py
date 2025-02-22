@@ -18,7 +18,7 @@ class Effect(ABC):
     """Effects govern communication between Actors."""
     def execute_with_statics_and_reformat(self, dungeon, reformat_dict : dict, deepcopy : bool = False):
         fresh_effect : Effect = copy.deepcopy(self) if deepcopy else self
-        fresh_effect.reformat(reformat_dict)
+        fresh_effect.reformat(dungeon, reformat_dict)
         dungeon.apply_statics(fresh_effect)
         if not fresh_effect.cancelled:
             fresh_effect.execute(dungeon)
@@ -27,11 +27,16 @@ class Effect(ABC):
         dungeon.apply_statics(fresh_effect)
         if not fresh_effect.cancelled:
             fresh_effect.execute(dungeon)
-    def reformat(self, reformat_dict : dict):
+    def reformat(self, dungeon, reformat_dict : dict):
         for x in vars(self):
             if isinstance(vars(self)[x], str):
-                if vars(self)[x] in reformat_dict:
-                    vars(self)[x] = reformat_dict[vars(self)[x]]
+                reform_str : str = vars(self)[x]
+                if reform_str in reformat_dict:
+                    vars(self)[x] = reformat_dict[reform_str]
+                elif ":" in reform_str:
+                    reform_list : list[str] = reform_str.split(":")
+                    if reform_list[0] == "id":
+                        vars(self)[x] = dungeon.place.get_roomobject_of_id(reform_list[1])
     def __init__(self):
         super().__init__()
         self.cancelled : bool = False
@@ -178,7 +183,7 @@ class DeathEvent(Effect):
             else:
                 if dungeon.actor == dungeon.player:
                     if self.target.has_stat("Bones"):
-                        dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " dropped ", ("bone", str(self.target.get_stat("Bones").get_current_bones()) + " Bones "),"."])
+                        dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " dropped ", ("bone", str(self.target.get_stat("Bones").get_current_bones()) + " Bones"),"."])
                         dungeon.player.get_stat("Bones").add(self.target.get_stat("Bones").get_current_bones())
                 for x in self.target.get_drops():
                     x.drop_chance = 1
@@ -217,7 +222,7 @@ class DamageEvent(Effect):
         self.target.get_stat("HP").damage(self.damage)
         self.target.notify(dungeon, Notif(self))
         if self.target.get_stat("HP").is_dead():
-            DeathEvent(self.target).execute(dungeon)
+            DeathEvent(self.target).execute_with_statics(dungeon)
 
 class RepeatEvent(Effect):
     """Repeats the effect an amount of times."""
@@ -227,9 +232,9 @@ class RepeatEvent(Effect):
         self.amount : int = amount
     def get_desc(self):
         return utility.combine_text([["(x",str(self.amount),") "], self.effect.get_desc()], False)
-    def reformat(self, reformat_dict : dict):
-        super().reformat(reformat_dict)
-        self.effect.reformat(reformat_dict)
+    def reformat(self, dungeon, reformat_dict : dict):
+        super().reformat(dungeon, reformat_dict)
+        self.effect.reformat(dungeon, reformat_dict)
     def execute(self, dungeon):
         for x in range(self.amount):
             self.effect.execute_with_statics(dungeon, True)
@@ -247,9 +252,9 @@ class ProbabilityEvent(Effect):
     def get_desc(self):
         percent : int = math.floor(self.chance * 100)
         return utility.combine_text([["(",str(percent),"%) "], self.effect.get_desc()], False)
-    def reformat(self, reformat_dict : dict):
-        super().reformat(reformat_dict)
-        self.effect.reformat(reformat_dict)
+    def reformat(self, dungeon, reformat_dict : dict):
+        super().reformat(dungeon, reformat_dict)
+        self.effect.reformat(dungeon, reformat_dict)
     def execute(self, dungeon):
         if random.random() <= self.chance:
             copy.deepcopy(self.effect).execute_with_statics(dungeon, True)
@@ -427,7 +432,10 @@ class GiveItemEffect(Effect):
     def execute(self, dungeon) -> None:
         if not self.target.can_take_item(self.item):
             return
-        AddtoInventoryEvent(self.target, self.item).execute(dungeon)
+        if hasattr(self.item,"equipment_slot") and self.target.inventory.equipment_handler.can_equip_without_swap(self.item):
+            self.target.equip_item(self.item)
+        else:
+            AddtoInventoryEvent(self.target, self.item).execute(dungeon)
         dungeon.add_to_message_queue_if_actor_visible(self.source, [self.source.get_name(), " gives ",self.target.get_name()," ", self.item.get_name(), "."])
 
 class PlayerAction(ABC):
@@ -494,6 +502,8 @@ class PlayerEquippedInteractAction(PlayerInteractAction):
         if self.player_inv:
             if dungeon.actor.can_take_item(self.interactable):
                 actions.append(UnequipItemAction(self.interactable))
+            for x in dungeon.player.get_items_in_bag(lambda item : hasattr(item, "equipment_slot") and item.equipment_slot == self.interactable.equipment_slot):
+                actions.append(EquipItemAction(x))
         return actions
 
 class PlayerBagInteractAction(PlayerInteractAction):
@@ -523,7 +533,9 @@ class PlayerDialogueAction(PlayerAction):
     def execute(self, dungeon):
         SetDialogueEffect(self.dialogue, self.speaker).execute_with_statics(dungeon)
         dungeon.player_interact(PlayerInteractAction(self.speaker.dialogue_manager))
+        utility.log(str(self.dialogue))
         if self.dialogue.get_effect() != None:
+            utility.log("do it!")
             reformat_dict = {
                 "player":dungeon.player, 
                 "speaker":self.speaker
@@ -590,7 +602,7 @@ class TakeItemAction(PlayerAction):
         dungeon.end_current_turn()
     
     def get_name(self):
-        return "Take"
+        return ["Take ", self.item.get_name()]
 
 class UnequipItemAction(PlayerAction):
     def __init__(self, item : "Equipment"):
@@ -604,7 +616,7 @@ class UnequipItemAction(PlayerAction):
         self.prev.prev.execute(dungeon)
     
     def get_name(self):
-        return "Unequip"
+        return ["Unequip ", self.item.get_name()]
 
 class UseItemAction(PlayerInteractAction):
     def execute(self, dungeon):
@@ -625,16 +637,19 @@ class UseItemAction(PlayerInteractAction):
         return "Use"
 
 class EquipItemAction(PlayerAction):
-    def __init__(self, item : "Equipment"):
+    def __init__(self, item : "Equipment", source = None):
         self.item = item
+        self.source = source
     
     def execute(self, dungeon) -> None:
+        if self.source != None:
+            RemoveRoomObjEffect(self.source, self.item).execute(dungeon)
         dungeon.actor.equip_item(self.item)
         dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " equipped the ", self.item.get_name(), "."])
         dungeon.end_current_turn()
     
     def get_name(self):
-        return "Equip"
+        return ["Equip ", self.item.get_name()]
 
 class DiscardItemAction(PlayerAction):
     def __init__(self, item : "Equipment"):
@@ -649,7 +664,7 @@ class DiscardItemAction(PlayerAction):
         self.prev.prev.execute(dungeon)
     
     def get_name(self):
-        return "Discard"
+        return ["Discard ", self.item.get_name()]
 
 class EatAction(PlayerAction):
     def __init__(self, food, campfire):
@@ -664,7 +679,7 @@ class EatAction(PlayerAction):
         dungeon.end_current_turn()
     
     def get_name(self):
-        return ["Eat the ", self.food.get_name()]
+        return ["Eat ", self.food.get_name()]
 
 class UseAction(PlayerAction):
     def __init__(self, item, target, verb : str = "uses"):

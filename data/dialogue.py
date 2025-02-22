@@ -31,39 +31,44 @@ dialogue_nodes : dict[str:DialogueNode] = {}
 
 wise_figure : dict[str:DialogueNode] = {
 "wise_figure_1" : DialogueNode(
-        None,
+        "\"Hello?\"",
         ["\"Well hello there traveller...\nIt appears you've awoken from your fall.\""],
         "wise_figure_2"
     ),
     "wise_figure_2" : DialogueNode(
-        "Who are you?",
+        "\"Who are you?\"",
         ["\"That's not important right now.\nWhat is important is teaching you how to survive.\""],
         "wise_figure_3"
     ),
     "wise_figure_3" : DialogueNode(
-        "Where am I?",
+        "\"Where am I?\"",
         ["\"A chatty one! Haha!\nWelcome to Subterra.\nYou came from up there.\"\nThe figure points upwards to a small patch of sky, barely visible."],
         "wise_figure_4"
     ),
     "wise_figure_4" : DialogueNode(
-        "Subterra?",
+        "\"Subterra?\"",
         ["\"Yes, that's what we call this.\"\nThe figure gestures around to an abandoned temple.\n\"These are the Ruins of the Sun.\nBefore, we were a mighty religion, but we've crumbled to dust.\""],
         "wise_figure_5"
     ),
     "wise_figure_5" : DialogueNode(
-        "How can I leave?",
+        "\"How can I leave?\"",
         ["\"Well, this won't be easy for you to hear...\nThere is no way out. As far as we know, at least.\nFor now, why don't you take this.\""],
         None,
         EffectSequence([GiveItemEffect("speaker","player",get_item("wooden_sword")),SetDialogueEffect(source="wise_figure_6",target="speaker")])
     ),
     "wise_figure_6" : DialogueNode(
-        None,
+        "\"What do I do?\"",
         ["\"Select the training dummy and attack it.\nProve to me you'll be able to survive.\""],
+        None
+    ),
+    "wise_figure_proud" : DialogueNode(
+        "\"I showed that dummy.\"",
+        ["\"Excellent. You have what it takes to survive down here. Have this.\""],
         None,
-        SetDialogueEffect(source="wise_figure_done",target="speaker")
+        EffectSequence([GiveItemEffect("speaker","player",get_item("wooden_key")),SetDialogueEffect(source="wise_figure_done",target="speaker")])
     ),
     "wise_figure_done" : DialogueNode(
-        None,
+        "\"I want to talk.\"",
         ["\"Good luck out there. May you see the stars, friend.\""],
         None,
     ),
@@ -109,4 +114,4 @@ fellow_traveller : dict[str:DialogueNode] = {
 dialogue_nodes.update(fellow_traveller)
 
 def get_dialogue(dia_id : str) -> DialogueNode:
-    return copy.deepcopy(dialogue_nodes[dia_id])
+    return dialogue_nodes[dia_id]

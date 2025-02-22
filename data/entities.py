@@ -164,15 +164,15 @@ greedlings : dict[str:StateEntity] = {
         state=IdleState()
     ),
     "starved_greedling" : StateEntity(
-        name=("meat","Large Greedling"), 
+        name=("meat","Starving Greedling"), 
         ability_handler=AbilityHandler([get_ability("greedling"), get_ability("starved")]),
         inventory=Inventory(
             EquipmentHandler({
                 "Weapon":get_item("greedling_tooth")
             }),
-            Bag(items=[Key(("celestial"),"Sunforged Key",key_id="crumbling_entrance_key")])
+            Bag(items=[Key(("celestial","Sunforged Key"),key_id="crumbling_entrance_key")])
         ),
-        stathandler=StatHandler({"HP":HPContainer(20), "Bones":BoneContainer(1)}),
+        stathandler=StatHandler({"HP":HPContainer(15), "Bones":BoneContainer(1)}),
         dialogue_manager=None,
         state=IdleState()
     )
@@ -210,13 +210,16 @@ npcs : dict[str:StateEntity] = {
     ),
     "training_dummy" : StateEntity(
         ("wood", "Training Dummy"),
-        inventory=Inventory(None, bag=Bag(-1,[Key(("wood", "Wooden Key"),key_id="wooden_key")])),
+        ability_handler=AbilityHandler([HiddenAbility(OnDeathEffect("dialogue_swap","Dialogue Swap",SetDialogueEffect("wise_figure_proud","id:wise_figure")))]),
         stathandler=StatHandler({"HP":HPContainer(1)}),
         state=NothingState()
     )
 }
 
 entities.update(npcs)
+
+for x in entities:
+    entities[x].id = x
 
 def get_entity(entity_id : str) -> StateEntity:
     return copy.deepcopy(entities[entity_id])

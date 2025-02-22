@@ -15,6 +15,7 @@ import utility
 
 class Interactable:
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]) -> None:
+        self.id : str = ""
         self.name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]] = name
         self.event = Event()
         self.notif = Event()
@@ -31,6 +32,8 @@ class Interactable:
         self.event.subscribe(dungeon.interaction_event)
     def get_name(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
         return self.name
+    def is_id(self, eye_dee : str) -> bool:
+        return eye_dee == self.id
 
 class AbilityHandler(Interactable):
     def __init__(self, abilities : list[Ability] = None):
@@ -136,7 +139,10 @@ class Item(RoomObject):
         self.drop_chance = drop_chance
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
         if dungeon.player.can_take_item(self):
-            return [classes.actions.TakeItemAction(self, dungeon.previous_interactable)]
+            if dungeon.player.can_equip(self):
+                return [classes.actions.EquipItemAction(self, dungeon.previous_interactable), classes.actions.TakeItemAction(self, dungeon.previous_interactable)]
+            else:
+                return [classes.actions.TakeItemAction(self, dungeon.previous_interactable)]
         else:
             return [classes.actions.DummyAction("Your inventory is full.")]
 
@@ -354,7 +360,7 @@ class EquipmentHandler(Interactable):
         self.equipment_dict : dict[str:Equipment] = equipment or {}
     
     def can_equip(self, item : Equipment):
-        if item.equipment_slot in self.equipment_dict:
+        if hasattr(item, "equipment_slot") and item.equipment_slot in self.equipment_dict:
             return True
         else:
             return False
@@ -470,9 +476,7 @@ class Inventory(Interactable):
         return self.equipment_handler.can_equip(item)
 
     def take_item(self, item : Item):
-        if isinstance(item, Equipment) and self.equipment_handler.can_equip_without_swap(item):
-            self.equip_item(item)
-        elif self.bag.can_add_item(item):
+        if self.bag.can_add_item(item):
             self.bag.add_item(item)
         else:
             sys.exit('Item cannot be added to bag!')
@@ -685,7 +689,7 @@ class Entity(RoomObject):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
         choices : list[classes.actions.PlayerAction] = []
         if self.dialogue_manager.has_dialogue():
-            choices.append(classes.actions.PlayerInteractAction(self.dialogue_manager))
+            choices.append(classes.actions.PlayerDialogueAction(self, self.dialogue_manager.root_dialogue))
         if dungeon.actor.has_weapon():
             choices.append(classes.actions.AttackAction(self))
         if self.inventory.equipment_handler.has_equipment_slots():
@@ -735,7 +739,11 @@ class Room(Actor):
     
     def get_choices(self, dungeon) -> list[classes.actions.PlayerAction]:
         choices = []
-        for x in self.room_contents:
+        for x in self.get_roomobjects(lambda item : isinstance(item, Entity) and not isinstance(item, Player)):
+            choices.append(classes.actions.PlayerInteractAction(x))
+        for x in self.get_roomobjects(lambda item : not (isinstance(item, Entity) or isinstance(item, Passage))):
+            choices.append(classes.actions.PlayerInteractAction(x))
+        for x in self.get_roomobjects(lambda item : isinstance(item, Passage)):
             choices.append(classes.actions.PlayerInteractAction(x))
         return choices
     
@@ -761,6 +769,12 @@ class Room(Actor):
             else:
                 pass
         return roomobjets
+
+    def get_roomobject_of_id(self, id : str) -> RoomObject:
+        for x in self.room_contents:
+            if x.is_id(id):
+                return x
+        return None
 
     def get_player(self) -> Player:
         for x in self.room_contents:
