@@ -60,6 +60,12 @@ class AbilityHandler(Interactable):
         new_chain.append(self)
         for x in self.ability_list:
             x.apply(new_chain, effect)
+        
+    def apply_from_bag(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in self.ability_list:
+            x.apply_from_bag(new_chain, effect)
     
     def end_of_round(self, chain):
         new_chain = chain.copy()
@@ -97,6 +103,11 @@ class Actor(Interactable):
         new_chain.append(self)
         self.ability_handler.apply(new_chain, effect)
     
+    def apply_statics_in_bag(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.ability_handler.apply_from_bag(new_chain, effect)
+
     def has_ability(self, id : str) -> bool:
         return self.ability_handler.has_ability(id)
     
@@ -348,6 +359,9 @@ class EquipmentHandler(Interactable):
         else:
             return False
 
+    def has_equipment_slots(self) -> bool:
+        return len(self.equipment_dict.keys()) > 0
+
     def can_equip_without_swap(self, item : Equipment):
         if self.can_equip(item) and self.equipment_dict[item.equipment_slot] == None:
             return True
@@ -427,7 +441,7 @@ class Bag(Interactable):
         new_chain = chain.copy()
         new_chain.append(self)
         for x in self.items_list:
-            x.apply_statics(new_chain, effect)
+            x.apply_statics_in_bag(new_chain, effect)
 
     def get_items_in_bag(self, condition = lambda item : True) -> list["Item"]:
         roomobjets : list["Item"] = []
@@ -621,10 +635,10 @@ class Entity(RoomObject):
         self.inventory.equip_item(item)
     
     def has_stat(self, stat: str):
-        self.stathandler.has_stat(stat)
+        return self.stathandler.has_stat(stat)
     
     def get_stat(self, stat: str):
-        self.stathandler.get_stat(stat)
+        return self.stathandler.get_stat(stat)
 
     def unequip_item(self, item : Equipment):
         self.inventory.unequip_item(item)
@@ -632,6 +646,9 @@ class Entity(RoomObject):
     def can_equip(self, item : Equipment):
         return self.inventory.can_equip(item)
     
+    def get_description(self):
+        return utility.combine_text([self.stathandler.get_description(), self.ability_handler.get_description()])
+
     def get_drops(self) -> list[Item]:
         all_items : list[Item] = self.inventory.get_all_items()
         drops : list[Item] = []
@@ -667,14 +684,12 @@ class Entity(RoomObject):
     
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
         choices : list[classes.actions.PlayerAction] = []
-        if dungeon.actor.has_weapon():
-            choices.append(classes.actions.AttackAction(self))
         if self.dialogue_manager.has_dialogue():
             choices.append(classes.actions.PlayerInteractAction(self.dialogue_manager))
-        choices.append(classes.actions.PlayerInteractAction(self.stathandler))
-        if self.ability_handler.has_abilities():
-            choices.append(classes.actions.PlayerInteractAction(self.ability_handler))
-        choices.append(classes.actions.PlayerInteractAction(self.inventory.equipment_handler))
+        if dungeon.actor.has_weapon():
+            choices.append(classes.actions.AttackAction(self))
+        if self.inventory.equipment_handler.has_equipment_slots():
+            choices.append(classes.actions.PlayerInteractAction(self.inventory.equipment_handler))
         return choices
 
     def apply_statics(self, chain : list, effect : Effect):
@@ -686,10 +701,8 @@ class Entity(RoomObject):
 class Player(Entity):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
         choices : list[classes.actions.PlayerAction] = []
-        choices.append(classes.actions.PlayerInteractAction(self.inventory))
-        choices.append(classes.actions.PlayerInteractAction(self.stathandler))
-        if self.ability_handler.has_abilities():
-            choices.append(classes.actions.PlayerInteractAction(self.ability_handler))
+        choices.append(classes.actions.PlayerInteractAction(self.inventory.equipment_handler))
+        choices.append(classes.actions.PlayerInteractAction(self.inventory.bag))
         return choices
     
 class StateEntity(Entity):

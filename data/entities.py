@@ -112,6 +112,8 @@ old_entities : dict[str:StateEntity] = {
 
 entities : dict[str:StateEntity] = {}
 
+entities.update(old_entities)
+
 greedlings : dict[str:StateEntity] = {
     "greedling" : StateEntity(
         name=("meat","Greedling"), 
@@ -208,7 +210,7 @@ npcs : dict[str:StateEntity] = {
     ),
     "training_dummy" : StateEntity(
         ("wood", "Training Dummy"),
-        inventory=Inventory(None, Bag=Bag(-1,[Key(("wood", "Wooden Key"),key_id="wooden_key")])),
+        inventory=Inventory(None, bag=Bag(-1,[Key(("wood", "Wooden Key"),key_id="wooden_key")])),
         stathandler=StatHandler({"HP":HPContainer(1)}),
         state=NothingState()
     )

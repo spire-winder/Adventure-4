@@ -58,7 +58,7 @@ class WanderState(State):
     def decide(self, dungeon ):
         current_room = dungeon.get_location_of_actor(self.state_entity)
         if dungeon.player in current_room.room_contents:
-            self.state_entity.change_state(AttackingState(), dungeon)
+            self.state_entity.change_state(AttackingState(), dungeon, True)
         else:
             if self.time > 0:
                 self.time -= 1

@@ -594,14 +594,14 @@ class TakeItemAction(PlayerAction):
 
 class UnequipItemAction(PlayerAction):
     def __init__(self, item : "Equipment"):
+        super().__init__()
         self.item = item
     
     def execute(self, dungeon) -> None:
         if not dungeon.actor.can_take_item(self.item):
             return
         dungeon.actor.unequip_item(self.item)
-        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " unequipped the ", self.item.get_name(), "."])
-        dungeon.end_current_turn()
+        self.prev.prev.execute(dungeon)
     
     def get_name(self):
         return "Unequip"
@@ -638,13 +638,15 @@ class EquipItemAction(PlayerAction):
 
 class DiscardItemAction(PlayerAction):
     def __init__(self, item : "Equipment"):
+        super().__init__()
         self.item = item
     
     def execute(self, dungeon) -> None:
         dungeon.actor.remove_item(self.item)
         AddRoomObjEffect(dungeon.place, self.item).execute(dungeon)
-        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " discarded the ", self.item.get_name(), "."])
-        dungeon.end_current_turn()
+        #dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " discarded the ", self.item.get_name(), "."])
+        #dungeon.end_current_turn()
+        self.prev.prev.execute(dungeon)
     
     def get_name(self):
         return "Discard"
@@ -666,6 +668,7 @@ class EatAction(PlayerAction):
 
 class UseAction(PlayerAction):
     def __init__(self, item, target, verb : str = "uses"):
+        super().__init__()
         self.item = item
         self.target = target
         self.verb = verb
@@ -679,6 +682,7 @@ class UseAction(PlayerAction):
 
 class AttackAction(PlayerAction):
     def __init__(self, entity):
+        super().__init__()
         self.entity = entity
     
     def execute(self, dungeon) -> None:

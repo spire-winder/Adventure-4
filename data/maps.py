@@ -138,6 +138,7 @@ ruins_of_the_sun : dict[str:Room] = {
     "starting_room": Room(
         name=[("celestial", "Sky"),("stone", " Chamber")],
         room_contents=[
+            player,
             get_entity("wise_figure"),
             get_entity("training_dummy"),
             LockedPassage(("stone", "Chamber Exit (north)"),destination_id="decrepit_cellar",key_id="wooden_key")

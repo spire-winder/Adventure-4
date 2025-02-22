@@ -66,8 +66,11 @@ class Dungeon:
         self.previous_interactable : Interactable = None
         self.actor : Actor = self.player
         self.place = self.get_location_of_actor(self.actor)
-        self.place.interact()
+        self.interact_with_room()
     
+    def interact_with_room(self) -> None:
+        self.place.interact()
+
     def generate_action_queue(self):
         self.action_queue : list[Actor] = []
         for x in self.map:

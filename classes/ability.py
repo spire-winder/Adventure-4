@@ -15,6 +15,8 @@ class Ability:
         return utility.combine_text([self.get_name(), utility.tab_text(self.get_desc())])
     def apply(self, chain : list, effect : Effect):
         pass
+    def apply_from_bag(self, chain : list, effect : Effect):
+        pass
     def end_of_round(self, chain):
         pass
     def is_id(self, the_id : str) -> bool:
@@ -81,6 +83,8 @@ class Sharpness(Ability):
             if self.sharpness <= 0.05:
                 chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[-2].get_name(), " broke!"])
                 chain[3].bag.remove_item(chain[-2])
+    def apply_from_bag(self, chain, effect):
+        return self.apply(chain, effect)
     def dull(self, amount : float):
         self.sharpness *= amount
     def sharpen(self, amount : float):
@@ -102,6 +106,8 @@ class ManaCost(Ability):
             elif not chain[2].get_stat("MP").spend(self.mpcost):
                 chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), "'s mana ran out!"])
                 effect.cancel()
+    def apply_from_bag(self, chain, effect):
+        return self.apply(chain, effect)
 
 class SingleUse(Ability):
     def __init__(self):
@@ -125,6 +131,8 @@ class MultiUse(Ability):
             if self.uses <= 0:
                 chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[-2].get_name(), " broke!"])
                 chain[3].bag.remove_item(chain[-2])
+    def apply_from_bag(self, chain, effect):
+        return self.apply(chain, effect)
 
 class Armor(Ability):
     def get_desc(self):
