@@ -37,7 +37,8 @@ abilities : dict[str:Ability] = {
         ("meat", "Starved"),
         "slashing",
         3
-    )
+    ),
+    "hidden_single_use":HiddenAbility(SingleUse())
 }
 
 def get_ability(ability_id : str) -> "Ability":

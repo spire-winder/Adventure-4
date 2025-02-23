@@ -5,7 +5,6 @@ import utility
 import copy
 import math
 import random
-from abc import ABC, abstractmethod
 if typing.TYPE_CHECKING:
     from collections.abc import Callable, Hashable, MutableSequence
     from classes.interactable import *
@@ -14,7 +13,7 @@ if typing.TYPE_CHECKING:
     from classes.interactable import Item
     from classes.interactable import Campfire
 
-class Effect(ABC):
+class Effect:
     """Effects govern communication between Actors."""
     def execute_with_statics_and_reformat(self, dungeon, reformat_dict : dict, deepcopy : bool = False):
         fresh_effect : Effect = copy.deepcopy(self) if deepcopy else self
@@ -37,10 +36,11 @@ class Effect(ABC):
                     reform_list : list[str] = reform_str.split(":")
                     if reform_list[0] == "id":
                         vars(self)[x] = dungeon.place.get_roomobject_of_id(reform_list[1])
+                    elif reform_list[0] == "roomid":
+                        vars(self)[x] = dungeon.map[reform_list[1]].get_roomobject_of_id(reform_list[2])
     def __init__(self):
         super().__init__()
         self.cancelled : bool = False
-    @abstractmethod
     def execute(self, dungeon):
         pass
     def get_desc(self):
@@ -340,7 +340,7 @@ class UseEffect(Effect):
         message.append(self.source.get_name())
         message.append(" ")
         message.append(self.verb)
-        message.append(" ")
+        message.append("s ")
         if self.target != None:
             message.append(self.target.get_name())
             message.append(" with ")
@@ -348,12 +348,14 @@ class UseEffect(Effect):
         message.append(".")
         dungeon.add_to_message_queue_if_visible(message)
         reformat_dict = {
+            "place":dungeon.place, 
             "user":self.source, 
             "target":self.target, 
             "item":self.item
         }
         new_effect : Effect = copy.deepcopy(self.item.get_effect(self.verb))
         new_effect.execute_with_statics_and_reformat(dungeon, reformat_dict, True)
+        self.item.use(dungeon)
 
 class EnterPassageEffect(Effect):
     """The source enters the target."""
@@ -363,18 +365,15 @@ class EnterPassageEffect(Effect):
         self.target = target
 
     def execute(self, dungeon):
-        if not self.source == dungeon.player:
-            dungeon.add_to_message_queue_if_actor_visible(self.source, [self.source.get_name(), " entered ", self.target.get_name(), "."])
         source_room = dungeon.place
         target_room = dungeon.map[self.target.destination_id]
+        if not self.source == dungeon.player:
+            dungeon.add_to_message_queue_if_actor_visible(self.source, [self.source.get_name(), " exits ", source_room.get_name(),"."])
         RemoveRoomObjEffect(source_room, self.source).execute(dungeon)
         AddRoomObjEffect(target_room, self.source).execute(dungeon)
         dungeon.update_location()
-        if not self.source == dungeon.player:
-            dungeon.add_to_message_queue_if_actor_visible(self.source, [self.source.get_name(), " exited ", self.target.get_name(), "."])
-        elif self.source == dungeon.player:
-            dungeon.add_to_message_queue([self.source.get_name(), " passes through ", self.target.get_name(), "."])
-
+        dungeon.add_to_message_queue_if_actor_visible(self.source, [self.source.get_name(), " enters ", target_room.get_name(),"."])
+        
 class UnlockEffect(Effect):
     """The source unlocks the target."""
     def __init__(self, source, target):
@@ -386,6 +385,18 @@ class UnlockEffect(Effect):
         self.target.unlock()
     def get_desc(self):
         return "Unlocks something..."
+
+class LockEffect(Effect):
+    """The source unlocks the target."""
+    def __init__(self, source, target):
+        super().__init__()
+        self.source = source
+        self.target = target
+
+    def execute(self, dungeon):
+        self.target.lock()
+    def get_desc(self):
+        return "Locks something..."
 
 class DestroyEffect(Effect):
     """The source destroys the target."""
@@ -438,18 +449,16 @@ class GiveItemEffect(Effect):
             AddtoInventoryEvent(self.target, self.item).execute(dungeon)
         dungeon.add_to_message_queue_if_actor_visible(self.source, [self.source.get_name(), " gives ",self.target.get_name()," ", self.item.get_name(), "."])
 
-class PlayerAction(ABC):
+class PlayerAction:
     """Effects which the player can call."""
     def __init__(self):
         self.prev = None
-    @abstractmethod
     def get_name(self):
         pass
 
     def get_description(self):
         return None
 
-    @abstractmethod
     def execute(self, dungeon):
         pass
 
@@ -533,9 +542,7 @@ class PlayerDialogueAction(PlayerAction):
     def execute(self, dungeon):
         SetDialogueEffect(self.dialogue, self.speaker).execute_with_statics(dungeon)
         dungeon.player_interact(PlayerInteractAction(self.speaker.dialogue_manager))
-        utility.log(str(self.dialogue))
         if self.dialogue.get_effect() != None:
-            utility.log("do it!")
             reformat_dict = {
                 "player":dungeon.player, 
                 "speaker":self.speaker
@@ -561,7 +568,7 @@ class UnlockAction(PlayerAction):
         self.target = target
         self.key = key
     def execute(self, dungeon):
-        UseEffect(dungeon.player, self.target, self.key, "unlocks").execute_with_statics(dungeon)
+        UseEffect(dungeon.player, self.target, self.key, "unlock").execute_with_statics(dungeon)
         dungeon.end_current_turn()
     def get_name(self):
         return utility.combine_text(["Unlock using ",self.key.get_name()], False)
@@ -573,7 +580,7 @@ class DestroyAction(PlayerAction):
         self.target = target
         self.tool = tool
     def execute(self, dungeon):
-        UseEffect(dungeon.player, self.target, self.tool, "destroys").execute_with_statics(dungeon)
+        UseEffect(dungeon.player, self.target, self.tool, "destroy").execute_with_statics(dungeon)
         dungeon.end_current_turn()
     def get_name(self):
         return utility.combine_text(["Use ",self.tool.get_name()], False)
@@ -586,6 +593,16 @@ class CampfireAction(PlayerInteractAction):
         actions = []
         for x in dungeon.actor.get_items_in_bag(lambda item : hasattr(item,"foodeffect")):
             actions.append(EatAction(x, self.interactable))
+        return actions
+
+class DreamAction(PlayerInteractAction):
+    def get_name(self):
+        return "Dream"
+
+    def get_choices(self, dungeon) -> list[PlayerAction]:
+        actions = []
+        for x in dungeon.get_discovered_campfire_rooms():
+            actions.append(TeleportAction(x, self.interactable))
         return actions
 
 class TakeItemAction(PlayerAction):
@@ -620,8 +637,10 @@ class UnequipItemAction(PlayerAction):
 
 class UseItemAction(PlayerInteractAction):
     def execute(self, dungeon):
-        if len(self.interactable.get_targets(dungeon)) == 1:
+        if len(self.interactable.get_targets(dungeon)) <= 1:
             choices = self.interactable.get_targets(dungeon)
+            if len(choices == 0):
+                choices = [None]
             UseAction(self.interactable, choices[0]).execute(dungeon)
         else:
             dungeon.player_interact(self)
@@ -635,6 +654,29 @@ class UseItemAction(PlayerInteractAction):
 
     def get_name(self):
         return "Use"
+
+class UseUsableAction(PlayerInteractAction):
+    def __init__(self, interactable):
+        super().__init__(interactable)
+
+    def execute(self, dungeon):
+        if len(self.interactable.get_targets(dungeon)) <= 1:
+            choices = self.interactable.get_targets(dungeon)
+            if len(choices) == 0:
+                choices = [None]
+            UseAction(self.interactable, choices[0], self.interactable.verb.lower()).execute(dungeon)
+        else:
+            dungeon.player_interact(self)
+
+    def get_choices(self, dungeon) -> list[PlayerAction]:
+        actions = []
+        targets = self.interactable.get_targets(dungeon)
+        for x in targets:
+            actions.append(UseAction(self.interactable, x, self.interactable.verb.lower()))
+        return actions
+
+    def get_name(self):
+        return self.interactable.verb
 
 class EquipItemAction(PlayerAction):
     def __init__(self, item : "Equipment", source = None):
@@ -674,15 +716,32 @@ class EatAction(PlayerAction):
     
     def execute(self, dungeon) -> None:
         dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " rests at ", self.campfire.get_name(), "."])
-        UseEffect(dungeon.player, None, self.food, "eats").execute_with_statics(dungeon)
+        UseEffect(dungeon.player, None, self.food, "eat").execute_with_statics(dungeon)
         RestoreMPEvent(self.food, dungeon.player, 10).execute_with_statics(dungeon)
         dungeon.end_current_turn()
     
     def get_name(self):
         return ["Eat ", self.food.get_name()]
 
+class TeleportAction(PlayerAction):
+    def __init__(self, room, campfire):
+        super().__init__()
+        self.room = room
+        self.campfire = campfire
+    
+    def execute(self, dungeon) -> None:
+        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " rests at ", self.campfire.get_name(), "."])
+        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " dreams of ", self.room.get_name(), "."])
+        source_room = dungeon.place
+        RemoveRoomObjEffect(source_room, dungeon.player).execute(dungeon)
+        AddRoomObjEffect(self.room, dungeon.player).execute(dungeon)
+        dungeon.end_current_turn()
+    
+    def get_name(self):
+        return ["Dream of ", self.room.get_name()]
+
 class UseAction(PlayerAction):
-    def __init__(self, item, target, verb : str = "uses"):
+    def __init__(self, item, target, verb : str = "use"):
         super().__init__()
         self.item = item
         self.target = target
@@ -701,7 +760,7 @@ class AttackAction(PlayerAction):
         self.entity = entity
     
     def execute(self, dungeon) -> None:
-        UseEffect(dungeon.player, self.entity, dungeon.player.get_weapon(), "attacks").execute_with_statics(dungeon)
+        UseEffect(dungeon.player, self.entity, dungeon.player.get_weapon(), "attack").execute_with_statics(dungeon)
         dungeon.end_current_turn()
     
     def get_name(self):

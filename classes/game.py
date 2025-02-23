@@ -36,7 +36,7 @@ class Game:
     def set_player_name(self, name):
         self.dungeon.player.name = name
 
-    def player_interact(self, inter: classes.actions.PlayerAction):
+    def player_interact(self, inter: classes.actions.PlayerInteractAction):
         self.dungeon.previous_interactable = self.dungeon.current_interactable
         self.dungeon.current_interactable = inter.interactable
         room_list = []
@@ -56,7 +56,7 @@ class Game:
                 player_inter.prev = inter
                 room_list.append(InteractableActionButton(self.dungeon,player_inter))
                 room_list.append(urwid.Divider())
-                room_list.append(ActionButton("Save and Quit", self.save_and_quit))
+                room_list.append(ActionButton("Options", self.load_options_menu_wrapper))
         center_widget : urwid.ListBox = urwid.ListBox(urwid.SimpleFocusListWalker(room_list))
         self.set_center_event.emit(new_center=center_widget)
 
@@ -75,13 +75,29 @@ class Game:
         notif_widget = urwid.ListBox(urwid.SimpleFocusListWalker(li))
         self.set_center_event.emit(new_center=notif_widget)
 
+    def load_options_menu_wrapper(self, button):
+        self.load_options_menu()
+
+    def load_options_menu(self):
+        options_menu_options = []
+        options_menu_options.append(ActionButton("Resume", self.resume_wrapper))
+        options_menu_options.append(ActionButton("Save", self.save_wrapper))
+        options_menu_options.append(ActionButton("Save and quit", self.save_and_quit))
+        options_menu = urwid.ListBox(urwid.SimpleFocusListWalker(options_menu_options))
+        self.set_center_event.emit(new_center=options_menu)
+    
+    def save_wrapper(self, button : ActionButton) -> None:
+        self.save()
 
     def save(self) -> None:
         systems.save_system.save_game(self.save_file, self.dungeon)
-    
-    def delete_save(self) -> None:
-        systems.save_system.delete_game(self.save_file)
 
+    def resume_wrapper(self, button : ActionButton) -> None:
+        self.resume()
+
+    def resume(self) -> None:
+        self.dungeon.interact_with_room()
+    
     def delete_and_quit(self, button : ActionButton) -> None:
         self.quit_event.emit()
 

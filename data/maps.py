@@ -134,6 +134,17 @@ standard_map : dict = {
 
 map : dict[str:Room] = {}
 
+misc_dic : dict[str:] = {
+    "arcane_entrance":LockedPassage(("stone", "Hidden Passage"),destination_id="shattered_spire"),
+    "arcane_entrance_lever":Lever(("stone","Hidden Lever"),oneffect=LockEffect("item","id:arcane_entrance"),offeffect=UnlockEffect("item","id:arcane_entrance"))
+}
+
+for x in misc_dic:
+    misc_dic[x].id = x
+
+def get_misc(entity_id : str) -> StateEntity:
+    return copy.deepcopy(misc_dic[entity_id])
+
 ruins_of_the_sun : dict[str:Room] = {
     "starting_room": Room(
         name=[("celestial", "Sky"),("stone", " Chamber")],
@@ -141,7 +152,9 @@ ruins_of_the_sun : dict[str:Room] = {
             player,
             get_entity("wise_figure"),
             get_entity("training_dummy"),
-            LockedPassage(("stone", "Chamber Exit"),destination_id="decrepit_cellar",key_id="wooden_key")
+            LockedPassage(("stone", "Chamber Exit"),destination_id="decrepit_cellar",key_id="wooden_key"),
+            Campfire(("heat", "DEBUG Campfire")),
+            get_item("diving_gear")
         ]
     ),
     "decrepit_cellar": Room(
@@ -157,6 +170,7 @@ ruins_of_the_sun : dict[str:Room] = {
         name=("stone", "Stone Rotunda"),
         room_contents=[
             get_entity("large_greedling"),
+            Campfire(("heat", "Roaring Campfire")),
             LockedPassage(("celestial", "Temple Gate"),destination_id="crumbling_entrance",key_id="crumbling_entrance_key"),
             LockedPassage(("celestial", "Vault Door"),destination_id="ransacked_vault",key_id="ransacked_vault_key"),
             Passage(("stone", "Cracked Steps"),destination_id="decrepit_cellar"),
@@ -193,6 +207,7 @@ ruins_of_the_sun : dict[str:Room] = {
     "sandy_chapel": Room(
         name=[("sand", "Sandy "), ("stone", "Chapel")],
         room_contents=[
+            Container(("wood", "Wooden Barrel"), contents=[get_item("roast_chicken")]),
             Destructible(("sand", "Pile of Sand"), contents=[Key(name=("celestial", "Vault Key"), key_id="ransacked_vault_key")], tool_requirement="Shovel", tool_strength=1),
             Passage(("stone", "Hallway"),destination_id="western_hallway"),
         ]
@@ -208,11 +223,109 @@ ruins_of_the_sun : dict[str:Room] = {
         name=("stone", "Crumbling Entrance"),
         room_contents=[
             Passage(("celestial", "Temple Gate"),destination_id="stone_rotunda"),
+            Passage(("stone", "Northern Cavern"),destination_id="empty_cavern"),
         ]
     ),
 }
 
 map.update(ruins_of_the_sun)
+
+shattered_ruins : dict[str:Room] = {
+    "empty_cavern": Room(
+        name=[("stone", "Empty Cavern")],
+        room_contents=[
+            Passage(("celestial", "Southern Temple"),destination_id="crumbling_entrance"),
+            Passage(("stone", "Northern Trail"),destination_id="ancient_courtyard"),
+        ]
+    ),
+    "ancient_courtyard": Room(
+        name=("stone", "Ancient Courtyard"),
+        room_contents=[
+            Passage(("stone", "Northern Road"),destination_id="cobblestone_road"),
+            Passage(("stone", "Eastern Cave"),destination_id="echoing_cave"),
+            Passage(("stone", "Southern Trail"),destination_id="empty_cavern"),
+            Passage(("stone", "Western Gate"),destination_id="foreboding_entry"),
+            Campfire(("heat", "Dying Campfire"))
+        ]
+    ),
+    "echoing_cave": Room(
+        name=("stone", "Echoing Cave"),
+        room_contents=[
+            Passage(("stone", "Western Courtyard"),destination_id="ancient_courtyard"),
+            SubmergedPassage(("water", "Underwater Passage"),destination_id="submerged_cavern"),
+        ]
+    ),
+    "submerged_cavern": Room(
+        name=("water", "Submerged Cavern"),
+        room_contents=[
+            SubmergedPassage(("water", "Underwater Passage"),destination_id="echoing_cave"),
+        ]
+    ),
+    "cobblestone_road": Room(
+        name=("stone", "Cobblestone Road"),
+        room_contents=[
+            Passage(("stone", "Southern Courtyard"),destination_id="ancient_courtyard"),
+        ]
+    ),
+    "foreboding_entry": Room(
+        name=("stone", "Foreboding Entry"),
+        room_contents=[
+            Passage(("stone", "Eastern Courtyard"),destination_id="ancient_courtyard"),
+            Passage(("stone", "Western Hall"),destination_id="ransacked_hall"),
+        ]
+    ),
+    "ransacked_hall": Room(
+        name=("stone", "Ransacked Hall"),
+        room_contents=[
+            Passage(("stone", "Eastern Entryway"),destination_id="foreboding_entry"),
+            Passage(("stone", "Throne Room"),destination_id="throne_room"),
+            UsableRoomObj(("arcane", "Curtains"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),verb="Unveil", useeffect=AddRoomObjEffect("place",get_misc("arcane_entrance"))),
+            UsableRoomObj(("arcane", "Curtains"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),verb="Unveil",useeffect=AddRoomObjEffect("place",get_misc("arcane_entrance_lever"))),
+        ]
+    ),
+    "shattered_spire": Room(
+        name=("stone", "Shattered Spire"),
+        room_contents=[
+            Passage(("stone", "Spire Exit"),destination_id="ransacked_hall"),
+        ]
+    ),
+    "throne_room": Room(
+        name=("stone", "Throne Room"),
+        room_contents=[
+            Passage(("stone", "Eastern Hall"),destination_id="ransacked_hall"),
+            Passage(("stone", "Royal Suite"),destination_id="royal_suite"),
+            Passage(("iron", "Southern Armory"),destination_id="forgotten_armory"),
+        ]
+    ),
+    "arcane_archive": Room(
+        name=("stone", "Arcane Archive"),
+        room_contents=[
+            Passage(("stone", "Archive Exit"),destination_id="throne_room"),
+        ]
+    ),
+    "hidden_garden": Room(
+        name=("stone", "Hidden Garden"),
+        room_contents=[
+            Passage(("stone", "Garden Exit"),destination_id="royal_suite"),
+        ]
+    ),
+    "forgotten_armory": Room(
+        name=("stone", "Forgotten Armory"),
+        room_contents=[
+            Passage(("stone", "Throne Room"),destination_id="throne_room"),
+        ]
+    ),
+    "royal_suite": Room(
+        name=("stone", "Royal Suite"),
+        room_contents=[
+            Passage(("stone", "Throne Room"),destination_id="throne_room"),
+            LockedPassage(("wood", "Wooden Door"),destination_id="hidden_garden",key_id="garden_key"),
+        ]
+    ),
+}
+
+map.update(shattered_ruins)
+
 
 systems.save_system.create_folder(systems.save_system.map_dir_name)
 systems.save_system.save_map("standard", map)

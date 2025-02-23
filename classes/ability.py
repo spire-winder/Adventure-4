@@ -133,7 +133,10 @@ class SingleUse(Ability):
         super().__init__("singleuse","Single Use",None)
     def apply(self, chain : list, effect : Effect):
         if isinstance(effect, UseEffect) and effect.item == chain[-2]:
-            chain[3].bag.remove_item(chain[-2])
+            if hasattr(chain[3], "bag"):
+                chain[3].bag.remove_item(chain[-2])
+            elif effect.item == chain[2]:
+                chain[1].remove_roomobject(chain[2])
     def apply_from_bag(self, chain, effect):
         return self.apply(chain, effect)
 

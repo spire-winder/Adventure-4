@@ -252,7 +252,7 @@ consumeable_items : dict[str:Item] = {
     "healing_potion":Potion(
         name=("healing","Healing Potion"),
         ability_handler=AbilityHandler([SingleUse()]),
-        useeffect=HealEvent("item","user",20)
+        useeffect=HealEvent("item","user",10)
     ),
     "restoration_potion":Potion(
         name=("magic","Restoration Potion"),
@@ -262,17 +262,17 @@ consumeable_items : dict[str:Item] = {
     "healing_potion_with_magic":Potion(
         name=utility.alternate_colors("Infused Healing Potion",["healing"*2,"magic"*2]),
         ability_handler=AbilityHandler([ManaCost("manacost","Mana Cost", 5),SingleUse()]),
-        useeffect=HealEvent("item","user",50)
+        useeffect=HealEvent("item","user",15)
     ),
     "regen_potion":Potion(
         name=("healing","Regeneration Potion"),
         ability_handler=AbilityHandler([SingleUse()]),
-        useeffect=AddAbilityEffect("user",Status(get_ability("regen"),10))
+        useeffect=AddAbilityEffect("user",Status(get_ability("regen"),5))
     ),
     "ironhide_potion":Potion(
         name=("iron","Ironhide Potion"),
         ability_handler=AbilityHandler([SingleUse()]),
-        useeffect=AddAbilityEffect("user",Status(Armor("iron_hide", ("iron", "Ironhide"),8),10))
+        useeffect=AddAbilityEffect("user",Status(Armor("iron_hide", ("iron", "Ironhide"),3),5))
     )
 }
 
@@ -349,7 +349,8 @@ tools : dict[str:Item] = {
         ability_handler=AbilityHandler([Sharpness()]),
         tool_type="Shovel",
         tool_strength=5
-    )
+    ),
+    "diving_gear":Equipment(("water","Diving Gear"),ability_handler=AbilityHandler([Ability("water_breathing",("water", "Water Breathing"),"Allows you to breathe underwater.")]),slot="Helmet")
 }
 
 items.update(tools)

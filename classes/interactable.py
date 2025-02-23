@@ -128,10 +128,14 @@ class Campfire(RoomObject):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None) -> None:
         super().__init__(name, ability_handler)
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
+        choices = []
         if len(dungeon.actor.get_items_in_bag(lambda item : hasattr(item,"foodeffect"))) > 0:
-            return [classes.actions.CampfireAction(self)]
+            choices.append(classes.actions.CampfireAction(self))
         else:
-            return [classes.actions.DummyAction(["You need food to rest at the ", self.name, "."])]
+            choices.append(classes.actions.DummyAction(["You need food to rest at the ", self.name, "."]))
+        if len(dungeon.get_discovered_campfire_rooms()) > 1:
+            choices.append(classes.actions.DreamAction(self))
+        return choices
 
 class Item(RoomObject):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1) -> None:
@@ -162,10 +166,47 @@ class UsableItem(Item):
     
     def get_effect(self, verb : str) -> Effect:
         return self.useeffect
+    def use(self, dungeon) -> None:
+        pass
 
 class Potion(UsableItem):
     def get_targets(self, dungeon):
         return dungeon.place.get_roomobjects(lambda x : isinstance(x, Player))
+
+class UsableRoomObj(RoomObject):
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, verb : str = "uses", useeffect : classes.actions.Effect = None) -> None:
+        super().__init__(name, ability_handler)
+        self.verb = verb
+        self.useeffect = useeffect or Effect()
+    
+    def get_choices(self, dungeon):
+        return [UseUsableAction(self)]
+
+    def get_targets(self, dungeon):
+        return [None]
+
+    def can_use(self, dungeon) -> bool:
+        return len(self.get_targets(dungeon)) > 0
+
+    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        return utility.combine_text([self.get_effect("use").get_desc(), self.ability_handler.get_description()])
+    
+    def get_effect(self, verb : str) -> Effect:
+        return self.useeffect
+    def use(self, dungeon) -> None:
+        pass
+
+class Lever(UsableRoomObj):
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, active : bool = False, oneffect : classes.actions.Effect = None, offeffect : classes.actions.Effect = None) -> None:
+        super().__init__(name, ability_handler,"Flip")
+        self.oneffect : Effect = oneffect or Effect()
+        self.offeffect : Effect = offeffect or Effect()
+        self.active : bool = active
+
+    def get_effect(self, verb : str) -> Effect:
+        return self.oneffect if self.active else self.offeffect
+    def use(self, dungeon) -> None:
+        self.active = not self.active
 
 class Key(Item):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, keyeffect : classes.actions.Effect = None, key_id : str = "?") -> None:
@@ -180,6 +221,9 @@ class Key(Item):
     def get_effect(self, verb : str) -> Effect:
         return self.keyeffect
 
+    def use(self, dungeon) -> None:
+        pass
+ 
     def can_unlock(self, id) -> bool:
         return self.key_id == id
 
@@ -196,6 +240,8 @@ class Tool(Item):
 
     def get_effect(self, verb : str) -> Effect:
         return self.tooleffect
+    def use(self, dungeon) -> None:
+        pass
 
     def can_destroy(self, id : str, strength : int) -> bool:
         return self.tool_type == id and self.tool_strength >= strength
@@ -227,6 +273,8 @@ class Weapon(Equipment):
     
     def get_effect(self, verb : str) -> Effect:
         return self.attackeffect
+    def use(self, dungeon) -> None:
+        pass
 
 class MeleeWeapon(Weapon):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, attackeffect : classes.actions.Effect = None, sharpness : float = 1.0, durability : float = 0.9) -> None:
@@ -255,6 +303,8 @@ class Food(Item):
     
     def get_effect(self, verb : str) -> Effect:
         return self.foodeffect
+    def use(self, dungeon) -> None:
+        pass
 
 class Stat:
     def get_text():
@@ -412,6 +462,12 @@ class EquipmentHandler(Interactable):
             if x != None:
                 equips.append(x)
         return equips
+    
+    def has_ability(self, id):
+        for x in self.equipment_dict.values():
+            if x != None and x.has_ability(id):
+                return True
+        return False
 
 class Bag(Interactable):
     def __init__(self, size : int = -1, items : list[Item] = None):
@@ -509,6 +565,9 @@ class Inventory(Interactable):
     
     def get_items_in_bag(self, condition = lambda item : True) -> list["Item"]:
         return self.bag.get_items_in_bag(condition)
+    
+    def has_ability(self, id):
+        return self.equipment_handler.has_ability(id)
 
 class Passage(RoomObject):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = None, destination_id : str = "?"):
@@ -538,6 +597,14 @@ class LockedPassage(Passage):
         self.locked : bool = False
     def lock(self):
         self.locked : bool = True
+
+class SubmergedPassage(Passage):
+    def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
+        utility.log(dungeon.player.has_ability("water_breathing"))
+        if not dungeon.player.has_ability("water_breathing"):
+            return [classes.actions.DummyAction("You can't breathe underwater.")]
+        else:
+            return [classes.actions.EnterPassageAction(self)]
 
 class Destructible(RoomObject):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = None, contents : list[RoomObject] = None, tool_requirement : str = "?", tool_strength : int = 0):
@@ -692,8 +759,8 @@ class Entity(RoomObject):
             choices.append(classes.actions.PlayerDialogueAction(self, self.dialogue_manager.root_dialogue))
         if dungeon.actor.has_weapon():
             choices.append(classes.actions.AttackAction(self))
-        if self.inventory.equipment_handler.has_equipment_slots():
-            choices.append(classes.actions.PlayerInteractAction(self.inventory.equipment_handler))
+        # if self.inventory.equipment_handler.has_equipment_slots():
+        #     choices.append(classes.actions.PlayerInteractAction(self.inventory.equipment_handler))
         return choices
 
     def apply_statics(self, chain : list, effect : Effect):
@@ -701,6 +768,9 @@ class Entity(RoomObject):
         new_chain = chain.copy()
         new_chain.append(self)
         self.inventory.apply_statics(new_chain, effect)
+    
+    def has_ability(self, id):
+        return super().has_ability(id) or self.inventory.has_ability(id)
 
 class Player(Entity):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
@@ -735,6 +805,7 @@ class StateEntity(Entity):
 class Room(Actor):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = None, room_contents : list["RoomObject"] = None) -> None:
         self.room_contents : list[RoomObject] = room_contents or None
+        self.discovered : bool = True # TODO: change to False
         super().__init__(name, ability_handler)
     
     def get_choices(self, dungeon) -> list[classes.actions.PlayerAction]:

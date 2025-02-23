@@ -69,7 +69,15 @@ class Dungeon:
         self.interact_with_room()
     
     def interact_with_room(self) -> None:
+        self.place.discovered = True
         self.place.interact()
+
+    def get_discovered_campfire_rooms(self) -> list[Room]:
+        possibilities : list[Room] = []
+        for x in self.map:
+            if self.map[x].discovered and self.map[x].get_roomobjects(lambda item : isinstance(item, Campfire)):
+                possibilities.append(self.map[x])
+        return possibilities
 
     def generate_action_queue(self):
         self.action_queue : list[Actor] = []

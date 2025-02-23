@@ -24,6 +24,7 @@ material_palette = [
     ("food", "brown", ""),
     ("bone", "light gray", ""),
     ("rust", "dark red", ""),
+    ("water", "dark blue", ""),
 ]
 
 damage_types = [
