@@ -22,6 +22,11 @@ abilities : dict[str:Ability] = {
         name=("meat","Greedling"),
         desc=[("meat","Greedlings"), " are small pests that inhabit ancient ruins, scavenging for shiny objects which they love."]
     ),
+    "spined":Ability(
+        id="spined",
+        name=("iron","Spined"),
+        desc=[("iron","Spined"), " are creatures brought to madness by painful iron spines driven into their backs."]
+    ),
     "regen":EndOfTurnEffect(
         id="regen",
         name=("healing","Regeneration"),

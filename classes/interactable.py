@@ -63,6 +63,12 @@ class AbilityHandler(Interactable):
         new_chain.append(self)
         for x in self.ability_list:
             x.apply(new_chain, effect)
+    
+    def reply(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in self.ability_list:
+            x.reply(new_chain, effect)
         
     def apply_from_bag(self, chain : list, effect : Effect):
         new_chain = chain.copy()
@@ -105,6 +111,11 @@ class Actor(Interactable):
         new_chain = chain.copy()
         new_chain.append(self)
         self.ability_handler.apply(new_chain, effect)
+    
+    def reply(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.ability_handler.reply(new_chain, effect)
     
     def apply_statics_in_bag(self, chain : list, effect : Effect):
         new_chain = chain.copy()
@@ -462,6 +473,13 @@ class EquipmentHandler(Interactable):
             if not x == None:
                 x.apply_statics(new_chain, effect)
     
+    def reply(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in self.equipment_dict.values():
+            if not x == None:
+                x.reply(new_chain, effect)
+
     def get_items(self) -> list[Equipment]:
         equips : list[Equipment] = []
         for x in self.equipment_dict.values():
@@ -510,6 +528,12 @@ class Bag(Interactable):
         new_chain.append(self)
         for x in self.items_list:
             x.apply_statics_in_bag(new_chain, effect)
+
+    def reply(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in self.items_list:
+            x.reply(new_chain, effect)
 
     def get_items_in_bag(self, condition = lambda item : True) -> list["Item"]:
         roomobjets : list["Item"] = []
@@ -569,6 +593,12 @@ class Inventory(Interactable):
         self.equipment_handler.apply_statics(new_chain, effect)
         self.bag.apply_statics(new_chain, effect)
     
+    def reply(self, chain : list, effect : Effect):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.equipment_handler.reply(new_chain, effect)
+        self.bag.reply(new_chain, effect)
+
     def get_items_in_bag(self, condition = lambda item : True) -> list["Item"]:
         return self.bag.get_items_in_bag(condition)
     
@@ -774,6 +804,12 @@ class Entity(RoomObject):
         new_chain.append(self)
         self.inventory.apply_statics(new_chain, effect)
     
+    def reply(self, chain : list, effect : Effect):
+        super().reply(chain, effect)
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.inventory.reply(new_chain, effect)
+
     def has_ability(self, id):
         return super().has_ability(id) or self.inventory.has_ability(id)
 
@@ -900,6 +936,14 @@ class Room(Actor):
         new_chain.append(self)
         for x in self.room_contents:
             x.apply_statics(new_chain, effect)
+
+    def reply(self, chain : list, effect : Effect):
+        super().reply(chain, effect)
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in self.room_contents:
+            x.reply(new_chain, effect)
+
     def end_of_round(self, chain) -> None:
         super().end_of_round(chain)
         new_chain = chain.copy()

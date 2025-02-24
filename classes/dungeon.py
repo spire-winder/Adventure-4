@@ -140,3 +140,7 @@ class Dungeon:
     def apply_statics(self, effect : Effect):
         chain : list = [self]
         self.place.apply_statics(chain, effect)
+    
+    def reply(self, effect : Effect):
+        chain : list = [self]
+        self.place.reply(chain, effect)

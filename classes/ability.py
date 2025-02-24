@@ -15,6 +15,8 @@ class Ability:
         return utility.combine_text([self.get_name(), utility.tab_text(self.get_desc())])
     def apply(self, chain : list, effect : Effect):
         pass
+    def reply(self, chain : list, effect : Effect):
+        pass
     def apply_from_bag(self, chain : list, effect : Effect):
         pass
     def end_of_round(self, chain):
@@ -177,6 +179,19 @@ class Armor(Ability):
                 if effect.armor_penetrate < 0:
                     effect.armor_penetrate = 0
             effect.damage -= current_armor
+
+class Reciprocate(Ability):
+    def get_desc(self):
+        return utility.combine_text(["When attacked, ", self.reciprocate_effect.get_desc()],False)
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], reciprocate_effect : Effect = None):
+        super().__init__(id,name)
+        self.reciprocate_effect = reciprocate_effect or Effect()
+    def reply(self, chain : list, effect : Effect):
+        if isinstance(effect, UseEffect) and effect.target == chain[2]:
+            new_effect : Effect = copy.deepcopy(self.reciprocate_effect)
+            new_dict = self.reformat_dict(chain).copy()
+            new_dict["attacker"] = effect.source
+            new_effect.execute_with_statics_and_reformat(chain[0], new_dict, True)
 
 class SelectiveArmor(Ability):
     def get_desc(self):

@@ -180,6 +180,23 @@ greedlings : dict[str:StateEntity] = {
 
 entities.update(greedlings)
 
+ruins_lurkers : dict[str:StateEntity] = {
+    "spined_human" : StateEntity(
+        name=("iron","Spined Human"), 
+        ability_handler=AbilityHandler([get_ability("spined"),Reciprocate("spines",("iron","Spines"),DamageEvent("self","attacker",3,"slashing"))]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("greedling_tooth")
+            })
+        ),
+        stathandler=StatHandler({"HP":HPContainer(15), "Bones":BoneContainer(5)}),
+        dialogue_manager=None,
+        state=IdleState()
+    )
+}
+
+entities.update(ruins_lurkers)
+
 npcs : dict[str:StateEntity] = {
     "wise_figure" : StateEntity(
         ("celestial","Wise Figure"), 

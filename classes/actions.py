@@ -21,11 +21,13 @@ class Effect:
         dungeon.apply_statics(fresh_effect)
         if not fresh_effect.cancelled:
             fresh_effect.execute(dungeon)
+            dungeon.reply(fresh_effect)
     def execute_with_statics(self, dungeon, deepcopy : bool = False):
         fresh_effect : Effect = copy.deepcopy(self) if deepcopy else self
         dungeon.apply_statics(fresh_effect)
         if not fresh_effect.cancelled:
             fresh_effect.execute(dungeon)
+            dungeon.reply(fresh_effect)
     def reformat(self, dungeon, reformat_dict : dict):
         for x in vars(self):
             if isinstance(vars(self)[x], str):
@@ -138,6 +140,7 @@ class EffectSequence(Effect):
         dungeon.apply_statics(self)
         for x in self.effects:
             x.execute_with_statics_and_reformat(dungeon, reformat_dict, True)
+        dungeon.reply(self)
 
 class AddtoInventoryEvent(Effect):
     """Adds the target to the source's inventory. If it cannot, then adds to the room"""
@@ -242,6 +245,7 @@ class RepeatEvent(Effect):
         dungeon.apply_statics(self)
         for x in range(self.amount):
             self.effect.execute_with_statics_and_reformat(dungeon, reformat_dict, True)
+        dungeon.reply(self)
 
 class ProbabilityEvent(Effect):
     """Repeats the effect an amount of times."""
@@ -262,6 +266,7 @@ class ProbabilityEvent(Effect):
         dungeon.apply_statics(self)
         if random.random() <= self.chance:
             self.effect.execute_with_statics_and_reformat(dungeon, reformat_dict, True)
+        dungeon.reply(self)
 
 class HealEvent(Effect):
     """Heals the target by an amount."""

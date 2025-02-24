@@ -151,11 +151,10 @@ ruins_of_the_sun : dict[str:Room] = {
         room_contents=[
             player,
             get_entity("wise_figure"),
-            get_entity("traveller"),
             get_entity("training_dummy"),
+            get_entity("spined_human"),
             LockedPassage(("stone", "Chamber Exit"),destination_id="decrepit_cellar",key_id="wooden_key"),
-            Campfire(("heat", "DEBUG Campfire")),
-            get_item("diving_gear")
+            Campfire(("heat", "DEBUG Campfire"))
         ]
     ),
     "decrepit_cellar": Room(
