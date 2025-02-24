@@ -277,6 +277,15 @@ magic_weapon_items : dict[str:Item] = {
         ]),
         mana_cost=10,
         price=10
+    ),
+    "mega_death":MagicWeapon(
+        name=("shadow","Mega Death"),
+        attackeffect=EffectSequence([
+            DamageEvent(damage=110,damage_type="shadow"),
+            AddAbilityEffect("target", Status(get_ability("stun"),5))
+        ]),
+        mana_cost=1,
+        price=10
     )
 }
 
@@ -366,21 +375,42 @@ enemy_items : dict[str:Item] = {
         drop_chance=0,
         attackeffect=DamageEvent(damage=5,damage_type="bashing",armor_penetrate=3)
     ),
-    "greedling_tooth":MeleeWeapon(
+    "tooth":MeleeWeapon(
         name=("meat","Tooth"),
         drop_chance=0.2,
         attackeffect=DamageEvent(damage=2,damage_type="slashing",armor_penetrate=1)
     ),
-    "magic_greedling_tooth":MeleeWeapon(
+    "magic_tooth":MeleeWeapon(
         name=("magic","Arcane Tooth"),
         drop_chance=0.1,
         attackeffect=DamageEvent(damage=4,damage_type="arcane",armor_penetrate=2)
     ),
-    "shadow_greedling_tooth":MeleeWeapon(
+    "shadow_tooth":MeleeWeapon(
         name=("shadow","Shadow Tooth"),
         drop_chance=0.1,
         attackeffect=DamageEvent(damage=6,damage_type="shadow")
-    )
+    ),
+    "rusty_spatula":MeleeWeapon(
+        name=[("rust","Rusty"),("iron"," Spatula")],
+        attackeffect=DamageEvent(damage=10, damage_type="bashing"),
+        durability=0.8,
+        drop_chance=0.3,
+        price=6
+    ),
+    "chef_hat":Equipment(
+        name="Chef's Hat",
+        ability_handler=AbilityHandler([Armor("armor",None,2),OnEatEffect("eat_mp","Home Cooking",RestoreMPEvent("item","user",5))]),
+        slot="Helmet",
+        drop_chance=0.3,
+        price=8
+    ),
+    "chef_apron":Equipment(
+        name="Chef's Apron",
+        ability_handler=AbilityHandler([Armor("armor",None,2),OnEatEffect("eat_hp","Ancestral Recipe",HealEvent("item","user",5))]),
+        slot="Armor",
+        drop_chance=0.3,
+        price=8
+    ),
 }
 
 items.update(enemy_items)

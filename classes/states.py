@@ -47,7 +47,7 @@ class AttackingState(State):
             if not self.state_entity.has_weapon():
                 self.find_weapon(dungeon)
             else:
-                classes.actions.UseEffect(self.state_entity, dungeon.player, self.state_entity.get_weapon(), "attacks").execute_with_statics(dungeon)
+                classes.actions.UseEffect(self.state_entity, dungeon.player, self.state_entity.get_weapon(), "attack").execute_with_statics(dungeon)
         else:
             self.state_entity.change_state(WanderState(3), dungeon, True)
 

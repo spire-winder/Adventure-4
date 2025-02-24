@@ -877,7 +877,9 @@ class Vendor(StateEntity):
 class Room(Actor):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = None, room_contents : list["RoomObject"] = None) -> None:
         self.room_contents : list[RoomObject] = room_contents or None
-        self.discovered : bool = True # TODO: change to False
+        self.discovered : bool = False 
+        if len(self.get_roomobjects(lambda item : isinstance(item, Campfire))) > 0:
+            self.discovered = True# TODO: change to False
         super().__init__(name, ability_handler)
     
     def get_choices(self, dungeon) -> list[classes.actions.PlayerAction]:

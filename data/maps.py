@@ -3,6 +3,7 @@ from classes.actions import *
 from classes.states import *
 from data.entities import get_entity
 from data.items import get_item
+from classes.ability import Spawner
 import systems.save_system
 import copy
 
@@ -152,13 +153,13 @@ ruins_of_the_sun : dict[str:Room] = {
             player,
             get_entity("wise_figure"),
             get_entity("training_dummy"),
-            get_entity("spined_human"),
             LockedPassage(("stone", "Chamber Exit"),destination_id="decrepit_cellar",key_id="wooden_key"),
             Campfire(("heat", "DEBUG Campfire"))
         ]
     ),
     "decrepit_cellar": Room(
         name=("stone", "Decrepit Cellar"),
+        ability_handler=AbilityHandler([Spawner([get_entity("greedling")],4)]),
         room_contents=[
             get_entity("greedling"),
             Container(("wood", "Wooden Chest"), contents=[get_item("rusty_sword"),get_item("leather_armor")]),
@@ -236,6 +237,7 @@ shattered_ruins : dict[str:Room] = {
         room_contents=[
             Passage(("celestial", "Southern Temple"),destination_id="crumbling_entrance"),
             Passage(("stone", "Northern Trail"),destination_id="ancient_courtyard"),
+            get_entity("spined_rat")
         ]
     ),
     "ancient_courtyard": Room(
@@ -257,6 +259,7 @@ shattered_ruins : dict[str:Room] = {
     ),
     "submerged_cavern": Room(
         name=("water", "Submerged Cavern"),
+        ability_handler=AbilityHandler([get_ability("underwater_room")]),
         room_contents=[
             SubmergedPassage(("water", "Underwater Passage"),destination_id="echoing_cave"),
         ]
@@ -270,6 +273,7 @@ shattered_ruins : dict[str:Room] = {
     "foreboding_entry": Room(
         name=("stone", "Foreboding Entry"),
         room_contents=[
+            get_entity("spined_human_1"),
             Passage(("stone", "Eastern Courtyard"),destination_id="ancient_courtyard"),
             Passage(("stone", "Western Hall"),destination_id="ransacked_hall"),
         ]
@@ -277,6 +281,7 @@ shattered_ruins : dict[str:Room] = {
     "ransacked_hall": Room(
         name=("stone", "Ransacked Hall"),
         room_contents=[
+            get_entity("spined_human_2"),
             Passage(("stone", "Eastern Entryway"),destination_id="foreboding_entry"),
             Passage(("stone", "Throne Room"),destination_id="throne_room"),
             Passage(("stone", "Kitchen"),destination_id="kitchen"),
@@ -286,7 +291,9 @@ shattered_ruins : dict[str:Room] = {
     ),
     "kitchen": Room(
         name=("stone", "Kitchen"),
+        ability_handler=AbilityHandler([Spawner([get_entity("spined_chef")],1,6,2)]),
         room_contents=[
+            get_entity("spined_chef"),
             Passage(("stone", "Hall"),destination_id="ransacked_hall"),
         ]
     ),

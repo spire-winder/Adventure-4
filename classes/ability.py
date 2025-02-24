@@ -187,7 +187,7 @@ class Reciprocate(Ability):
         super().__init__(id,name)
         self.reciprocate_effect = reciprocate_effect or Effect()
     def reply(self, chain : list, effect : Effect):
-        if isinstance(effect, UseEffect) and effect.target == chain[2]:
+        if isinstance(effect, UseEffect) and effect.target == chain[2] and effect.source != chain[2]:
             new_effect : Effect = copy.deepcopy(self.reciprocate_effect)
             new_dict = self.reformat_dict(chain).copy()
             new_dict["attacker"] = effect.source
@@ -262,7 +262,7 @@ class SelectiveBuff(Ability):
 
 class EndOfTurnEffect(Ability):
     def get_desc(self):
-        return utility.combine_text([self.effect.get_desc(), " each round"], False)
+        return utility.combine_text([self.effect.get_desc(), " at end of round"], False)
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], effect : Effect):
         super().__init__(id,name)
         self.effect = effect
@@ -281,6 +281,17 @@ class OnDeathEffect(Ability):
             new_effect : Effect = copy.deepcopy(self.effect)
             new_effect.execute_with_statics_and_reformat(chain[0], self.reformat_dict(chain), True)
 
+class OnEatEffect(Ability):
+    def get_desc(self):
+        return utility.combine_text([self.effect.get_desc(), " when eating"], False)
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], effect : Effect):
+        super().__init__(id,name)
+        self.effect = effect
+    def apply(self, chain, effect):
+        if isinstance(effect, UseEffect) and effect.target == chain[2] and hasattr(effect.item,"foodeffect") :
+            new_effect : Effect = copy.deepcopy(self.effect)
+            new_effect.execute_with_statics_and_reformat(chain[0], self.reformat_dict(chain), True)
+
 class ImmuneToAbility(Ability):
     def get_desc(self):
         return utility.combine_text(["Immune to ", self.abil.get_name()], False)
@@ -291,3 +302,37 @@ class ImmuneToAbility(Ability):
         if isinstance(effect, AddAbilityEffect) and effect.target == chain[2] and effect.source.is_id(self.abil.id):
             chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), " is immune to ", effect.source.get_name(), "!"])
             effect.cancel()
+
+class Spawned(Ability):
+    def __init__(self, spawner : Ability):
+        super().__init__("spawned", None, None)
+        self.spawner = spawner
+    def apply(self, chain, effect):
+        if isinstance(effect, DeathEvent) and effect.target == chain[2]:
+            self.spawner.spawned_died(chain[2])
+
+class Spawner(Ability):
+    def __init__(self, entities : list, max_entities : int = 1, spawning_frequency : int = 1, spawning_offset : int = 0):
+        super().__init__("spawner", None, None)
+        self.entities : list= entities
+        self.current_alive : int = 0
+        self.max_entities : int = max_entities
+        self.spawning_frequency : int = spawning_frequency
+        self.spawning_offset : int = spawning_offset
+        self.current_delay : int = 0
+        self.set_delay()
+    def set_delay(self):
+        self.current_delay = self.spawning_frequency + (random.random() - 0.5) * self.spawning_offset * 2
+    def spawned_died(self, entitiy):
+        self.current_alive -= 1
+    def end_of_round(self, chain):
+        self.current_delay -= 1
+        if (self.current_delay <= 0):
+            if  (chain[1].discovered and 
+            chain[0].get_location_of_actor(chain[0].player) != chain[1] and 
+            self.current_alive <= self.max_entities):
+                new_entity = copy.deepcopy(random.choice(self.entities))
+                new_entity.add_ability(HiddenAbility(Spawned(self)))
+                AddRoomObjEffect(chain[1],new_entity).execute_with_statics(chain[0])
+                self.current_alive += 1
+            self.set_delay()

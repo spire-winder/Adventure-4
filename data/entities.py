@@ -120,7 +120,7 @@ greedlings : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("greedling")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("greedling_tooth")
+                "Weapon":get_item("tooth")
             })
         ),
         stathandler=StatHandler({"HP":HPContainer(5), "Bones":BoneContainer(2)}),
@@ -132,7 +132,7 @@ greedlings : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("greedling"), get_ability("greedling_boss")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("greedling_tooth")
+                "Weapon":get_item("tooth")
             })
         ),
         stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
@@ -144,7 +144,7 @@ greedlings : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("greedling")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("magic_greedling_tooth")
+                "Weapon":get_item("magic_tooth")
             })
         ),
         stathandler=StatHandler({"HP":HPContainer(8), "Bones":BoneContainer(2)}),
@@ -156,7 +156,7 @@ greedlings : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("greedling")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("shadow_greedling_tooth")
+                "Weapon":get_item("shadow_tooth")
             })
         ),
         stathandler=StatHandler({"HP":HPContainer(12), "Bones":BoneContainer(3)}),
@@ -168,7 +168,7 @@ greedlings : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("greedling"), get_ability("starved")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("greedling_tooth")
+                "Weapon":get_item("tooth")
             }),
             Bag(items=[Key(("celestial","Sunforged Key"),key_id="crumbling_entrance_key")])
         ),
@@ -181,15 +181,58 @@ greedlings : dict[str:StateEntity] = {
 entities.update(greedlings)
 
 ruins_lurkers : dict[str:StateEntity] = {
-    "spined_human" : StateEntity(
-        name=("iron","Spined Human"), 
+    "spined_rat" : StateEntity(
+        name=[("iron","Spined "), ("meat", "Rat")], 
+        ability_handler=AbilityHandler([get_ability("spined"),Reciprocate("spines",("iron","Spines"),DamageEvent("self","attacker",2,"slashing"))]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("tooth")
+            })
+        ),
+        stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "spined_human_1" : StateEntity(
+        name=[("iron","Spined "), "Human"],
         ability_handler=AbilityHandler([get_ability("spined"),Reciprocate("spines",("iron","Spines"),DamageEvent("self","attacker",3,"slashing"))]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("greedling_tooth")
+                "Weapon":get_item("rusty_sword"),
+                "Offhand":get_item("wooden_shield"),
+                "Helmet":get_item("leather_helmet")
             })
         ),
         stathandler=StatHandler({"HP":HPContainer(15), "Bones":BoneContainer(5)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "spined_human_2" : StateEntity(
+        name=[("iron","Spined "), "Human"],
+        ability_handler=AbilityHandler([get_ability("spined"),Reciprocate("spines",("iron","Spines"),DamageEvent("self","attacker",3,"slashing"))]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("rusty_axe"),
+                "Helmet":get_item("leather_helmet"),
+                "Boots":get_item("leather_boots"),
+            })
+        ),
+        stathandler=StatHandler({"HP":HPContainer(15), "Bones":BoneContainer(5)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "spined_chef" : StateEntity(
+        name=[("iron","Spined "), "Chef"],
+        ability_handler=AbilityHandler([get_ability("spined"),Reciprocate("spines",("iron","Spines"),DamageEvent("self","attacker",5,"slashing"))]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("rusty_spatula"),
+                "Helmet":get_item("chef_hat"),
+                "Armor":get_item("chef_apron"),
+            }),
+            Bag(-1, [get_item("roast_chicken"),get_item("bone_marrow_stew")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(25), "Bones":BoneContainer(5)}),
         dialogue_manager=None,
         state=IdleState()
     )

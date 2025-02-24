@@ -37,7 +37,7 @@ damage_types = [
     ("heat", "light red", ""),
     ("cold", "light cyan", ""),
     ("celestial", "light blue", ""),
-    ("shadow", "black", "white"),
+    ("shadow", "black", "dark gray"),
     ("toxic", "dark green", ""),
     ("lightning", "yellow", ""),
 ]
