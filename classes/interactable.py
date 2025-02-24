@@ -175,34 +175,39 @@ class Potion(UsableItem):
         return dungeon.place.get_roomobjects(lambda x : isinstance(x, Player))
 
 class UsableRoomObj(RoomObject):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, verb : str = "uses", useeffect : classes.actions.Effect = None) -> None:
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, actions : dict[str:Effect] = None) -> None:
         super().__init__(name, ability_handler)
-        self.verb = verb
-        self.useeffect = useeffect or Effect()
+        self.actions = actions or {}
     
     def get_choices(self, dungeon):
-        return [UseUsableAction(self)]
-
-    def get_targets(self, dungeon):
-        return [None]
-
-    def can_use(self, dungeon) -> bool:
-        return len(self.get_targets(dungeon)) > 0
+        choices = []
+        for x in self.actions:
+            choices.append(UseAction(self, None, x))
+        return choices
 
     def get_description(self, dungeon) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        return utility.combine_text([self.get_effect("use").get_desc(), self.ability_handler.get_description(dungeon)])
+        acts = []
+        for x in self.actions:
+            acts.append(self.get_effect(x).get_desc())
+        return utility.combine_text([utility.combine_text(acts), self.ability_handler.get_description(dungeon)])
     
     def get_effect(self, verb : str) -> Effect:
-        return self.useeffect
-    def use(self, dungeon) -> None:
+        return self.actions[verb]
+    def use(self, dungeon):
         pass
 
 class Lever(UsableRoomObj):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, active : bool = False, oneffect : classes.actions.Effect = None, offeffect : classes.actions.Effect = None) -> None:
-        super().__init__(name, ability_handler,"Flip")
+        super().__init__(name, ability_handler)
         self.oneffect : Effect = oneffect or Effect()
         self.offeffect : Effect = offeffect or Effect()
         self.active : bool = active
+
+    def get_choices(self, dungeon):
+        return [UseAction(self, None, "flip")]
+
+    def get_description(self, dungeon) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        return utility.combine_text([self.get_effect("flip").get_desc(), self.ability_handler.get_description(dungeon)])
 
     def get_effect(self, verb : str) -> Effect:
         return self.oneffect if self.active else self.offeffect

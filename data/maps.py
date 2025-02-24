@@ -281,8 +281,8 @@ shattered_ruins : dict[str:Room] = {
             Passage(("stone", "Eastern Entryway"),destination_id="foreboding_entry"),
             Passage(("stone", "Throne Room"),destination_id="throne_room"),
             Passage(("stone", "Kitchen"),destination_id="kitchen"),
-            UsableRoomObj(("arcane", "Curtains"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),verb="Unveil", useeffect=AddRoomObjEffect("place",get_misc("arcane_entrance"))),
-            UsableRoomObj(("arcane", "Curtains"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),verb="Unveil",useeffect=AddRoomObjEffect("place",get_misc("arcane_entrance_lever"))),
+            UsableRoomObj(("arcane", "Curtains"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),actions={"unveil":AddRoomObjEffect("place",get_misc("arcane_entrance"))}),
+            UsableRoomObj(("arcane", "Curtains"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),actions={"unveil":AddRoomObjEffect("place",get_misc("arcane_entrance_lever"))}),
         ]
     ),
     "kitchen": Room(

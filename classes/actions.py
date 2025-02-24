@@ -684,29 +684,6 @@ class UseItemAction(PlayerInteractAction):
     def get_name(self):
         return "Use"
 
-class UseUsableAction(PlayerInteractAction):
-    def __init__(self, interactable):
-        super().__init__(interactable)
-
-    def execute(self, dungeon):
-        if len(self.interactable.get_targets(dungeon)) <= 1:
-            choices = self.interactable.get_targets(dungeon)
-            if len(choices) == 0:
-                choices = [None]
-            UseAction(self.interactable, choices[0], self.interactable.verb.lower()).execute(dungeon)
-        else:
-            dungeon.player_interact(self)
-
-    def get_choices(self, dungeon) -> list[PlayerAction]:
-        actions = []
-        targets = self.interactable.get_targets(dungeon)
-        for x in targets:
-            actions.append(UseAction(self.interactable, x, self.interactable.verb.lower()))
-        return actions
-
-    def get_name(self):
-        return self.interactable.verb
-
 class EquipItemAction(PlayerAction):
     def __init__(self, item : "Equipment", source = None):
         self.item = item
@@ -796,7 +773,10 @@ class UseAction(PlayerAction):
         dungeon.end_current_turn()
     
     def get_name(self):
-        return self.target.get_name()
+        if self.target != None:
+            return self.target.get_name()
+        else:
+            return self.verb.capitalize()
 
 class AttackAction(PlayerAction):
     def __init__(self, entity):
