@@ -213,6 +213,12 @@ npcs : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([HiddenAbility(OnDeathEffect("dialogue_swap","Dialogue Swap",SetDialogueEffect("wise_figure_proud","id:wise_figure")))]),
         stathandler=StatHandler({"HP":HPContainer(1)}),
         state=NothingState()
+    ),
+    "traveller":Vendor(
+        name=("iron", "Traveller"),
+        stathandler=StatHandler({"HP":HPContainer(40)}),
+        state=PeacefulState(),
+        shop_manager=ShopManager({get_item("iron_axe"):10,get_item("wooden_sword"):3})
     )
 }
 

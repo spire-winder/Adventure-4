@@ -41,7 +41,7 @@ class Game:
         self.dungeon.current_interactable = inter.interactable
         room_list = []
         room_list.append(urwid.Text(inter.get_name()))
-        room_list.append(urwid.Text(inter.get_description()))
+        room_list.append(urwid.Text(inter.get_description(self.dungeon)))
         room_list.append(urwid.Divider())
         for x in inter.get_choices(self.dungeon):
             if hasattr(x, "prev"):

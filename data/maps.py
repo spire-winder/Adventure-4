@@ -151,6 +151,7 @@ ruins_of_the_sun : dict[str:Room] = {
         room_contents=[
             player,
             get_entity("wise_figure"),
+            get_entity("traveller"),
             get_entity("training_dummy"),
             LockedPassage(("stone", "Chamber Exit"),destination_id="decrepit_cellar",key_id="wooden_key"),
             Campfire(("heat", "DEBUG Campfire")),
@@ -279,8 +280,15 @@ shattered_ruins : dict[str:Room] = {
         room_contents=[
             Passage(("stone", "Eastern Entryway"),destination_id="foreboding_entry"),
             Passage(("stone", "Throne Room"),destination_id="throne_room"),
+            Passage(("stone", "Kitchen"),destination_id="kitchen"),
             UsableRoomObj(("arcane", "Curtains"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),verb="Unveil", useeffect=AddRoomObjEffect("place",get_misc("arcane_entrance"))),
             UsableRoomObj(("arcane", "Curtains"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),verb="Unveil",useeffect=AddRoomObjEffect("place",get_misc("arcane_entrance_lever"))),
+        ]
+    ),
+    "kitchen": Room(
+        name=("stone", "Kitchen"),
+        room_contents=[
+            Passage(("stone", "Hall"),destination_id="ransacked_hall"),
         ]
     ),
     "shattered_spire": Room(

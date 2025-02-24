@@ -20,7 +20,7 @@ class Interactable:
         self.event = Event()
         self.notif = Event()
         self.include_back = True
-    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+    def get_description(self, dungeon) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
         return ""
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
         return []
@@ -52,7 +52,7 @@ class AbilityHandler(Interactable):
     def has_abilities(self) -> bool:
         return len(self.ability_list) != 0
 
-    def get_description(self):
+    def get_description(self, dungeon):
         full_list = []
         for x in self.ability_list:
             full_list.append(x.get_full())
@@ -138,8 +138,9 @@ class Campfire(RoomObject):
         return choices
 
 class Item(RoomObject):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1) -> None:
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, price : int = 0, drop_chance : float = 1) -> None:
         super().__init__(name, ability_handler)
+        self.price = price
         self.drop_chance = drop_chance
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
         if dungeon.player.can_take_item(self):
@@ -151,8 +152,8 @@ class Item(RoomObject):
             return [classes.actions.DummyAction("Your inventory is full.")]
 
 class UsableItem(Item):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, useeffect : classes.actions.Effect = None) -> None:
-        super().__init__(name, ability_handler, drop_chance)
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, price : int = 0, drop_chance : float = 1, useeffect : classes.actions.Effect = None) -> None:
+        super().__init__(name, ability_handler, price, drop_chance)
         self.useeffect = useeffect or Effect()
     
     def get_targets(self, dungeon):
@@ -161,8 +162,8 @@ class UsableItem(Item):
     def can_use(self, dungeon) -> bool:
         return len(self.get_targets(dungeon)) > 0
 
-    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        return utility.combine_text([self.useeffect.get_desc(), self.ability_handler.get_description()])
+    def get_description(self, dungeon) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        return utility.combine_text([self.useeffect.get_desc(), self.ability_handler.get_description(dungeon)])
     
     def get_effect(self, verb : str) -> Effect:
         return self.useeffect
@@ -188,8 +189,8 @@ class UsableRoomObj(RoomObject):
     def can_use(self, dungeon) -> bool:
         return len(self.get_targets(dungeon)) > 0
 
-    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        return utility.combine_text([self.get_effect("use").get_desc(), self.ability_handler.get_description()])
+    def get_description(self, dungeon) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        return utility.combine_text([self.get_effect("use").get_desc(), self.ability_handler.get_description(dungeon)])
     
     def get_effect(self, verb : str) -> Effect:
         return self.useeffect
@@ -209,14 +210,14 @@ class Lever(UsableRoomObj):
         self.active = not self.active
 
 class Key(Item):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, keyeffect : classes.actions.Effect = None, key_id : str = "?") -> None:
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None,price : int = 0,  drop_chance : float = 1, keyeffect : classes.actions.Effect = None, key_id : str = "?") -> None:
         ability_handler = ability_handler or AbilityHandler([SingleUse()])
-        super().__init__(name, ability_handler, drop_chance)
+        super().__init__(name, ability_handler, price, drop_chance)
         self.keyeffect = keyeffect or UnlockEffect("item", "target")
         self.key_id = key_id
     
-    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        return utility.combine_text([self.keyeffect.get_desc(), self.ability_handler.get_description()])
+    def get_description(self, dungeon) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        return utility.combine_text([self.keyeffect.get_desc(), self.ability_handler.get_description(dungeon)])
 
     def get_effect(self, verb : str) -> Effect:
         return self.keyeffect
@@ -228,15 +229,15 @@ class Key(Item):
         return self.key_id == id
 
 class Tool(Item):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, tooleffect : classes.actions.Effect = None, tool_type : str = "?", tool_strength : str = "?") -> None:
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, price : int = 0, drop_chance : float = 1, tooleffect : classes.actions.Effect = None, tool_type : str = "?", tool_strength : str = "?") -> None:
         ability_handler = ability_handler or AbilityHandler()
-        super().__init__(name, ability_handler, drop_chance)
+        super().__init__(name, ability_handler, price,  drop_chance)
         self.tooleffect = tooleffect or DestroyEffect("item","target")
         self.tool_type : str = tool_type
         self.tool_strength : int= tool_strength
     
-    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        return utility.combine_text(["Type: " + self.tool_type,"Strength: " + str(self.tool_strength),self.tooleffect.get_desc(), self.ability_handler.get_description()])
+    def get_description(self, dungeon) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        return utility.combine_text(["Type: " + self.tool_type,"Strength: " + str(self.tool_strength),self.tooleffect.get_desc(), self.ability_handler.get_description(dungeon)])
 
     def get_effect(self, verb : str) -> Effect:
         return self.tooleffect
@@ -256,20 +257,20 @@ class Sharpener(UsableItem):
         return targets
 
 class Equipment(Item):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, slot : str = "?") -> None:
-        super().__init__(name, ability_handler, drop_chance)
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None,price : int = 0,  drop_chance : float = 1, slot : str = "?") -> None:
+        super().__init__(name, ability_handler, price, drop_chance)
         self.equipment_slot : str = slot
     
-    def get_description(self):
-        return self.ability_handler.get_description()
+    def get_description(self, dungeon):
+        return self.ability_handler.get_description(dungeon)
 
 class Weapon(Equipment):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, attackeffect : classes.actions.Effect = None) -> None:
-        super().__init__(name, ability_handler, drop_chance, "Weapon")
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None,price : int = 0,  drop_chance : float = 1, attackeffect : classes.actions.Effect = None) -> None:
+        super().__init__(name, ability_handler, price, drop_chance, "Weapon")
         self.attackeffect = attackeffect or Effect()
     
-    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        return utility.combine_text([self.attackeffect.get_desc(), self.ability_handler.get_description()])
+    def get_description(self, dungeon) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        return utility.combine_text([self.attackeffect.get_desc(), self.ability_handler.get_description(dungeon)])
     
     def get_effect(self, verb : str) -> Effect:
         return self.attackeffect
@@ -277,8 +278,8 @@ class Weapon(Equipment):
         pass
 
 class MeleeWeapon(Weapon):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, attackeffect : classes.actions.Effect = None, sharpness : float = 1.0, durability : float = 0.9) -> None:
-        super().__init__(name, ability_handler, drop_chance, attackeffect)
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, price : int = 0, drop_chance : float = 1, attackeffect : classes.actions.Effect = None, sharpness : float = 1.0, durability : float = 0.9) -> None:
+        super().__init__(name, ability_handler, price, drop_chance, attackeffect)
         self.ability_handler.add_ability(get_ability("melee"))
         self.ability_handler.add_ability(Sharpness(sharpness, durability))
     
@@ -288,18 +289,18 @@ class MeleeWeapon(Weapon):
         self.ability_handler.get_ability("sharpness").sharpen(amount)
 
 class MagicWeapon(Weapon):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, attackeffect : classes.actions.Effect = None, mana_cost : int = 10) -> None:
-        super().__init__(name, ability_handler, drop_chance, attackeffect)
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, price : int = 0, drop_chance : float = 1, attackeffect : classes.actions.Effect = None, mana_cost : int = 10) -> None:
+        super().__init__(name, ability_handler, price, drop_chance, attackeffect)
         self.ability_handler.add_ability(get_ability("magic"))
         self.ability_handler.add_ability(ManaCost("manacost","Mana Cost", mana_cost))
 
 class Food(Item):
-    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, drop_chance : float = 1, foodeffect : classes.actions.Effect = None) -> None:
-        super().__init__(name, ability_handler, drop_chance)
+    def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, price : int = 0, drop_chance : float = 1, foodeffect : classes.actions.Effect = None) -> None:
+        super().__init__(name, ability_handler, price, drop_chance)
         self.foodeffect = foodeffect or Effect()
     
-    def get_description(self) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
-        return utility.combine_text([self.foodeffect.get_desc(), self.ability_handler.get_description()])
+    def get_description(self, dungeon) -> str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]:
+        return utility.combine_text([self.foodeffect.get_desc(), self.ability_handler.get_description(dungeon)])
     
     def get_effect(self, verb : str) -> Effect:
         return self.foodeffect
@@ -398,7 +399,7 @@ class StatHandler(Interactable):
     def set_stat(self, stat : str, new_value):
         self.stat_dict[stat] = new_value
     
-    def get_description(self):
+    def get_description(self, dungeon):
         text_list = []
         for p in self.stat_dict:
             text_list.append([p,": ", self.stat_dict[p].get_text()])
@@ -487,7 +488,7 @@ class Bag(Interactable):
     def remove_item(self, item : Item):
         self.items_list.remove(item)
     
-    def get_description(self):
+    def get_description(self, dungeon):
         return ["Size: ", str(self.size)]
 
     def get_items(self) -> list[Item]:
@@ -600,7 +601,6 @@ class LockedPassage(Passage):
 
 class SubmergedPassage(Passage):
     def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
-        utility.log(dungeon.player.has_ability("water_breathing"))
         if not dungeon.player.has_ability("water_breathing"):
             return [classes.actions.DummyAction("You can't breathe underwater.")]
         else:
@@ -676,7 +676,7 @@ class DialogueManager(Interactable):
     def has_dialogue(self) -> bool:
         return self.root_dialogue != None
 
-    def get_description(self):
+    def get_description(self, dungeon):
         return self.root_dialogue.get_text()
 
     def get_choices(self, dungeon):
@@ -717,8 +717,8 @@ class Entity(RoomObject):
     def can_equip(self, item : Equipment):
         return self.inventory.can_equip(item)
     
-    def get_description(self):
-        return utility.combine_text([self.stathandler.get_description(), self.ability_handler.get_description()])
+    def get_description(self, dungeon):
+        return utility.combine_text([self.stathandler.get_description(dungeon), self.ability_handler.get_description(dungeon)])
 
     def get_drops(self) -> list[Item]:
         all_items : list[Item] = self.inventory.get_all_items()
@@ -801,6 +801,37 @@ class StateEntity(Entity):
     def take_turn(self, dungeon) -> None:
         self.state.decide(dungeon)
         self.event.emit(action=None)
+
+class ShopManager(Interactable):
+    def __init__(self, items : dict[Item:int] = None):
+        super().__init__("Buy")
+        self.items_dict : dict[Item:int] = items or {}
+
+    def get_description(self, dungeon):
+        return dungeon.player.get_stat("Bones").get_text()
+
+    def get_choices(self, dungeon) -> list[classes.actions.PlayerAction]:
+        choices = []
+        for x in self.items_dict:
+            choices.append(classes.actions.PlayerBuyAction(x, self.items_dict[x]))
+        return choices
+
+class Vendor(StateEntity):
+    def __init__(self, name, ability_handler=None, inventory=None, stathandler=None, dialogue_manager = None, state = None, shop_manager : ShopManager = None):
+        super().__init__(name, ability_handler, inventory, stathandler, dialogue_manager, state)
+        self.shop_manager = shop_manager or ShopManager()
+    
+    def get_choices(self, dungeon) -> MutableSequence[classes.actions.PlayerAction]:
+        choices : list[classes.actions.PlayerAction] = []
+        choices.append(classes.actions.PlayerInteractAction(self.shop_manager))
+        choices.append(classes.actions.SellMenuAction(self.shop_manager))
+        if self.dialogue_manager.has_dialogue():
+            choices.append(classes.actions.PlayerDialogueAction(self, self.dialogue_manager.root_dialogue))
+        if dungeon.actor.has_weapon():
+            choices.append(classes.actions.AttackAction(self))
+        # if self.inventory.equipment_handler.has_equipment_slots():
+        #     choices.append(classes.actions.PlayerInteractAction(self.inventory.equipment_handler))
+        return choices
 
 class Room(Actor):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = None, room_contents : list["RoomObject"] = None) -> None:

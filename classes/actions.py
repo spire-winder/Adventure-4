@@ -456,7 +456,7 @@ class PlayerAction:
     def get_name(self):
         pass
 
-    def get_description(self):
+    def get_description(self, dungeon):
         return None
 
     def execute(self, dungeon):
@@ -491,8 +491,8 @@ class PlayerInteractAction(PlayerAction):
     def get_name(self):
         return self.interactable.get_name()
 
-    def get_description(self):
-        return self.interactable.get_description()
+    def get_description(self, dungeon):
+        return self.interactable.get_description(dungeon)
 
     def get_choices(self, dungeon) -> list[PlayerAction]:
         return self.interactable.get_choices(dungeon)
@@ -595,6 +595,19 @@ class CampfireAction(PlayerInteractAction):
             actions.append(EatAction(x, self.interactable))
         return actions
 
+class SellMenuAction(PlayerInteractAction):
+    def get_name(self):
+        return "Sell"
+    
+    def get_description(self, dungeon):
+        return dungeon.player.get_stat("Bones").get_text()
+
+    def get_choices(self, dungeon) -> list[PlayerAction]:
+        actions = []
+        for x in dungeon.actor.get_items_in_bag(lambda item : item.price > 0):
+            actions.append(SellItemAction(x))
+        return actions
+
 class DreamAction(PlayerInteractAction):
     def get_name(self):
         return "Dream"
@@ -604,6 +617,22 @@ class DreamAction(PlayerInteractAction):
         for x in dungeon.get_discovered_campfire_rooms():
             actions.append(TeleportAction(x, self.interactable))
         return actions
+
+class PlayerBuyAction(PlayerAction):
+    def __init__(self, item, price):
+        super().__init__()
+        self.item = item
+        self.price = price
+    
+    def execute(self, dungeon) -> None:
+        if dungeon.player.can_take_item(self.item) and dungeon.actor.get_stat("Bones").get_current_bones() >= self.price:
+            dungeon.add_to_message_queue([dungeon.player.get_name(), " bought ", self.item.get_name(), "."])
+            AddtoInventoryEvent(dungeon.player, self.item).execute_with_statics(dungeon)
+            dungeon.actor.get_stat("Bones").spend(self.price)
+            dungeon.end_current_turn()
+    
+    def get_name(self):
+        return ["Buy ", self.item.get_name(), ": ", ("bone", str(self.price) + " bones")]
 
 class TakeItemAction(PlayerAction):
     def __init__(self, item, source):
@@ -694,7 +723,7 @@ class EquipItemAction(PlayerAction):
         return ["Equip ", self.item.get_name()]
 
 class DiscardItemAction(PlayerAction):
-    def __init__(self, item : "Equipment"):
+    def __init__(self, item : "Item"):
         super().__init__()
         self.item = item
     
@@ -707,6 +736,21 @@ class DiscardItemAction(PlayerAction):
     
     def get_name(self):
         return ["Discard ", self.item.get_name()]
+
+class SellItemAction(PlayerAction):
+    def __init__(self, item : "Item"):
+        super().__init__()
+        self.item = item
+    
+    def execute(self, dungeon) -> None:
+        dungeon.actor.remove_item(self.item)
+        dungeon.actor.get_stat("Bones").add(self.item.price)
+        #dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " discarded the ", self.item.get_name(), "."])
+        #dungeon.end_current_turn()
+        self.prev.execute(dungeon)
+    
+    def get_name(self):
+        return ["Sell ", self.item.get_name(), ": ", ("bone", str(self.item.price) + " bones")]
 
 class EatAction(PlayerAction):
     def __init__(self, food, campfire):
