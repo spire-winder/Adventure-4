@@ -205,7 +205,7 @@ ruins_of_the_sun : dict[str:Room] = {
         ability_handler=AbilityHandler([Spawner([get_entity("shadow_greedling")],1,25)]),
         room_contents=[
             get_entity("shadow_greedling"),
-            Container(("stone", "Defiled Crypt"), contents=[get_item("wooden_shovel"),get_item("wooden_dagger")]),
+            Container(("stone", "Defiled Grave"), contents=[get_item("wooden_shovel"),get_item("wooden_dagger")]),
             Passage(("stone", "Hallway"),destination_id="western_hallway"),
         ]
     ),
@@ -244,7 +244,7 @@ shattered_ruins : dict[str:Room] = {
             Passage(("celestial", "Southern Temple"),destination_id="crumbling_entrance"),
             Passage(("stone", "Northern Trail"),destination_id="ancient_courtyard"),
             get_entity("goblin_miner"),
-            Destructible(("stone", "Rubble"), contents=[], tool_requirement="Pickaxe", tool_strength=2)
+            Destructible(("stone", "Rubble"), contents=[get_item("magic_ring"),get_item("spiked_shield")], tool_requirement="Pickaxe", tool_strength=2)
         ]
     ),
     "ancient_courtyard": Room(
@@ -348,8 +348,8 @@ shattered_ruins : dict[str:Room] = {
     "arcane_archive": Room(
         name=("magic", "Arcane Archive"),
         room_contents=[
-            Container(("wood","Staff Display"),contents=[get_item("fire_staff"),get_item("ice_staff")]),
-            Container(("wood","Scroll Rack"),contents=[get_item("venom_scroll"),get_item("storm_scroll")]),
+            Container(("wood","Staff Display"),contents=[RandomElement([get_item("fire_staff"),get_item("ice_staff"),get_item("poison_staff"),get_item("lightning_staff"),get_item("arcane_staff"),get_item("shadow_staff"),get_item("celestial_staff")]),]),
+            Container(("wood","Scroll Rack"),contents=[RandomElement([get_item("wildfire_scroll"),get_item("blizzard_scroll"),get_item("venom_scroll"),get_item("storm_scroll"),get_item("mystic_scroll"),get_item("eclipse_scroll"),get_item("starfire_scroll")])]),
             Container(("wood","Alchemy Station"),contents=[get_item("empowering_potion"),get_item("regen_potion")]),
             Passage(("stone", "Archive Exit"),destination_id="throne_room"),
         ]
@@ -357,7 +357,6 @@ shattered_ruins : dict[str:Room] = {
     "hidden_garden": Room(
         name=("stone", "Hidden Garden"),
         room_contents=[
-            get_item("poison_staff"),
             Container(("wood","Planter Box"),contents=[get_item("torchroot_buds"),get_item("shockflower_blossom"),get_item("surface_apple")]),
             Passage(("stone", "Garden Exit"),destination_id="royal_suite"),
         ]

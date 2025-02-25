@@ -44,7 +44,7 @@ abilities : dict[str:Ability] = {
     ),
     "doomed":Doomed(
         id="doomed",
-        name=("toxic","Doomed"),
+        name=("shadow","Doomed"),
         damage_mod=5
     ),
     "starved":DamageTypeBuff(
@@ -88,11 +88,11 @@ abilities["greedling_boss"]= BattleCry(
         id="greedling_boss",
         name=("meat","Greedling Boss"),
         tag_id=get_ability("greedling"),
-        strength=3
+        strength=1
     )
 abilities["goblin_battle_cry"]= BattleCry(
         id="goblin_battle_cry",
         name=("goblin","Goblin Battle Cry"),
         tag_id=get_ability("goblin"),
-        strength=3
+        strength=1
     )

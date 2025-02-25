@@ -13,7 +13,32 @@ ruins_of_the_sun_items : dict[str:Item] = {
         attackeffect=DamageEvent(damage=6, damage_type="slashing"),
         drop_chance=0.3,
         price=2,
-        durability=0.75
+        durability=0.9,
+    ),
+    "wooden_bo":MeleeWeapon(
+        name=("wood","Wooden Bo"),
+        attackeffect=RepeatEvent(DamageEvent(damage=4, damage_type="bashing"),2),
+        drop_chance=0.3,
+        durability=0.9,
+        price=2
+    ),
+    "wooden_axe":MeleeWeapon(
+        name=("wood","Wooden Axe"),
+        attackeffect=
+            EffectSequence([
+                DamageEvent(damage=5, damage_type="slashing"),
+                ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("stun"),3)),0.25)
+            ]),
+        drop_chance=0.3,
+        price=2,
+        durability=0.9,
+    ),
+    "wooden_sledge":MeleeWeapon(
+        name=("wood","Wooden Sledge"),
+        attackeffect=DamageEvent(damage=5, damage_type="bashing",armor_penetrate=2),
+        drop_chance=0.3,
+        price=2,
+        durability=0.9,
     ),
     "wooden_key":Key(("wood", "Wooden Key"),key_id="wooden_key"),
     "wooden_shield":Equipment(
@@ -27,14 +52,14 @@ ruins_of_the_sun_items : dict[str:Item] = {
         name=[("rust","Rusty"),("iron"," Sword")],
         attackeffect=DamageEvent(damage=8, damage_type="slashing"),
         drop_chance=0.3,
-        durability=0.8,
+        durability=0.9,
         price=4
     ),
     "rusty_staff":MeleeWeapon(
         name=[("rust","Rusty"),("iron"," Staff")],
         attackeffect=RepeatEvent(DamageEvent(damage=5, damage_type="bashing"),2),
         drop_chance=0.3,
-        durability=0.8,
+        durability=0.9,
         price=4
     ),
     "rusty_axe":MeleeWeapon(
@@ -42,15 +67,15 @@ ruins_of_the_sun_items : dict[str:Item] = {
         attackeffect=
             EffectSequence([
                 DamageEvent(damage=7, damage_type="slashing"),
-                ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("stun"),3)),0.25)
+                ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("stun"),3)),0.5)
             ]),
         drop_chance=0.3,
-        durability=0.8,
+        durability=0.9,
         price=4
     ),
     "wooden_shovel":Tool(
         ("wood", "Wooden Shovel"),
-        ability_handler=AbilityHandler([Sharpness(1,0.6)]),
+        ability_handler=AbilityHandler([Sharpness(1,0.7)]),
         drop_chance=0.3,
         tool_type="Shovel",
         tool_strength=1,
@@ -69,7 +94,7 @@ ruins_of_the_sun_items : dict[str:Item] = {
         foodeffect=EffectSequence([
             HealEvent("item","user",8)
         ]),
-        drop_chance=0.3,
+        drop_chance=0.6,
         price=2
     )
 }
@@ -102,14 +127,14 @@ shattered_ruins_items : dict[str:Item] = {
         name=[("rust","Rusty"),("iron"," Sledge")],
         attackeffect=DamageEvent(damage=6, damage_type="bashing",armor_penetrate=4),
         drop_chance=0.3,
-        durability=0.8,
+        durability=0.9,
         price=4
     ),
     "rusty_pickaxe":MeleeTool(
         name=[("rust","Rusty"),("iron"," Pickaxe")],
         attackeffect=DamageEvent(damage=4, damage_type="slashing",armor_penetrate=-1),
         drop_chance=0.5,
-        durability=0.8,
+        durability=0.9,
         price=4,
         tool_type="Pickaxe",
         tool_strength=2,
@@ -126,7 +151,7 @@ shattered_ruins_items : dict[str:Item] = {
     "rusty_spatula":MeleeWeapon(
         name=[("rust","Rusty"),("iron"," Spatula")],
         attackeffect=DamageEvent(damage=12, damage_type="bashing"),
-        durability=0.8,
+        durability=0.95,
         drop_chance=0.3,
         price=6
     ),
@@ -198,30 +223,17 @@ shattered_ruins_items : dict[str:Item] = {
         name=("stone","Small Rock"),
         ability_handler=AbilityHandler([SingleUse()]),
         drop_chance=0.9,
-        useeffect=DamageEvent(damage=10,damage_type="bashing")
-    )
+        useeffect=DamageEvent(damage=7,damage_type="bashing")
+    ),
+    "spiked_shield":Equipment(
+        name=("iron","Spiked Shield"),
+        ability_handler=AbilityHandler([SelectiveArmor("sturdy", ("iron", "Sturdy"), "slashing", 2),Reciprocate("spikes",("iron","Spikes"),DamageEvent("self","attacker",2,"slashing"))]),
+        slot="Offhand",
+        price=5
+    ),
 }
 
 items.update(shattered_ruins_items)
-
-wooden_items : dict[str:Item] = {
-    "wooden_bo":MeleeWeapon(
-        name=("wood","Wooden Bo"),
-        attackeffect=RepeatEvent(DamageEvent(damage=4, damage_type="bashing"),2),
-        price=2
-    ),
-    "wooden_axe":MeleeWeapon(
-        name=("wood","Wooden Axe"),
-        attackeffect=
-            EffectSequence([
-                DamageEvent(damage=5, damage_type="slashing"),
-                ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("stun"),3)),0.25)
-            ]),
-        price=2
-    ),
-}
-
-items.update(wooden_items)
 
 iron_items : dict[str:Item] = {
     "iron_sword":MeleeWeapon(
@@ -245,7 +257,7 @@ iron_items : dict[str:Item] = {
     ),
     "iron_shield":Equipment(
         name=("iron","Iron Shield"),
-        ability_handler=AbilityHandler([SelectiveArmor("magicarmor", "Magic Armor", "bashing", 4)]),
+        ability_handler=AbilityHandler([SelectiveArmor("sturdy", ("iron", "Sturdy"), "slashing", 4)]),
         slot="Offhand",
         price=5
     ),

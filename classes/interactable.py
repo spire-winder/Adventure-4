@@ -13,6 +13,15 @@ import classes.actions
 import copy
 import utility
 
+class RandomElement:
+    def __init__(self, possibilities : list):
+        self.possibilities : list = possibilities
+    
+    def dungeon_init(self, chain):
+        return random.choice(self.possibilities)
+    def handle_connecting_signals(self, dungeon):
+        pass
+
 class Interactable:
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]) -> None:
         self.id : str = ""
@@ -70,6 +79,14 @@ class AbilityHandler(Interactable):
         for x in self.ability_list:
             x.reply(new_chain, effect)
         
+    def dungeon_init(self, chain : list):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in range(len(self.ability_list)):
+            ele = self.ability_list[x]
+            if isinstance(ele, RandomElement):
+                self.ability_list[x] = ele.dungeon_init(new_chain)
+        
     def apply_from_bag(self, chain : list, effect : Effect):
         new_chain = chain.copy()
         new_chain.append(self)
@@ -107,6 +124,11 @@ class Actor(Interactable):
         new_chain.append(self)
         self.ability_handler.end_of_round(new_chain)
     
+    def dungeon_init(self, chain : list):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.ability_handler.dungeon_init(new_chain)
+
     def apply_statics(self, chain : list, effect : Effect):
         new_chain = chain.copy()
         new_chain.append(self)
@@ -337,6 +359,8 @@ class MeleeTool(MeleeWeapon, Tool):
         Tool.__init__(self, name, ability_handler, price, drop_chance, tooleffect, tool_type, tool_strength)
     def get_effect(self, effect) -> Effect:
         return self.tooleffect if isinstance(effect.target, Destructible) else self.attackeffect
+    def get_description(self, dungeon):
+        return utility.combine_text([self.attackeffect.get_desc(),Tool.get_description(self,dungeon)])
 
 class Food(Item):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, price : int = 0, drop_chance : float = 1, foodeffect : classes.actions.Effect = None) -> None:
@@ -501,6 +525,14 @@ class EquipmentHandler(Interactable):
             if not x == None:
                 x.apply_statics(new_chain, effect)
     
+    def dungeon_init(self, chain : list):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in self.equipment_dict.keys():
+            ele = self.equipment_dict[x]
+            if isinstance(ele, RandomElement):
+                self.equipment_dict[x] = ele.dungeon_init(new_chain)
+
     def reply(self, chain : list, effect : Effect):
         new_chain = chain.copy()
         new_chain.append(self)
@@ -520,6 +552,16 @@ class EquipmentHandler(Interactable):
             if x != None and x.has_ability(id):
                 return True
         return False
+    
+    def has_item_equipped(self, item : Equipment):
+        if self.get_item_in_slot(item.equipment_slot) == item:
+            return True
+        else:
+            return False
+    
+    def remove_item(self, item : Equipment):
+        if self.get_item_in_slot(item.equipment_slot) == item:
+            self.equipment_dict[item.equipment_slot] = None
 
 class Bag(Interactable):
     def __init__(self, size : int = -1, items : list[Item] = None):
@@ -556,6 +598,14 @@ class Bag(Interactable):
         new_chain.append(self)
         for x in self.items_list:
             x.apply_statics_in_bag(new_chain, effect)
+
+    def dungeon_init(self, chain : list):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in range(len(self.items_list)):
+            ele = self.items_list[x]
+            if isinstance(ele, RandomElement):
+                self.items_list[x] = ele.dungeon_init(new_chain)
 
     def reply(self, chain : list, effect : Effect):
         new_chain = chain.copy()
@@ -628,6 +678,12 @@ class Inventory(Interactable):
         self.equipment_handler.apply_statics(new_chain, effect)
         self.bag.apply_statics(new_chain, effect)
     
+    def dungeon_init(self, chain : list):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.equipment_handler.dungeon_init(new_chain)
+        self.bag.dungeon_init(new_chain)
+
     def reply(self, chain : list, effect : Effect):
         new_chain = chain.copy()
         new_chain.append(self)
@@ -639,6 +695,12 @@ class Inventory(Interactable):
     
     def has_ability(self, id):
         return self.equipment_handler.has_ability(id)
+    
+    def remove_item(self, item : Item):
+        if isinstance(item, Equipment) and self.equipment_handler.has_item_equipped(item):
+            self.equipment_handler.remove_item(item)
+        else:
+            self.bag.remove_item(item)
 
 class Passage(RoomObject):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = None, destination_id : str = "?"):
@@ -842,7 +904,7 @@ class Entity(RoomObject):
             choices.append(classes.actions.PlayerDialogueAction(self, self.dialogue_manager.root_dialogue))
         if dungeon.actor.has_weapon():
             choices.append(classes.actions.AttackAction(self))
-        choices.append(classes.actions.PlayerInteractAction(self.inventory.bag))
+        #choices.append(classes.actions.PlayerInteractAction(self.inventory.bag))
         # if self.inventory.equipment_handler.has_equipment_slots():
         #     choices.append(classes.actions.PlayerInteractAction(self.inventory.equipment_handler))
         return choices
@@ -853,6 +915,12 @@ class Entity(RoomObject):
         new_chain.append(self)
         self.inventory.apply_statics(new_chain, effect)
     
+    def dungeon_init(self, chain : list):
+        super().dungeon_init(chain)
+        new_chain = chain.copy()
+        new_chain.append(self)
+        self.inventory.dungeon_init(new_chain)
+
     def reply(self, chain : list, effect : Effect):
         super().reply(chain, effect)
         new_chain = chain.copy()
@@ -981,6 +1049,13 @@ class Room(Actor):
         for x in self.get_roomobjects(lambda item : not isinstance(item, Player)):
             x.add_to_action_queue(action_queue)
     
+    def dungeon_init(self, chain : list):
+        super().dungeon_init(chain)
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in self.room_contents:
+            x.dungeon_init(new_chain)
+
     def apply_statics(self, chain : list, effect : Effect):
         super().apply_statics(chain, effect)
         new_chain = chain.copy()

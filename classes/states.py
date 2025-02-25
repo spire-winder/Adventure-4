@@ -51,7 +51,7 @@ class AttackingState(State):
                 if self.state_entity.has_item_to_use(dungeon):
                     item = self.state_entity.get_item_to_use(dungeon)[0]
                     target = item.get_targets(dungeon)[0]
-                    classes.actions.UseEffect(self.state_entity, target, item, "use").execute_with_statics(dungeon)
+                    classes.actions.UseEffect(self.state_entity, target, item, "target").execute_with_statics(dungeon)
                 else:
                     self.find_weapon(dungeon)
             else:

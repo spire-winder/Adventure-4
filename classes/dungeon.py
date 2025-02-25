@@ -28,6 +28,7 @@ class Dungeon:
         return state
 
     def new_game_setup(self):
+        self.dungeon_init()
         self.init_location("starting_room")
         self.player : Player= self.place.get_player()
 
@@ -137,6 +138,11 @@ class Dungeon:
     def player_interact(self, inter : classes.actions.PlayerInteractAction):
         self.ui_event.emit(classes.actions.InteractAction(inter))
     
+    def dungeon_init(self):
+        chain : list = [self]
+        for x in self.map:
+            self.map[x].dungeon_init(chain)
+
     def apply_statics(self, effect : Effect):
         chain : list = [self]
         self.place.apply_statics(chain, effect)

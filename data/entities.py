@@ -67,7 +67,7 @@ old_entities : dict[str:StateEntity] = {
         stathandler=StatHandler({"HP":HPContainer(25)}),
         state=IdleState()
     ),
-    "goblin_mage" : StateEntity(
+    "goblin_mage_og" : StateEntity(
         utility.alternate_colors("Goblin Mage",["goblin","magic"]), 
         AbilityHandler([get_ability("goblin")]),
         Inventory(
@@ -182,17 +182,16 @@ greedlings : dict[str:StateEntity] = {
 
 entities.update(greedlings)
 
-
 goblins : dict[str:StateEntity] = {
     "goblin_guard_spawned" : StateEntity(
         name=[("goblin","Goblin Guard")], 
         ability_handler=AbilityHandler([get_ability("goblin")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("rusty_sword"),
-                "Helmet":get_item("leather_helmet"),
-                "Armor":get_item("leather_armor"),
-                "Boots":get_item("leather_boots"),
+                "Weapon":RandomElement([get_item("wooden_sword"),get_item("wooden_bo"),get_item("wooden_axe")]),
+                "Helmet":RandomElement([get_item("leather_helmet"),None]),
+                "Armor":RandomElement([get_item("leather_armor"),None]),
+                "Boots":RandomElement([get_item("leather_boots"),None]),
             }),
             Bag(-1,[get_item("uneaten_scraps")])
         ),
@@ -205,10 +204,10 @@ goblins : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("goblin")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("rusty_sword"),
-                "Helmet":get_item("leather_helmet"),
-                "Armor":get_item("leather_armor"),
-                "Boots":get_item("leather_boots"),
+                "Weapon":RandomElement([get_item("wooden_sword"),get_item("wooden_bo"),get_item("wooden_axe")]),
+                "Helmet":RandomElement([get_item("leather_helmet"),None]),
+                "Armor":RandomElement([get_item("leather_armor"),None]),
+                "Boots":RandomElement([get_item("leather_boots"),None]),
             }),
             Bag(-1,[get_item("uneaten_scraps")])
         ),
@@ -221,9 +220,9 @@ goblins : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("goblin")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Helmet":get_item("leather_helmet"),
-                "Armor":get_item("leather_armor"),
-                "Boots":get_item("leather_boots"),
+                "Helmet":RandomElement([get_item("leather_helmet"),None]),
+                "Armor":RandomElement([get_item("leather_armor"),None]),
+                "Boots":RandomElement([get_item("leather_boots"),None]),
             }),
             Bag(-1,[get_item("uneaten_scraps"),get_item("small_rock"),get_item("small_rock")])
         ),
@@ -236,10 +235,10 @@ goblins : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("goblin")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("rusty_axe"),
-                "Helmet":get_item("leather_helmet"),
-                "Armor":get_item("leather_armor"),
-                "Boots":get_item("leather_boots"),
+                "Weapon":RandomElement([get_item("wooden_sword"),get_item("wooden_bo"),get_item("wooden_axe")]),
+                "Helmet":RandomElement([get_item("leather_helmet"),None]),
+                "Armor":RandomElement([get_item("leather_armor"),None]),
+                "Boots":RandomElement([get_item("leather_boots"),None]),
             }),
             Bag(-1,[get_item("uneaten_scraps")])
         ),
@@ -252,10 +251,10 @@ goblins : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("goblin"),get_ability("goblin_battle_cry")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("rusty_staff"),
-                "Helmet":get_item("leather_helmet"),
-                "Armor":get_item("leather_armor"),
-                "Boots":get_item("leather_boots"),
+                "Weapon":RandomElement([get_item("wooden_sword"),get_item("wooden_bo"),get_item("wooden_axe")]),
+                "Helmet":RandomElement([get_item("leather_helmet"),None]),
+                "Armor":RandomElement([get_item("leather_armor"),None]),
+                "Boots":RandomElement([get_item("leather_boots"),None]),
             }),
             Bag(-1,[get_item("uneaten_scraps")])
         ),
@@ -268,10 +267,10 @@ goblins : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("goblin")]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("rusty_sledge"),
-                "Helmet":get_item("leather_helmet"),
-                "Armor":get_item("leather_armor"),
-                "Boots":get_item("leather_boots"),
+                "Weapon":get_item("wooden_sledge"),
+                "Helmet":RandomElement([get_item("leather_helmet"),None]),
+                "Armor":RandomElement([get_item("leather_armor"),None]),
+                "Boots":RandomElement([get_item("leather_boots"),None]),
             }),
             Bag(-1,[get_item("uneaten_scraps")])
         ),
@@ -285,22 +284,11 @@ goblins : dict[str:StateEntity] = {
         inventory=Inventory(
             EquipmentHandler({
                 "Weapon":get_item("rusty_pickaxe"),
-                "Helmet":get_item("leather_helmet"),
-                "Armor":get_item("leather_armor"),
-                "Boots":get_item("leather_boots"),
+                "Helmet":RandomElement([get_item("leather_helmet"),None]),
+                "Armor":RandomElement([get_item("leather_armor"),None]),
+                "Boots":RandomElement([get_item("leather_boots"),None]),
             }),
             Bag(-1,[get_item("uneaten_scraps")])
-        ),
-        stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
-        dialogue_manager=None,
-        state=IdleState()
-    ),
-    "test_goblin" : StateEntity(
-        name=[("heat","Demo"),("goblin"," Goblin")], 
-        ability_handler=AbilityHandler([get_ability("goblin")]),
-        inventory=Inventory(
-            EquipmentHandler({
-            })
         ),
         stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
         dialogue_manager=None,
@@ -312,9 +300,9 @@ goblins : dict[str:StateEntity] = {
         inventory=Inventory(
             EquipmentHandler({
                 "Weapon":None,
-                "Helmet":get_item("leather_helmet"),
-                "Armor":get_item("leather_armor"),
-                "Boots":get_item("leather_boots"),
+                "Helmet":RandomElement([get_item("leather_helmet"),None]),
+                "Armor":RandomElement([get_item("leather_armor"),None]),
+                "Boots":RandomElement([get_item("leather_boots"),None]),
             }),
             Bag(-1,[get_item("dynamite"),get_item("dynamite")])
         ),
@@ -333,7 +321,7 @@ goblins : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("roast_chicken"),get_item("roast_beef"),get_item("bone_marrow_stew")])
         ),
-        stathandler=StatHandler({"HP":HPContainer(25), "Bones":BoneContainer(5)}),
+        stathandler=StatHandler({"HP":HPContainer(20), "Bones":BoneContainer(5)}),
         dialogue_manager=None,
         state=IdleState()
     ),
@@ -342,13 +330,13 @@ goblins : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("goblin"),DamageTypeBuff("arcane_arts",("magic", "Arcane Arts"), "arcane", 2)]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("arcane_staff"),
+                "Weapon":RandomElement([get_item("fire_staff"),get_item("ice_staff"),get_item("poison_staff"),get_item("lightning_staff"),get_item("arcane_staff"),get_item("shadow_staff"),get_item("celestial_staff")]),
                 "Armor":get_item("mage_cloak"),
                 "Boots":get_item("mage_boots"),
             }),
             Bag(-1, [get_item("clarity_crystal"),get_item("wooden_ring")])
         ),
-        stathandler=StatHandler({"HP":HPContainer(25),"MP":MPContainer(30), "Bones":BoneContainer(5)}),
+        stathandler=StatHandler({"HP":HPContainer(20),"MP":MPContainer(30), "Bones":BoneContainer(5)}),
         dialogue_manager=None,
         state=IdleState()
     ),
@@ -357,7 +345,7 @@ goblins : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("goblin"),SelectiveBuff("buffed",("meat","Bulging Muscles"),get_ability("melee"),3)]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("iron_sword"),
+                "Weapon":RandomElement([get_item("rusty_sword"),get_item("rusty_staff"),get_item("rusty_axe"),get_item("rusty_sledge")]),
                 "Armor":get_item("iron_helmet"),
                 "Armor":get_item("iron_armor"),
                 "Boots":get_item("iron_boots"),

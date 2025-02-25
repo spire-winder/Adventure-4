@@ -72,6 +72,7 @@ class AddRoomObjEffect(Effect):
         self.target = target
     def execute(self, dungeon):
         self.source.add_roomobject(self.target)
+        self.target.dungeon_init([dungeon])
         self.target.handle_connecting_signals(dungeon)
 
 class EndStatusEffect(Effect):
@@ -636,7 +637,8 @@ class DreamAction(PlayerInteractAction):
     def get_choices(self, dungeon) -> list[PlayerAction]:
         actions = []
         for x in dungeon.get_discovered_campfire_rooms():
-            actions.append(TeleportAction(x, self.interactable))
+            if x != dungeon.place:
+                actions.append(TeleportAction(x, self.interactable))
         return actions
 
 class PlayerBuyAction(PlayerAction):
@@ -689,7 +691,7 @@ class UseItemAction(PlayerInteractAction):
     def execute(self, dungeon):
         if len(self.interactable.get_targets(dungeon)) <= 1:
             choices = self.interactable.get_targets(dungeon)
-            if len(choices == 0):
+            if len(choices) == 0:
                 choices = [None]
             UseAction(self.interactable, choices[0]).execute(dungeon)
         else:

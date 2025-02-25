@@ -88,13 +88,6 @@ class Status(Ability):
         return self.current_duration > a.current_duration
 
 #durability stats
-#0.6 durability = 5 uses
-#0.7 durability = 8 uses
-#0.75 durability = 10 uses
-#0.8 durability = 13 uses
-#0.85 durability = 18 uses
-#0.9 durability = 28 uses
-#0.95 durability = 58 uses
 
 class Sharpness(Ability):
     def get_desc(self):
@@ -105,18 +98,18 @@ class Sharpness(Ability):
         self.sharpness : float = sharpness
         self.durability : float = durability
     def apply(self, chain : list, effect : Effect):
-        if hasattr(effect, "damage") and effect.source == chain[-2]:
-            effect.damage *= self.sharpness
-            effect.damage = math.ceil(effect.damage)
+        # if hasattr(effect, "damage") and effect.source == chain[-2]:
+        #     effect.damage *= self.sharpness
+        #     effect.damage = math.ceil(effect.damage)
         if isinstance(effect, UseEffect) and effect.item == chain[-2]:
-            self.dull(random.random() * (1 - self.durability) + self.durability)
+            self.dull(random.random() * (1 - self.durability))
             if self.sharpness <= 0.05:
                 chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[-2].get_name(), " broke!"])
-                chain[3].bag.remove_item(chain[-2])
+                chain[3].remove_item(chain[-2])
     def apply_from_bag(self, chain, effect):
         return self.apply(chain, effect)
     def dull(self, amount : float):
-        self.sharpness *= amount
+        self.sharpness -= amount
     def sharpen(self, amount : float):
         self.sharpness += amount
         if self.sharpness > 1.0:
@@ -252,9 +245,9 @@ class Stunned(Ability):
         self.tag = tag_id
         self.damage_mod = damage_mod
     def apply(self, chain : list, effect : Effect):
-        if hasattr(effect, "damage") and effect.target == chain[2] and effect.source.has_ability(self.tag.id):
+        if hasattr(effect, "damage") and effect.target == chain[2] and hasattr(effect.source, "has_ability") and effect.source.has_ability(self.tag.id):
             effect.damage += self.damage_mod
-        if hasattr(effect, "damage") and chain[0].actor == chain[2] and effect.source.has_ability(self.tag.id):
+        if hasattr(effect, "damage") and chain[0].actor == chain[2] and hasattr(effect.source, "has_ability") and effect.source.has_ability(self.tag.id):
             effect.damage -= self.damage_mod
 
 class BattleCry(Ability):
@@ -299,7 +292,7 @@ class SelectiveBuff(Ability):
         self.tag = tag_id
         self.strength = strength
     def apply(self, chain : list, effect : Effect):
-        if hasattr(effect, "damage") and chain[0].actor == chain[2] and effect.source.has_ability(self.tag.id):
+        if hasattr(effect, "damage") and chain[0].actor == chain[2] and hasattr(effect.source, "has_ability") and effect.source.has_ability(self.tag.id):
             effect.damage += self.strength
 
 class EndOfTurnEffect(Ability):
@@ -372,7 +365,7 @@ class Spawner(Ability):
         if (self.current_delay <= 0):
             if  (chain[1].discovered and 
             chain[0].get_location_of_actor(chain[0].player) != chain[1] and 
-            self.current_alive <= self.max_entities):
+            self.current_alive < self.max_entities):
                 new_entity = copy.deepcopy(random.choice(self.entities))
                 new_entity.add_ability(HiddenAbility(Spawned(self)))
                 AddRoomObjEffect(chain[1],new_entity).execute_with_statics(chain[0])
