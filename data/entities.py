@@ -100,7 +100,7 @@ old_entities : dict[str:StateEntity] = {
         AbilityHandler(),
         Inventory(
             EquipmentHandler({
-                "Weapon":get_item("poison_tome"),
+                "Weapon":get_item("poison_staff"),
                 "Boots":get_item("magic_boots")
             })
         ), 
@@ -121,7 +121,8 @@ greedlings : dict[str:StateEntity] = {
         inventory=Inventory(
             EquipmentHandler({
                 "Weapon":get_item("tooth")
-            })
+            }),
+            Bag(-1,[get_item("greedling_flesh")])
         ),
         stathandler=StatHandler({"HP":HPContainer(5), "Bones":BoneContainer(2)}),
         dialogue_manager=None,
@@ -133,7 +134,8 @@ greedlings : dict[str:StateEntity] = {
         inventory=Inventory(
             EquipmentHandler({
                 "Weapon":get_item("tooth")
-            })
+            }),
+            Bag(-1,[get_item("greedling_flesh")])
         ),
         stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
         dialogue_manager=None,
@@ -180,7 +182,197 @@ greedlings : dict[str:StateEntity] = {
 
 entities.update(greedlings)
 
-ruins_lurkers : dict[str:StateEntity] = {
+
+goblins : dict[str:StateEntity] = {
+    "goblin_guard_spawned" : StateEntity(
+        name=[("goblin","Goblin Guard")], 
+        ability_handler=AbilityHandler([get_ability("goblin")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("rusty_sword"),
+                "Helmet":get_item("leather_helmet"),
+                "Armor":get_item("leather_armor"),
+                "Boots":get_item("leather_boots"),
+            }),
+            Bag(-1,[get_item("uneaten_scraps")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
+        dialogue_manager=None,
+        state=WanderState(2)
+    ),
+    "goblin_guard" : StateEntity(
+        name=[("goblin","Goblin Guard")], 
+        ability_handler=AbilityHandler([get_ability("goblin")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("rusty_sword"),
+                "Helmet":get_item("leather_helmet"),
+                "Armor":get_item("leather_armor"),
+                "Boots":get_item("leather_boots"),
+            }),
+            Bag(-1,[get_item("uneaten_scraps")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "goblin_hooligan" : StateEntity(
+        name=[("goblin","Goblin Hooligan")], 
+        ability_handler=AbilityHandler([get_ability("goblin")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Helmet":get_item("leather_helmet"),
+                "Armor":get_item("leather_armor"),
+                "Boots":get_item("leather_boots"),
+            }),
+            Bag(-1,[get_item("uneaten_scraps"),get_item("small_rock"),get_item("small_rock")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "goblin_officer" : StateEntity(
+        name=[("goblin","Goblin Officer")], 
+        ability_handler=AbilityHandler([get_ability("goblin")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("rusty_axe"),
+                "Helmet":get_item("leather_helmet"),
+                "Armor":get_item("leather_armor"),
+                "Boots":get_item("leather_boots"),
+            }),
+            Bag(-1,[get_item("uneaten_scraps")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(12), "Bones":BoneContainer(4)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "goblin_commander" : StateEntity(
+        name=[("goblin","Goblin Commander")], 
+        ability_handler=AbilityHandler([get_ability("goblin"),get_ability("goblin_battle_cry")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("rusty_staff"),
+                "Helmet":get_item("leather_helmet"),
+                "Armor":get_item("leather_armor"),
+                "Boots":get_item("leather_boots"),
+            }),
+            Bag(-1,[get_item("uneaten_scraps")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(15), "Bones":BoneContainer(5)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "goblin_basher" : StateEntity(
+        name=[("goblin","Goblin Basher")], 
+        ability_handler=AbilityHandler([get_ability("goblin")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("rusty_sledge"),
+                "Helmet":get_item("leather_helmet"),
+                "Armor":get_item("leather_armor"),
+                "Boots":get_item("leather_boots"),
+            }),
+            Bag(-1,[get_item("uneaten_scraps")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(15), "Bones":BoneContainer(5)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "goblin_miner" : StateEntity(
+        name=[("goblin","Goblin Miner")], 
+        ability_handler=AbilityHandler([get_ability("goblin")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("rusty_pickaxe"),
+                "Helmet":get_item("leather_helmet"),
+                "Armor":get_item("leather_armor"),
+                "Boots":get_item("leather_boots"),
+            }),
+            Bag(-1,[get_item("uneaten_scraps")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "test_goblin" : StateEntity(
+        name=[("heat","Demo"),("goblin"," Goblin")], 
+        ability_handler=AbilityHandler([get_ability("goblin")]),
+        inventory=Inventory(
+            EquipmentHandler({
+            })
+        ),
+        stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "demogob" : StateEntity(
+        name=[("heat","Demo"),("goblin","gob")], 
+        ability_handler=AbilityHandler([get_ability("goblin")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":None,
+                "Helmet":get_item("leather_helmet"),
+                "Armor":get_item("leather_armor"),
+                "Boots":get_item("leather_boots"),
+            }),
+            Bag(-1,[get_item("dynamite"),get_item("dynamite")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(3)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "goblin_chef" : StateEntity(
+        name=[("goblin","Goblin "), "Chef"],
+        ability_handler=AbilityHandler([get_ability("goblin")]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("rusty_spatula"),
+                "Helmet":get_item("chef_hat"),
+                "Armor":get_item("chef_apron"),
+            }),
+            Bag(-1, [get_item("roast_chicken"),get_item("roast_beef"),get_item("bone_marrow_stew")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(25), "Bones":BoneContainer(5)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "goblin_mage" : StateEntity(
+        name=[("goblin","Goblin "), ("magic", "Mage")],
+        ability_handler=AbilityHandler([get_ability("goblin"),DamageTypeBuff("arcane_arts",("magic", "Arcane Arts"), "arcane", 2)]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("arcane_staff"),
+                "Armor":get_item("mage_cloak"),
+                "Boots":get_item("mage_boots"),
+            }),
+            Bag(-1, [get_item("clarity_crystal"),get_item("wooden_ring")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(25),"MP":MPContainer(30), "Bones":BoneContainer(5)}),
+        dialogue_manager=None,
+        state=IdleState()
+    ),
+    "goblin_monarch" : StateEntity(
+        name=[("goblin","Goblin "), ("heat", "Monarch")],
+        ability_handler=AbilityHandler([get_ability("goblin"),SelectiveBuff("buffed",("meat","Bulging Muscles"),get_ability("melee"),3)]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("iron_sword"),
+                "Armor":get_item("iron_helmet"),
+                "Armor":get_item("iron_armor"),
+                "Boots":get_item("iron_boots"),
+            }),
+            Bag(-1, [get_item("garden_key")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(25), "Bones":BoneContainer(5)}),
+        dialogue_manager=None,
+        state=IdleState()
+    )
+}
+
+entities.update(goblins)
+
+spined : dict[str:StateEntity] = {
     "spined_rat" : StateEntity(
         name=[("iron","Spined "), ("meat", "Rat")], 
         ability_handler=AbilityHandler([get_ability("spined"),Reciprocate("spines",("iron","Spines"),DamageEvent("self","attacker",2,"slashing"))]),
@@ -198,7 +390,7 @@ ruins_lurkers : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("spined"),Reciprocate("spines",("iron","Spines"),DamageEvent("self","attacker",3,"slashing"))]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":get_item("rusty_sword"),
+                "Weapon":get_item("rusty_staff"),
                 "Offhand":get_item("wooden_shield"),
                 "Helmet":get_item("leather_helmet")
             })
@@ -221,6 +413,18 @@ ruins_lurkers : dict[str:StateEntity] = {
         dialogue_manager=None,
         state=IdleState()
     ),
+    "spined_human_spawned" : StateEntity(
+        name=[("iron","Spined "), "Human"],
+        ability_handler=AbilityHandler([get_ability("spined"),Reciprocate("spines",("iron","Spines"),DamageEvent("self","attacker",3,"slashing"))]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("rusty_sword")
+            })
+        ),
+        stathandler=StatHandler({"HP":HPContainer(15), "Bones":BoneContainer(5)}),
+        dialogue_manager=None,
+        state=WanderState(3)
+    ),
     "spined_chef" : StateEntity(
         name=[("iron","Spined "), "Chef"],
         ability_handler=AbilityHandler([get_ability("spined"),Reciprocate("spines",("iron","Spines"),DamageEvent("self","attacker",5,"slashing"))]),
@@ -235,10 +439,25 @@ ruins_lurkers : dict[str:StateEntity] = {
         stathandler=StatHandler({"HP":HPContainer(25), "Bones":BoneContainer(5)}),
         dialogue_manager=None,
         state=IdleState()
+    ),
+    "spined_wizard" : StateEntity(
+        name=[("iron","Spined "), ("magic", "Wizard")],
+        ability_handler=AbilityHandler([get_ability("spined"),Reciprocate("spines",("iron","Spines"),DamageEvent("self","attacker",5,"slashing"))]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("arcane_staff"),
+                "Armor":get_item("mage_cloak"),
+                "Boots":get_item("mage_boots"),
+            }),
+            Bag(-1, [get_item("clarity_crystal"),get_item("wooden_ring")])
+        ),
+        stathandler=StatHandler({"HP":HPContainer(25),"MP":MPContainer(30), "Bones":BoneContainer(5)}),
+        dialogue_manager=None,
+        state=IdleState()
     )
 }
 
-entities.update(ruins_lurkers)
+entities.update(spined)
 
 npcs : dict[str:StateEntity] = {
     "wise_figure" : StateEntity(
@@ -274,11 +493,12 @@ npcs : dict[str:StateEntity] = {
         stathandler=StatHandler({"HP":HPContainer(1)}),
         state=NothingState()
     ),
-    "traveller":Vendor(
-        name=("iron", "Traveller"),
+    "thrifty_traveller":Vendor(
+        name=("iron", "Thrifty Traveller"),
         stathandler=StatHandler({"HP":HPContainer(40)}),
+        dialogue_manager=DialogueManager("thrifty_traveller_1"),
         state=PeacefulState(),
-        shop_manager=ShopManager({get_item("iron_axe"):10,get_item("wooden_sword"):3})
+        shop_manager=ShopManager({get_item("sharpening_stone"):5,get_item("healing_potion"):10,get_item("dynamite"):8,get_item("roast_chicken"):7})
     )
 }
 

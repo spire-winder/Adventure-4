@@ -16,7 +16,7 @@ class Program:
         self.load_main_menu()
 
     def load_ui(self):
-        self.header : urwid.Widget = urwid.AttrMap(urwid.Text("Adventure 4", align="center"), "header")
+        self.header : urwid.Widget = urwid.AttrMap(urwid.Text("Adventure 4 - Games for Blind Gamers", align="center"), "header")
         self.center : urwid.Widget = urwid.Text("")
         self.top : urwid.Frame = urwid.Frame(self.center, header=self.header)
 

@@ -36,16 +36,24 @@ class IdleState(State):
 class AttackingState(State):
     def find_weapon(self, dungeon) -> bool:
         current_room = dungeon.get_location_of_actor(self.state_entity)
-        weapons = current_room.get_roomobjects(lambda item : hasattr(item, "attackeffect"))
+        weapons = current_room.get_roomobjects(lambda item : hasattr(item, "attackeffect") or hasattr(item, "useeffect"))
         if weapons != []:
             weapon = random.choice(weapons)
-            classes.actions.TakeItemEffect(current_room, self.state_entity, weapon).execute_with_statics(dungeon)
+            if hasattr(weapon, "attackeffect"):
+                classes.actions.EquipItemEffect(current_room, self.state_entity, weapon).execute_with_statics(dungeon)
+            else:
+                classes.actions.TakeItemEffect(current_room, self.state_entity, weapon).execute_with_statics(dungeon)
     
     def decide(self, dungeon ):
         current_room = dungeon.get_location_of_actor(self.state_entity)
         if dungeon.player in current_room.room_contents:
             if not self.state_entity.has_weapon():
-                self.find_weapon(dungeon)
+                if self.state_entity.has_item_to_use(dungeon):
+                    item = self.state_entity.get_item_to_use(dungeon)[0]
+                    target = item.get_targets(dungeon)[0]
+                    classes.actions.UseEffect(self.state_entity, target, item, "use").execute_with_statics(dungeon)
+                else:
+                    self.find_weapon(dungeon)
             else:
                 classes.actions.UseEffect(self.state_entity, dungeon.player, self.state_entity.get_weapon(), "attack").execute_with_statics(dungeon)
         else:

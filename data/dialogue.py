@@ -30,7 +30,7 @@ class DialogueNode:
 dialogue_nodes : dict[str:DialogueNode] = {}
 
 wise_figure : dict[str:DialogueNode] = {
-"wise_figure_1" : DialogueNode(
+    "wise_figure_1" : DialogueNode(
         "\"Hello?\"",
         ["\"Well hello there traveller...\nIt appears you've awoken from your fall.\""],
         "wise_figure_2"
@@ -42,11 +42,11 @@ wise_figure : dict[str:DialogueNode] = {
     ),
     "wise_figure_3" : DialogueNode(
         "\"Where am I?\"",
-        ["\"A chatty one! Haha!\nWelcome to Subterra.\nYou came from up there.\"\nThe figure points upwards to a small patch of sky, barely visible."],
+        ["\"A chatty one! Haha!\nWelcome to the Subterra.\nYou came from up there.\"\nThe figure points upwards to a small patch of sky, barely visible."],
         "wise_figure_4"
     ),
     "wise_figure_4" : DialogueNode(
-        "\"Subterra?\"",
+        "\"The Subterra?\"",
         ["\"Yes, that's what we call this.\"\nThe figure gestures around to an abandoned temple.\n\"These are the Ruins of the Sun.\nBefore, we were a mighty religion, but we've crumbled to dust.\""],
         "wise_figure_5"
     ),
@@ -96,7 +96,7 @@ fellow_traveller : dict[str:DialogueNode] = {
         "I'll be fine",
         ["\"Well, no matter what happens, why don't you take this. Hopefully it will help.\""],
         "fellow_traveller_5",
-        AddtoInventoryEvent("player",get_item("lightning_tome"))
+        AddtoInventoryEvent("player",get_item("lightning_staff"))
     ),
     "fellow_traveller_5" : DialogueNode(
         "Thank you!",
@@ -112,6 +112,60 @@ fellow_traveller : dict[str:DialogueNode] = {
 }
 
 dialogue_nodes.update(fellow_traveller)
+
+thrifty_traveller : dict[str:DialogueNode] = {
+    "thrifty_traveller_1" : DialogueNode(
+        "\"Hello!\"",
+        ["\"Greetings friend!\nAre you new to the Subterra?\""],
+        ["thrifty_traveller_2","thrifty_traveller_3"]
+    ),
+    "thrifty_traveller_2" : DialogueNode(
+        "\"Yes.\"",
+        ["\"Welcome to the underground. It's dangerous down here, make sure you never let your guard down.\""],
+        "thrifty_traveller_4"
+    ),
+    "thrifty_traveller_3" : DialogueNode(
+        "\"That's not for you to know.\"",
+        ["\"Oh, very mysterious! Well I hope you can wash off some of those greedling guts.\"\nThe traveller points at your nasty clothes."],
+        "thrifty_traveller_4"
+    ),
+    "thrifty_traveller_4" : DialogueNode(
+        "\"What are you doing down here?\"",
+        ["\"I'm what you might describe as a merchant. I peddle my wares and travel around.\""],
+        "thrifty_traveller_5"
+    ),
+    "thrifty_traveller_5" : DialogueNode(
+        "\"Goodbye.\"",
+        ["\"Live long, friend.\""],
+        None,
+        SetDialogueEffect(source="thrifty_traveller_done",target="speaker")
+    ),
+    "thrifty_traveller_done" : DialogueNode(
+        "\"I want to talk.\"",
+        ["\"What is it?\""],
+        ["thrifty_traveller_info1","thrifty_traveller_info2","thrifty_traveller_info3"],
+    ),
+    "thrifty_traveller_info1" : DialogueNode(
+        "\"Why does your economy depend on bones?\"",
+        ["\"Bones are the backbone of commerce in the Subterra.\nThey're readily avaliable, but scarce enough to make a good currency.\nNow why don't you buy some of my things?\""],
+        None,
+        SetDialogueEffect(source="thrifty_traveller_done",target="speaker")
+    ),
+    "thrifty_traveller_info2" : DialogueNode(
+        "\"What's around here?\"",
+        ["\"To the south are the Ruins of the Sun. The Wise Figure spends a lot of time there.\nTo the north are the Shattered Ruins. There's a castle there, but it's been overrun by goblins. Stay safe if you're going to check it out.\""],
+        None,
+        SetDialogueEffect(source="thrifty_traveller_done",target="speaker")
+    ),
+    "thrifty_traveller_info3" : DialogueNode(
+        "\"Where are you from?\"",
+        ["\"I was born in the town of Ember. It's north of the ruins, and it's the main settlement in the Subterra.\""],
+        None,
+        SetDialogueEffect(source="thrifty_traveller_done",target="speaker")
+    ),
+}
+
+dialogue_nodes.update(thrifty_traveller)
 
 def get_dialogue(dia_id : str) -> DialogueNode:
     return dialogue_nodes[dia_id]

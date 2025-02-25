@@ -42,6 +42,11 @@ abilities : dict[str:Ability] = {
         name=("toxic","Poison"),
         effect=DamageEvent("self","user",5,"toxic",-1)
     ),
+    "doomed":Doomed(
+        id="doomed",
+        name=("toxic","Doomed"),
+        damage_mod=5
+    ),
     "starved":DamageTypeBuff(
         "starved",
         ("meat", "Starved"),
@@ -60,15 +65,34 @@ abilities["goblin_boss"]= BattleCry(
         tag_id=get_ability("goblin"),
         strength=5
     )
+abilities["empowered"]=SelectiveBuff(
+        id="empowered",
+        name=("celestial","Empowered"),
+        tag_id=get_ability("magic"),
+        strength=3
+    )
 abilities["stun"]=Stunned(
         id="stun",
         name=("stunned","Stunned"),
         tag_id=get_ability("melee"),
         damage_mod=2
     )
+abilities["freeze"]=Frozen(
+        id="freeze",
+        name=("cold","Frozen"),
+        tag_id=get_ability("melee"),
+        damage_mod=2
+    )
+
 abilities["greedling_boss"]= BattleCry(
         id="greedling_boss",
         name=("meat","Greedling Boss"),
         tag_id=get_ability("greedling"),
+        strength=3
+    )
+abilities["goblin_battle_cry"]= BattleCry(
+        id="goblin_battle_cry",
+        name=("goblin","Goblin Battle Cry"),
+        tag_id=get_ability("goblin"),
         strength=3
     )

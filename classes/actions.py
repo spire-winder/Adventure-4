@@ -358,7 +358,7 @@ class UseEffect(Effect):
             "target":self.target, 
             "item":self.item
         }
-        new_effect : Effect = copy.deepcopy(self.item.get_effect(self.verb))
+        new_effect : Effect = copy.deepcopy(self.item.get_effect(self))
         new_effect.execute_with_statics_and_reformat(dungeon, reformat_dict, True)
         self.item.use(dungeon)
 
@@ -387,7 +387,8 @@ class UnlockEffect(Effect):
         self.target = target
 
     def execute(self, dungeon):
-        self.target.unlock()
+        if self.target != None:
+            self.target.unlock()
     def get_desc(self):
         return "Unlocks something..."
 
@@ -399,7 +400,8 @@ class LockEffect(Effect):
         self.target = target
 
     def execute(self, dungeon):
-        self.target.lock()
+        if self.target != None:
+            self.target.lock()
     def get_desc(self):
         return "Locks something..."
 
@@ -436,6 +438,20 @@ class TakeItemEffect(Effect):
         RemoveRoomObjEffect(self.source, self.item).execute(dungeon)
         AddtoInventoryEvent(self.target, self.item).execute(dungeon)
         dungeon.add_to_message_queue_if_actor_visible(self.source, [self.target.get_name(), " takes ", self.item.get_name(), "."])
+
+class EquipItemEffect(Effect):
+    """The target equips the item from the source."""
+    def __init__(self, source, target, item):
+        super().__init__()
+        self.source = source
+        self.target = target
+        self.item = item
+    
+    def execute(self, dungeon) -> None:
+        if self.source != None:
+            RemoveRoomObjEffect(self.source, self.item).execute(dungeon)
+        self.target.equip_item(self.item)
+        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " equipped the ", self.item.get_name(), "."])
 
 class GiveItemEffect(Effect):
     """The source gives the target an item."""
@@ -695,10 +711,7 @@ class EquipItemAction(PlayerAction):
         self.source = source
     
     def execute(self, dungeon) -> None:
-        if self.source != None:
-            RemoveRoomObjEffect(self.source, self.item).execute(dungeon)
-        dungeon.actor.equip_item(self.item)
-        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " equipped the ", self.item.get_name(), "."])
+        EquipItemEffect(self.source, dungeon.actor, self.item).execute_with_statics(dungeon)
         dungeon.end_current_turn()
     
     def get_name(self):

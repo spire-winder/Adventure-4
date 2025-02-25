@@ -87,6 +87,15 @@ class Status(Ability):
     def __gt__(self, a : "Status") -> bool:
         return self.current_duration > a.current_duration
 
+#durability stats
+#0.6 durability = 5 uses
+#0.7 durability = 8 uses
+#0.75 durability = 10 uses
+#0.8 durability = 13 uses
+#0.85 durability = 18 uses
+#0.9 durability = 28 uses
+#0.95 durability = 58 uses
+
 class Sharpness(Ability):
     def get_desc(self):
         percent : int = math.floor(self.sharpness * 100)
@@ -162,7 +171,7 @@ class MultiUse(Ability):
 
 class Armor(Ability):
     def get_desc(self):
-        return [("iron", "+" + str(self.armor_value) + " Armor")]
+        return [("iron", "+" + str(self.armor_value) + " armor")]
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], armor_value : int = 1):
         super().__init__(id,name)
         self.armor_value = armor_value
@@ -195,7 +204,7 @@ class Reciprocate(Ability):
 
 class SelectiveArmor(Ability):
     def get_desc(self):
-        return utility.combine_text([("iron","+" + str(self.armor_value) + " Armor")," against ",(self.damage_type, self.damage_type)," attacks"], False)
+        return utility.combine_text([("iron","+" + str(self.armor_value) + " armor")," against ",(self.damage_type, self.damage_type)," attacks"], False)
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], damage_type : str, armor_value : int):
         super().__init__(id,name)
         self.damage_type = damage_type
@@ -213,6 +222,27 @@ class SelectiveArmor(Ability):
                 if effect.armor_penetrate < 0:
                     effect.armor_penetrate = 0
             effect.damage -= current_armor
+
+class Frozen(Ability):
+    def get_desc(self):
+        return ["Deal ",   "-", str(self.damage_mod), " less damage with ",self.tag.get_name()," attacks"]
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], tag_id : Ability, damage_mod : int = 1):
+        super().__init__(id,name)
+        self.tag = tag_id
+        self.damage_mod = damage_mod
+    def apply(self, chain : list, effect : Effect):
+        if hasattr(effect, "damage") and chain[0].actor == chain[2] and effect.source.has_ability(self.tag.id):
+            effect.damage -= self.damage_mod
+
+class Doomed(Ability):
+    def get_desc(self):
+        return ["Recieve +", str(self.damage_mod), " damage"]
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], damage_mod : int = 1):
+        super().__init__(id,name)
+        self.damage_mod = damage_mod
+    def apply(self, chain : list, effect : Effect):
+        if hasattr(effect, "damage") and effect.target == chain[2]:
+            effect.damage += self.damage_mod
 
 class Stunned(Ability):
     def get_desc(self):
@@ -237,6 +267,18 @@ class BattleCry(Ability):
     def apply(self, chain : list, effect : Effect):
         if hasattr(effect, "damage") and chain[0].actor.has_ability(self.tag.id):
             effect.damage += self.strength
+
+class ManaReduction(Ability):
+    def get_desc(self):
+        return utility.combine_text(["Spend ", ("magic",str(self.strength))," less ",("magic","MP")], False)
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], strength : int):
+        super().__init__(id,name)
+        self.strength = strength
+    def apply(self, chain : list, effect : Effect):
+        if isinstance(effect, SpendMPEvent) and effect.target == chain[2]:
+            effect.spending -= self.strength
+            if effect.spending < 0:
+                effect.spending = 0
 
 class DamageTypeBuff(Ability):
     def get_desc(self):
@@ -288,7 +330,7 @@ class OnEatEffect(Ability):
         super().__init__(id,name)
         self.effect = effect
     def apply(self, chain, effect):
-        if isinstance(effect, UseEffect) and effect.target == chain[2] and hasattr(effect.item,"foodeffect") :
+        if isinstance(effect, UseEffect) and effect.source == chain[2] and hasattr(effect.item,"foodeffect") :
             new_effect : Effect = copy.deepcopy(self.effect)
             new_effect.execute_with_statics_and_reformat(chain[0], self.reformat_dict(chain), True)
 

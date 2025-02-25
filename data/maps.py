@@ -23,7 +23,7 @@ player : Player = Player(
     StatHandler({
         "HP":HPContainer(50),
         "MP":MPContainer(50),
-        "Bones":BoneContainer(0,25)
+        "Bones":BoneContainer(0,50)
     })
 )
 
@@ -104,7 +104,7 @@ standard_map : dict = {
         ("magic", "Overgrown Library"), 
         AbilityHandler(), 
         [
-            Container(("magic", "Overgrown Bookcase"), contents=[get_item("fire_tome"),get_item("magic_armor"), get_item("restoration_potion")]),
+            Container(("magic", "Overgrown Bookcase"), contents=[get_item("fire_staff"),get_item("magic_armor"), get_item("restoration_potion")]),
             get_entity("forest_mage"),
             Passage(("magic", "Northern Trail"), destination_id="forest_crossroad")
         ]
@@ -137,7 +137,9 @@ map : dict[str:Room] = {}
 
 misc_dic : dict[str:] = {
     "arcane_entrance":LockedPassage(("stone", "Hidden Passage"),destination_id="shattered_spire"),
-    "arcane_entrance_lever":Lever(("stone","Hidden Lever"),oneffect=LockEffect("item","id:arcane_entrance"),offeffect=UnlockEffect("item","id:arcane_entrance"))
+    "arcane_entrance_lever":Lever(("stone","Hidden Lever"),oneffect=LockEffect("item","id:arcane_entrance"),offeffect=UnlockEffect("item","id:arcane_entrance")),
+    "arcane_archive_entrance":LockedPassage(("magic", "Arcane Passage"), destination_id="arcane_archive"),
+    "arcane_archive_lever":Lever(("stone","Unmarked Lever"),oneffect=LockEffect("item","roomid:throne_room:arcane_entrance"),offeffect=UnlockEffect("item","roomid:throne_room:arcane_archive_entrance"))
 }
 
 for x in misc_dic:
@@ -154,21 +156,21 @@ ruins_of_the_sun : dict[str:Room] = {
             get_entity("wise_figure"),
             get_entity("training_dummy"),
             LockedPassage(("stone", "Chamber Exit"),destination_id="decrepit_cellar",key_id="wooden_key"),
-            Campfire(("heat", "DEBUG Campfire"))
+            #Campfire(("heat", "DEBUG Campfire"))
         ]
     ),
     "decrepit_cellar": Room(
         name=("stone", "Decrepit Cellar"),
-        ability_handler=AbilityHandler([Spawner([get_entity("greedling")],4)]),
         room_contents=[
             get_entity("greedling"),
-            Container(("wood", "Wooden Chest"), contents=[get_item("rusty_sword"),get_item("leather_armor")]),
+            Container(("wood", "Wooden Chest"), contents=[get_item("rusty_sword"),get_item("wooden_shield")]),
             Passage(("stone", "Chamber Exit"),destination_id="starting_room"),
             Passage(("stone", "Cracked Steps"),destination_id="stone_rotunda")
         ]
     ),
     "stone_rotunda": Room(
         name=("stone", "Stone Rotunda"),
+        ability_handler=AbilityHandler([Spawner([get_entity("large_greedling")],2,50,5)]),
         room_contents=[
             get_entity("large_greedling"),
             Campfire(("heat", "Roaring Campfire")),
@@ -180,6 +182,7 @@ ruins_of_the_sun : dict[str:Room] = {
     ),
     "western_hallway": Room(
         name=("stone", "Western Hallway"),
+        ability_handler=AbilityHandler([Spawner([get_entity("arcane_greedling")],1,25)]),
         room_contents=[
             get_entity("greedling"),
             get_entity("arcane_greedling"),
@@ -199,9 +202,10 @@ ruins_of_the_sun : dict[str:Room] = {
     ),
     "crypt_of_the_sunblessed": Room(
         name=[("stone", "Crypt of the "), ("celestial", "Sunblessed")],
+        ability_handler=AbilityHandler([Spawner([get_entity("shadow_greedling")],1,25)]),
         room_contents=[
             get_entity("shadow_greedling"),
-            Container(("stone", "Defiled Crypt"), contents=[get_item("wooden_shovel"),get_item("leather_helmet")]),
+            Container(("stone", "Defiled Crypt"), contents=[get_item("wooden_shovel"),get_item("wooden_dagger")]),
             Passage(("stone", "Hallway"),destination_id="western_hallway"),
         ]
     ),
@@ -217,12 +221,13 @@ ruins_of_the_sun : dict[str:Room] = {
         name=("stone", "Ransacked Vault"),
         room_contents=[
             get_entity("starved_greedling"),
-            Passage(("stone", "Rotunda"),destination_id="stone_rotunda"),
+            Passage(("stone", "Rotunda"),destination_id="stone_rotunda")
         ]
     ),
     "crumbling_entrance": Room(
         name=("stone", "Crumbling Entrance"),
         room_contents=[
+            get_entity("thrifty_traveller"),
             Passage(("celestial", "Temple Gate"),destination_id="stone_rotunda"),
             Passage(("stone", "Northern Cavern"),destination_id="empty_cavern"),
         ]
@@ -234,10 +239,12 @@ map.update(ruins_of_the_sun)
 shattered_ruins : dict[str:Room] = {
     "empty_cavern": Room(
         name=[("stone", "Empty Cavern")],
+        ability_handler=AbilityHandler([Spawner([get_entity("goblin_miner")],1,25,3)]),
         room_contents=[
             Passage(("celestial", "Southern Temple"),destination_id="crumbling_entrance"),
             Passage(("stone", "Northern Trail"),destination_id="ancient_courtyard"),
-            get_entity("spined_rat")
+            get_entity("goblin_miner"),
+            Destructible(("stone", "Rubble"), contents=[], tool_requirement="Pickaxe", tool_strength=2)
         ]
     ),
     "ancient_courtyard": Room(
@@ -252,9 +259,13 @@ shattered_ruins : dict[str:Room] = {
     ),
     "echoing_cave": Room(
         name=("stone", "Echoing Cave"),
+        ability_handler=AbilityHandler([Spawner([get_entity("demogob")],1,25,3)]),
         room_contents=[
             Passage(("stone", "Western Courtyard"),destination_id="ancient_courtyard"),
             SubmergedPassage(("water", "Underwater Passage"),destination_id="submerged_cavern"),
+            get_entity("demogob"),
+            get_entity("goblin_miner"),
+            get_item("dynamite")
         ]
     ),
     "submerged_cavern": Room(
@@ -268,71 +279,104 @@ shattered_ruins : dict[str:Room] = {
         name=("stone", "Cobblestone Road"),
         room_contents=[
             Passage(("stone", "Southern Courtyard"),destination_id="ancient_courtyard"),
+            get_entity("goblin_guard")
         ]
     ),
     "foreboding_entry": Room(
         name=("stone", "Foreboding Entry"),
         room_contents=[
-            get_entity("spined_human_1"),
             Passage(("stone", "Eastern Courtyard"),destination_id="ancient_courtyard"),
             Passage(("stone", "Western Hall"),destination_id="ransacked_hall"),
+            get_entity("goblin_guard"),
+            get_entity("goblin_commander")
         ]
     ),
     "ransacked_hall": Room(
         name=("stone", "Ransacked Hall"),
+        ability_handler=AbilityHandler([Spawner([get_entity("goblin_guard_spawned")],3,20,2)]),
         room_contents=[
-            get_entity("spined_human_2"),
+            get_entity("goblin_officer"),
+            get_entity("goblin_basher"),
             Passage(("stone", "Eastern Entryway"),destination_id="foreboding_entry"),
-            Passage(("stone", "Throne Room"),destination_id="throne_room"),
+            Passage(("stone", "Parlor"),destination_id="demolished_parlor"),
             Passage(("stone", "Kitchen"),destination_id="kitchen"),
             UsableRoomObj(("arcane", "Curtains"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),actions={"unveil":AddRoomObjEffect("place",get_misc("arcane_entrance"))}),
             UsableRoomObj(("arcane", "Curtains"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),actions={"unveil":AddRoomObjEffect("place",get_misc("arcane_entrance_lever"))}),
         ]
     ),
     "kitchen": Room(
-        name=("stone", "Kitchen"),
-        ability_handler=AbilityHandler([Spawner([get_entity("spined_chef")],1,6,2)]),
+        name=("stone", "Royal Kitchen"),
+        ability_handler=AbilityHandler([Spawner([get_entity("goblin_chef")],1,15,2)]),
         room_contents=[
-            get_entity("spined_chef"),
+            get_entity("goblin_chef"),
+            Campfire(("heat","Royal Hearth")),
             Passage(("stone", "Hall"),destination_id="ransacked_hall"),
         ]
     ),
     "shattered_spire": Room(
         name=("stone", "Shattered Spire"),
+        ability_handler=AbilityHandler([Spawner([get_entity("goblin_mage")],1,15,2)]),
         room_contents=[
+            get_entity("goblin_mage"),
             Passage(("stone", "Spire Exit"),destination_id="ransacked_hall"),
+            get_misc("arcane_archive_lever"),
+            Container(("wood","Wooden Bookshelf"), contents=[get_item("mystic_scroll"),get_item("restoration_potion")])
+        ]
+    ),
+    "demolished_parlor": Room(
+        name=("stone", "Demolished Parlor"),
+        room_contents=[
+            get_item("uneaten_scraps"),
+            get_entity("goblin_hooligan"),
+            get_entity("goblin_hooligan"),
+            Passage(("stone", "Eastern Hall"),destination_id="ransacked_hall"),
+            Passage(("stone", "Royal Suite"),destination_id="royal_suite"),
+            Passage(("iron", "Southern Armory"),destination_id="forgotten_armory"),
+            Passage(("iron", "Throne Room"),destination_id="throne_room"),
         ]
     ),
     "throne_room": Room(
         name=("stone", "Throne Room"),
         room_contents=[
-            Passage(("stone", "Eastern Hall"),destination_id="ransacked_hall"),
-            Passage(("stone", "Royal Suite"),destination_id="royal_suite"),
-            Passage(("iron", "Southern Armory"),destination_id="forgotten_armory"),
+            get_entity("goblin_monarch"),
+            get_entity("goblin_commander"),
+            get_entity("goblin_guard"),
+            Passage(("stone", "Parlor"),destination_id="demolished_parlor"),
+            Destructible(("iron", "Broken Throne"),contents=[get_misc("arcane_archive_entrance")],tool_requirement="Pickaxe",tool_strength=3)
         ]
     ),
     "arcane_archive": Room(
-        name=("stone", "Arcane Archive"),
+        name=("magic", "Arcane Archive"),
         room_contents=[
+            Container(("wood","Staff Display"),contents=[get_item("fire_staff"),get_item("ice_staff")]),
+            Container(("wood","Scroll Rack"),contents=[get_item("venom_scroll"),get_item("storm_scroll")]),
+            Container(("wood","Alchemy Station"),contents=[get_item("empowering_potion"),get_item("regen_potion")]),
             Passage(("stone", "Archive Exit"),destination_id="throne_room"),
         ]
     ),
     "hidden_garden": Room(
         name=("stone", "Hidden Garden"),
         room_contents=[
+            get_item("poison_staff"),
+            Container(("wood","Planter Box"),contents=[get_item("torchroot_buds"),get_item("shockflower_blossom"),get_item("surface_apple")]),
             Passage(("stone", "Garden Exit"),destination_id="royal_suite"),
         ]
     ),
     "forgotten_armory": Room(
         name=("stone", "Forgotten Armory"),
         room_contents=[
-            Passage(("stone", "Throne Room"),destination_id="throne_room"),
+            get_item("iron_shield"),
+            get_item("iron_ring"),
+            get_item("iron_axe"),
+            get_item("sharpening_stone"),
+            Passage(("stone", "Parlor"),destination_id="demolished_parlor"),
         ]
     ),
     "royal_suite": Room(
         name=("stone", "Royal Suite"),
         room_contents=[
-            Passage(("stone", "Throne Room"),destination_id="throne_room"),
+            Container(("wood","Wooden Chest"), contents=[get_item("iron_ring"),get_item("healing_potion")]),
+            Passage(("stone", "Parlor"),destination_id="demolished_parlor"),
             LockedPassage(("wood", "Wooden Door"),destination_id="hidden_garden",key_id="garden_key"),
         ]
     ),
