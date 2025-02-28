@@ -68,7 +68,7 @@ class Game:
         for x in queue:
             li.append(urwid.Text(x))
         li.append(urwid.Divider())
-        if not self.dungeon.game_over:
+        if not (self.dungeon.game_over or self.dungeon.game_win):
             li.append(ActionButton(["Continue"], self.end_round))
         else:
             li.append(ActionButton(["Return to menu"], self.delete_and_quit))
@@ -86,6 +86,15 @@ class Game:
         options_menu = urwid.ListBox(urwid.SimpleFocusListWalker(options_menu_options))
         self.set_center_event.emit(new_center=options_menu)
     
+    def load_victory_menu(self):
+        menu_options = []
+        menu_options.append(urwid.Text("You were victorious! You killed the Shadowed One, and the citizens of the Subterra are free to roam the external world."))
+        menu_options.append(urwid.Text("Feel free to return to your save file with your new items."))
+        menu_options.append(urwid.Divider())
+        menu_options.append(ActionButton("Return to menu", self.save_and_quit))
+        options_menu = urwid.ListBox(urwid.SimpleFocusListWalker(menu_options))
+        self.set_center_event.emit(new_center=options_menu)
+    
     def save_wrapper(self, button : ActionButton) -> None:
         self.save()
 
@@ -99,7 +108,10 @@ class Game:
         self.dungeon.interact_with_room()
     
     def delete_and_quit(self, button : ActionButton) -> None:
-        self.quit_event.emit()
+        if self.dungeon.game_win:
+            self.load_victory_menu()
+        else:
+            self.quit_event.emit()
 
     def save_and_quit(self, button : ActionButton) -> None:
         self.save()

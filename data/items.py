@@ -96,6 +96,15 @@ ruins_of_the_sun_items : dict[str:Item] = {
         ]),
         drop_chance=0.6,
         price=2
+    ),
+    "raw_fish":Food(
+        name=("water", "Raw Fish"),
+        ability_handler=AbilityHandler([SingleUse()]),
+        foodeffect=EffectSequence([
+            HealEvent("item","user",10)
+        ]),
+        drop_chance=0.6,
+        price=2
     )
 }
 
@@ -146,7 +155,7 @@ shattered_ruins_items : dict[str:Item] = {
         price=4,
         tool_type="Pickaxe",
         tool_strength=3,
-        attackeffect=DamageEvent(damage=10, damage_type="heat",armor_penetrate=-1)
+        attackeffect=AOEEffect(DamageEvent(damage=10, damage_type="heat",armor_penetrate=-1))
     ),
     "rusty_spatula":MeleeWeapon(
         name=[("rust","Rusty"),("iron"," Spatula")],
@@ -227,13 +236,80 @@ shattered_ruins_items : dict[str:Item] = {
     ),
     "spiked_shield":Equipment(
         name=("iron","Spiked Shield"),
-        ability_handler=AbilityHandler([SelectiveArmor("sturdy", ("iron", "Sturdy"), "slashing", 2),Reciprocate("spikes",("iron","Spikes"),DamageEvent("self","attacker",2,"slashing"))]),
+        ability_handler=AbilityHandler([SelectiveArmor("sturdy", ("iron", "Sturdy"), "slashing", 2),Reciprocate("spikes",("iron","Spikes"),DamageEvent("item","attacker",2,"slashing"))]),
         slot="Offhand",
+        price=5
+    ),
+    "spiked_ring":Equipment(
+        name=("iron","Spiked Ring"),
+        ability_handler=AbilityHandler([SelectiveBuff("bloodsoaked", ("meat", "Bloodsoaked"), get_ability("melee"), 2),Reciprocate("spikes",("iron","Spikes"),DamageEvent("item","attacker",2,"slashing"))]),
+        slot="Ring",
         price=5
     ),
 }
 
 items.update(shattered_ruins_items)
+
+shadowed_forest_items : dict[str:Item] = {
+    "frozen_helm":Equipment(
+        name=("cold","Frozen Helm"),
+        ability_handler=AbilityHandler([Armor("armor",None,5),DamageTypeBuff("freeze_aura1",("cold","Frozen Aura"),"cold",5),SelectiveArmor("freeze_aura2",None,"cold",5)]),
+        slot="Helmet",
+        price=12
+    ),
+    "guardian_chestplate":Equipment(
+        name=utility.alternate_colors("Guardian Chestplate", ["magic","stone"]),
+        ability_handler=AbilityHandler([Armor("armor",None,5),SelectiveArmor("ancient_armor1","Ancient Armor","arcane",3),SelectiveArmor("ancient_armor2",None,"heat",3)]),
+        slot="Armor",
+        price=12
+    ),
+    "waterforged_boots":Equipment(
+        name=utility.alternate_colors("Waterforged Boots", ["water","magic"]),
+        ability_handler=AbilityHandler([Armor("armor",None,5),EndOfTurnEffect("mp_restore",("magic", "Magic Restoration"),RestoreMPEvent("self","user",3))]),
+        slot="Boots",
+        price=12
+    ),
+    "waterforged_sledge":MeleeWeapon(
+        name=[("water","Waterforged"),("iron"," Sledge")],
+        attackeffect=EffectSequence([DamageEvent(damage=6, damage_type="bashing",armor_penetrate=4),DamageEvent(damage=6, damage_type="cold",armor_penetrate=4)]),
+        durability=0.9,
+        price=15
+    ),
+    "guardian_crystal":Equipment(
+        name=utility.alternate_colors("Guardian Chestplate", ["magic","stone"]),
+        ability_handler=AbilityHandler([DamageTypeBuff("ancient_power1","Ancient Power","arcane",3),DamageTypeBuff("ancient_power2",None,"heat",3)]),
+        slot="Offhand",
+        price=12
+    ),
+    "gillberry":Food(
+        name=("water", "Gillberry"),
+        ability_handler=AbilityHandler([SingleUse()]),
+        foodeffect=EffectSequence([
+            HealEvent("item","user",10),
+            AddAbilityEffect("user",get_ability("water_breathing"))
+        ]),
+        price=20,
+        drop_chance=1
+    ),
+    "serpent_flesh":Food(
+        name=("water", "Serpent Flesh"),
+        ability_handler=AbilityHandler([SingleUse()]),
+        drop_chance=1,
+        foodeffect=HealEvent("item","user",45),
+        price=15
+    ),
+    "bat_flesh":Food(
+        name=("water", "Bat Flesh"),
+        ability_handler=AbilityHandler([SingleUse()]),
+        drop_chance=0.5,
+        foodeffect=HealEvent("item","user",20),
+        price=15
+    ),
+    "armory_key":Key(("iron", "Armory Key"),key_id="armory_key"),
+    "iron_key":Key(("iron", "Iron Key"),key_id="iron_key"),
+}
+
+items.update(shadowed_forest_items)
 
 iron_items : dict[str:Item] = {
     "iron_sword":MeleeWeapon(
@@ -241,7 +317,7 @@ iron_items : dict[str:Item] = {
         attackeffect=DamageEvent(damage=10, damage_type="slashing"),
         price=5
     ),
-    "iron_bo":MeleeWeapon(
+    "iron_staff":MeleeWeapon(
         name=("iron","Iron Staff"),
         attackeffect=RepeatEvent(DamageEvent(damage=7, damage_type="bashing"),2),
         price=5
@@ -485,7 +561,7 @@ consumeable_items : dict[str:Item] = {
     "healing_potion":Potion(
         name=("healing","Healing Potion"),
         ability_handler=AbilityHandler([SingleUse()]),
-        useeffect=HealEvent("item","user",10),
+        useeffect=HealEvent("item","user",20),
         price=2
     ),
     "restoration_potion":Potion(
@@ -497,7 +573,7 @@ consumeable_items : dict[str:Item] = {
     "healing_potion_with_magic":Potion(
         name=utility.alternate_colors("Infused Healing Potion",["healing"*2,"magic"*2]),
         ability_handler=AbilityHandler([ManaCost("manacost","Mana Cost", 5),SingleUse()]),
-        useeffect=HealEvent("item","user",15),
+        useeffect=HealEvent("item","user",30),
         price=4
     ),
     "regen_potion":Potion(
@@ -517,6 +593,20 @@ consumeable_items : dict[str:Item] = {
         ability_handler=AbilityHandler([SingleUse()]),
         useeffect=AddAbilityEffect("user",Status(Armor("iron_hide", ("iron", "Ironhide"),3),5)),
         price=4
+    ),
+    "lifeforce_container":Potion(
+        name=("healing","Lifeforce Container"),
+        ability_handler=AbilityHandler([SingleUse()]),
+        useeffect=IncreaseMaxHPEffect("item","user",10),
+        drop_chance=1,
+        price=10
+    ),
+    "mana_container":Potion(
+        name=("magic","Mana Container"),
+        ability_handler=AbilityHandler([SingleUse()]),
+        useeffect=IncreaseMaxMPEffect("item","user",10),
+        drop_chance=1,
+        price=10
     )
 }
 
@@ -595,7 +685,7 @@ enemy_items : dict[str:Item] = {
     "magic_barbs":MeleeWeapon(
         name=("magic","Magic Barbs"),
         drop_chance=0,
-        attackeffect=DamageEvent(damage=7,damage_type="arcane",armor_penetrate=2)
+        attackeffect=DamageEvent(damage=10,damage_type="arcane",armor_penetrate=2)
     ),
     "eye_whip":MeleeWeapon(
         name=("meat","Eye Whip"),
@@ -616,6 +706,29 @@ enemy_items : dict[str:Item] = {
         name=("shadow","Shadow Tooth"),
         drop_chance=0.1,
         attackeffect=DamageEvent(damage=6,damage_type="shadow")
+    ),
+    "maneater_bite":MeleeWeapon(
+        name=("shadow","Maneater Jaw"),
+        drop_chance=0,
+        attackeffect=EffectSequence([DamageEvent(damage=10,damage_type="shadow"),
+            ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("doomed"),3)),0.25)])
+    ),
+    "wave_crash":MeleeWeapon(
+        name=("water","Wave Crash"),
+        drop_chance=0,
+        attackeffect=EffectSequence([DamageEvent(damage=5,damage_type="bashing"),DamageEvent(damage=5,damage_type="cold"),
+            ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("freeze"),3)),0.5)])
+    ),
+    "flame_crash":MeleeWeapon(
+        name=("heat","Flame Crash"),
+        drop_chance=0,
+        attackeffect=RepeatEvent(DamageEvent(damage=5,damage_type="heat"),3)
+    ),
+    "bat_bite":MeleeWeapon(
+        name=("shadow","Bat Bite"),
+        drop_chance=0,
+        attackeffect=EffectSequence([DamageEvent(damage=3,damage_type="shadow"),
+            ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("doomed"),3)),0.25)])
     ),
 }
 
@@ -638,6 +751,58 @@ tools : dict[str:Item] = {
 }
 
 items.update(tools)
+
+final_boss_items : dict[str:Item] = {
+    "shadow_blade":MeleeWeapon(
+        name=[("shadow","Shadow Blade")],
+        attackeffect=
+            EffectSequence([
+                DamageEvent(damage=10, damage_type="slashing"),
+                DamageEvent(damage=10, damage_type="shadow"),
+                ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("doomed"),3)),0.25)
+            ]),
+        drop_chance=0.3,
+        durability=0.95,
+        price=20
+    ),
+    "gloom_helm":Equipment(
+        name=("shadow","Gloom Helm"),
+        ability_handler=AbilityHandler([Armor("armor",None,5),DamageTypeBuff("shadow_armor",("shadow","Murky Blades"),"shadow",3)]),
+        slot="Helmet",
+        drop_chance=0.3,
+        price=20
+    ),
+    "umbra_cloak":Equipment(
+        name=("shadow","Umbra Cloak"),
+        ability_handler=AbilityHandler([Armor("armor",None,5),SelectiveArmor("shadow_armor",("shadow","Armor of Darkness"),"shadow",3)]),
+        slot="Armor",
+        drop_chance=0.3,
+        price=20
+    ),
+    "blight_treads":Equipment(
+        name=("shadow","Blight Treads"),
+        ability_handler=AbilityHandler([Armor("armor",None,5),ImmuneToAbility("shadow_armor",("shadow","Fatetwister"),get_ability("doomed"))]),
+        slot="Boots",
+        drop_chance=0.3,
+        price=20
+    ),
+    "twilight_ring":Equipment(
+        name=("shadow","Twilight Ring"),
+        ability_handler=AbilityHandler([SelectiveBuff("shadow_armor",("shadow","Mystic Drain"),get_ability("magic"),3),AbilityArmor("shadow_armor",None,get_ability("magic"),3)]),
+        slot="Ring",
+        drop_chance=0.3,
+        price=20
+    ),
+    "dusk_shield":Equipment(
+        name=("shadow","Dusk Shield"),
+        ability_handler=AbilityHandler([Armor("armor",None,5),Reciprocate("spikes",("shadow","Dark Equilibrium"),AddAbilityEffect("attacker",get_ability("doomed")))]),
+        slot="Offhand",
+        drop_chance=0.3,
+        price=20
+    ),
+}
+
+items.update(final_boss_items)
 
 for x in items:
     items[x].id = x

@@ -17,6 +17,7 @@ class Dungeon:
         self.ui_event = Event()
         self.save_game_event = Event()
         self.game_over = False
+        self.game_win = False
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -113,18 +114,14 @@ class Dungeon:
         self.place = self.get_location_of_actor(self.actor)
 
     def start_next_turn(self):
-        if len(self.action_queue) == 0:
-            #self.actor : Actor = None
-            if not self.round_ended:
-                self.end_of_round()
-                self.show_message_queue()
-        else:
+        while len(self.action_queue) != 0:
             self.actor : Actor = self.action_queue.pop()
             self.update_location()
             if self.actor != None and self.place != None:
+                utility.log(str(self.actor.get_name()))
                 self.actor.take_turn(self)
-            else:
-                self.end_current_turn()
+        self.end_of_round()
+        self.show_message_queue()
 
     def end_of_round(self):
         self.round_ended = True

@@ -27,10 +27,11 @@ abilities : dict[str:Ability] = {
         name=("iron","Spined"),
         desc=[("iron","Spined"), " are creatures brought to madness by painful iron spines driven into their backs."]
     ),
+    "water_breathing":Ability("water_breathing",("water", "Water Breathing"),"You can breathe underwater."),
     "underwater_room":Ability(
         id="underwater_room",
         name=("water","Underwater"),
-        desc=["The room is completely submerged."]
+        desc=["The area is completely submerged."]
     ),
     "regen":EndOfTurnEffect(
         id="regen",

@@ -43,18 +43,6 @@ old_entities : dict[str:StateEntity] = {
         stathandler=StatHandler({"HP":HPContainer(10)}),
         state=IdleState()
     ),
-    "mage_hater" : StateEntity(
-        name=("magic","Mage Hater"), 
-        ability_handler=AbilityHandler([SelectiveArmor("magebane", "Mage Bane", "arcane", 5)]),
-        inventory=Inventory(
-            EquipmentHandler({
-                "Weapon":get_item("magic_barbs")
-            }),
-            Bag(-1, [get_item("roast_pork")])
-        ), 
-        stathandler=StatHandler({"HP":HPContainer(15)}),
-        state=IdleState()
-    ),
     "helmet_snail" : StateEntity(
         name=("iron","Helmet Snail"), 
         ability_handler=AbilityHandler([]),
@@ -360,6 +348,95 @@ goblins : dict[str:StateEntity] = {
 
 entities.update(goblins)
 
+forest_beasts : dict[str:StateEntity] = {
+    "mage_hater" : StateEntity(
+        name=("magic","Mage Hater"), 
+        ability_handler=AbilityHandler([WeakTo("celestial_weakness",("shadow", "Celestial Weakness"),"celestial",5),SelectiveArmor("magebane", ("arcane","Mage Bane"), "arcane", 5)]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("magic_barbs")
+            }),
+            Bag(-1, [get_item("roast_pork")])
+        ), 
+        stathandler=StatHandler({"HP":HPContainer(25)}),
+        state=IdleState()
+    ),
+    "maneater" : StateEntity(
+        name=("shadow","Maneater"), 
+        ability_handler=AbilityHandler([WeakTo("celestial_weakness",("shadow", "Celestial Weakness"),"celestial",5),WeakTo("plant",("healing", "Vines"),"slashing",5)]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("maneater_bite")
+            }),
+            Bag(-1, [])
+        ), 
+        stathandler=StatHandler({"HP":HPContainer(25)}),
+        state=IdleCannotLeaveState()
+    ),
+    "waterfall_serpent" : StateEntity(
+        name=("water","Waterfall Serpent"), 
+        ability_handler=AbilityHandler([WeakTo("celestial_weakness",("shadow", "Celestial Weakness"),"celestial",5),SelectiveArmor("temperature_modulation_heat", ("water","Temperature Modulation"), "heat", 5),SelectiveArmor("temperature_modulation_cold", None, "cold", 5)]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("wave_crash")
+            }),
+            Bag(-1, [get_item("gillberry"),get_item("frozen_helm"),get_item("serpent_flesh"),get_item("lifeforce_container"),RandomElement([get_item("ice_staff"),get_item("blizzard_scroll")])])
+        ), 
+        stathandler=StatHandler({"HP":HPContainer(30)}),
+        state=IdleCannotLeaveState()
+    ),
+    "cave_serpent" : StateEntity(
+        name=("water","Cave Serpent"), 
+        ability_handler=AbilityHandler([SelectiveArmor("temperature_modulation_heat", ("water","Temperature Modulation"), "heat", 3),SelectiveArmor("temperature_modulation_cold", None, "cold", 3)]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("wave_crash")
+            }),
+            Bag(-1, [get_item("serpent_flesh")])
+        ), 
+        stathandler=StatHandler({"HP":HPContainer(15)}),
+        state=IdleCannotLeaveState()
+    ),
+    "colossal_bat" : StateEntity(
+        name=("meat","Colossal Bat"), 
+        ability_handler=AbilityHandler([WeakTo("celestial_weakness",("shadow", "Celestial Weakness"),"celestial",5)]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("bat_bite")
+            }),
+            Bag(-1, [get_item("bat_flesh")])
+        ), 
+        stathandler=StatHandler({"HP":HPContainer(10)}),
+        state=IdleCannotLeaveState()
+    ),
+    "temple_guardian" : StateEntity(
+        name=utility.alternate_colors("Temple Guardian", ["heat","magic","stone"]), 
+        ability_handler=AbilityHandler([WeakTo("arcane_weakness",("arcane", "Arcane Vulnerability"),"arcane",5),SelectiveArmor("heatproof", ("heat","Heatproof"), "heat", 3), Armor("armor",("stone","Ancient Stone"),5)]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("flame_crash")
+            }),
+            Bag(-1, [get_item("mana_container"),get_item("armory_key"),RandomElement([get_item("fire_staff"),get_item("wildfire_scroll")])])
+        ), 
+        stathandler=StatHandler({"HP":HPContainer(20)}),
+        state=IdleCannotLeaveState()
+    ),
+    "shadowed_one" : StateEntity(
+        name=("shadow","Shadowed One"), 
+        ability_handler=AbilityHandler([WeakTo("celestial_weakness",("shadow", "Celestial Weakness"),"celestial",5),Armor("shadow_armor",("shadow","Shade Armor"),3),DamageTypeBuff("shadow_aura",("shadow","Shade Aura"),"shadow",3)]),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("shadow_blade")
+            }),
+            Bag(-1, [get_item("iron_key"),get_item("gloom_helm"),get_item("umbra_cloak"),get_item("blight_treads"),get_item("twilight_ring"),get_item("dusk_shield")])
+        ), 
+        stathandler=StatHandler({"HP":HPContainer(40)}),
+        state=IdleCannotLeaveState()
+    ),
+}
+
+entities.update(forest_beasts)
+
 spined : dict[str:StateEntity] = {
     "spined_rat" : StateEntity(
         name=[("iron","Spined "), ("meat", "Rat")], 
@@ -485,9 +562,92 @@ npcs : dict[str:StateEntity] = {
         name=("iron", "Thrifty Traveller"),
         stathandler=StatHandler({"HP":HPContainer(40)}),
         dialogue_manager=DialogueManager("thrifty_traveller_1"),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("iron_sword"),
+                "Offhand":get_item("wooden_shield"),
+                "Helmet":get_item("iron_helmet")
+            })
+        ), 
         state=PeacefulState(),
         shop_manager=ShopManager({get_item("sharpening_stone"):5,get_item("healing_potion"):10,get_item("dynamite"):8,get_item("roast_chicken"):7})
-    )
+    ),
+    "trailblazer":StateEntity(
+        name=("sand", "Trailblazer"),
+        stathandler=StatHandler({"HP":HPContainer(40)}),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("iron_staff"),
+                "Offhand":get_item("wooden_dagger"),
+                "Boots":get_item("iron_boots")
+            })
+        ), 
+        dialogue_manager=DialogueManager("trailblazer_1"),
+        state=PeacefulState()
+    ),
+    "old_figure":StateEntity(
+        name=("shadow", "Old Figure"),
+        stathandler=StatHandler({"HP":HPContainer(10)}),
+        dialogue_manager=DialogueManager("old_figure_1"),
+        state=NothingState()
+    ),
+    "old_figure":StateEntity(
+        name=("shadow", "Old Figure"),
+        stathandler=StatHandler({"HP":HPContainer(10)}),
+        dialogue_manager=DialogueManager("old_figure_1"),
+        state=NothingState()
+    ),
+    "young_child":StateEntity(
+        name="Young Child",
+        stathandler=StatHandler({"HP":HPContainer(10)}),
+        dialogue_manager=DialogueManager("young_child_1"),
+        state=NothingState()
+    ),
+    "tired_parent":Vendor(
+        name="Tired Parent",
+        stathandler=StatHandler({"HP":HPContainer(10)}),
+        dialogue_manager=DialogueManager("tired_parent_1"),
+        state=NothingState(),
+        shop_manager=ShopManager({get_item("greedling_flesh"):5,get_item("small_rock"):3,get_item("raw_fish"):6,get_item("wooden_shovel"):5})
+    ),
+    "wise_elder":StateEntity(
+        name=("arcane", "Town Elder"),
+        stathandler=StatHandler({"HP":HPContainer(10)}),
+        dialogue_manager=DialogueManager("wise_elder_1"),
+        state=NothingState()
+    ),
+    "fishy_peasant":StateEntity(
+        name=("water", "Fishy Peasant"),
+        stathandler=StatHandler({"HP":HPContainer(10)}),
+        dialogue_manager=DialogueManager("fishy_peasant_1"),
+        state=NothingState()
+    ),
+    "fishy_merchant":Vendor(
+        name=("water","Fishy merchant"),
+        stathandler=StatHandler({"HP":HPContainer(10)}),
+        dialogue_manager=DialogueManager("fishy_merchant_1"),
+        state=NothingState(),
+        shop_manager=ShopManager({get_item("serpent_flesh"):20,get_item("empowering_potion"):10,get_item("healing_potion_with_magic"):10})
+    ),
+    "fishy_noble":StateEntity(
+        name=("water", "Fishy Noble"),
+        stathandler=StatHandler({"HP":HPContainer(10)}),
+        dialogue_manager=DialogueManager("fishy_noble_1"),
+        state=NothingState()
+    ),
+    "coral_king":StateEntity(
+        name=("water", "Coral King"),
+        stathandler=StatHandler({"HP":HPContainer(30)}),
+        dialogue_manager=DialogueManager("coral_king_1"),
+        inventory=Inventory(
+            EquipmentHandler({
+                "Weapon":get_item("iron_staff"),
+                "Offhand":get_item("wooden_dagger"),
+                "Boots":get_item("waterforged_boots")
+            })
+        ), 
+        state=PeacefulState()
+    ),
 }
 
 entities.update(npcs)

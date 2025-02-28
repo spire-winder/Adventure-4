@@ -13,7 +13,10 @@ os.system('title Adventure 4')
 class Program:
     def __init__(self) -> None:
         self.load_ui()
-        self.load_main_menu()
+        if systems.save_system.has_saves():
+            self.load_main_menu()
+        else:
+            self.load_info_menu()
 
     def load_ui(self):
         self.header : urwid.Widget = urwid.AttrMap(urwid.Text("Adventure 4 - Games for Blind Gamers", align="center"), "header")
@@ -22,6 +25,18 @@ class Program:
 
     def load_main_menu_wrapper(self, button):
         self.load_main_menu()
+
+    def i(self, button):
+        pass
+
+    def load_info_menu(self):
+        info_menu_options = []
+        info_menu_options.append(urwid.Text("Adventure 4 makes use of menus that can be navigated using the arrow keys. After you have the option you wish to choose selected, press ENTER to select it."))
+        info_menu_options.append(classes.ui.ActionButton("Option 1", self.i))
+        info_menu_options.append(classes.ui.ActionButton("Option 2", self.i))
+        info_menu_options.append(classes.ui.ActionButton("Select this option to begin", self.load_main_menu_wrapper))
+        info_menu = urwid.ListBox(urwid.SimpleFocusListWalker(info_menu_options))
+        self.set_center(info_menu)
 
     def load_main_menu(self):
         start_menu_options = []

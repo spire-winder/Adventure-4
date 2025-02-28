@@ -216,6 +216,27 @@ class SelectiveArmor(Ability):
                     effect.armor_penetrate = 0
             effect.damage -= current_armor
 
+class AbilityArmor(Ability):
+    def get_desc(self):
+        return utility.combine_text([("iron","+" + str(self.armor_value) + " armor")," against ", self.tag.get_name() ," attacks"], False)
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], tag_id : Ability, armor_value : int):
+        super().__init__(id,name)
+        self.tag = tag_id
+        self.armor_value = armor_value
+    def apply(self, chain : list, effect : Effect):
+        if hasattr(effect, "damage") and chain[0].actor == chain[2] and hasattr(effect.source, "has_ability") and effect.source.has_ability(self.tag.id):
+            current_armor = self.armor_value
+            if effect.armor_penetrate == -1:
+                return
+            if effect.armor_penetrate > 0:
+                current_armor -= effect.armor_penetrate
+                if current_armor < 0:
+                    current_armor = 0
+                effect.armor_penetrate -= self.armor_value
+                if effect.armor_penetrate < 0:
+                    effect.armor_penetrate = 0
+            effect.damage -= current_armor
+
 class Frozen(Ability):
     def get_desc(self):
         return ["Deal ",   "-", str(self.damage_mod), " less damage with ",self.tag.get_name()," attacks"]
@@ -229,7 +250,7 @@ class Frozen(Ability):
 
 class Doomed(Ability):
     def get_desc(self):
-        return ["Recieve +", str(self.damage_mod), " damage"]
+        return ["Recieve", ("damage", " +" + str(self.damage_mod) + " damage")]
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], damage_mod : int = 1):
         super().__init__(id,name)
         self.damage_mod = damage_mod
@@ -237,9 +258,20 @@ class Doomed(Ability):
         if hasattr(effect, "damage") and effect.target == chain[2]:
             effect.damage += self.damage_mod
 
+class WeakTo(Ability):
+    def get_desc(self):
+        return ["Recieve ",("damage","+"+ str(self.damage_mod)+ " damage")," from ",(self.damage_type, self.damage_type)," attacks"]
+    def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], damage_type : str, damage_mod : int = 1):
+        super().__init__(id,name)
+        self.damage_type = damage_type
+        self.damage_mod = damage_mod
+    def apply(self, chain : list, effect : Effect):
+        if hasattr(effect, "damage") and effect.target == chain[2] and effect.damage_type == self.damage_type:
+            effect.damage += self.damage_mod
+
 class Stunned(Ability):
     def get_desc(self):
-        return [["Deal ",   "-", str(self.damage_mod), " damage with ",self.tag.get_name()," attacks"],"\n", ["Recieve +", str(self.damage_mod), " damage from ",self.tag.get_name()," attacks"]]
+        return [["Deal ",   ("damage","-"+ str(self.damage_mod)+ " damage")," with ",self.tag.get_name()," attacks"],"\n", ["Recieve +", str(self.damage_mod), " damage from ",self.tag.get_name()," attacks"]]
     def __init__(self, id:str, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], tag_id : Ability, damage_mod : int = 1):
         super().__init__(id,name)
         self.tag = tag_id

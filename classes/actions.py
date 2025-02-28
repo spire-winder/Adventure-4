@@ -193,6 +193,8 @@ class DeathEvent(Effect):
                     x.drop_chance = 1
                     AddRoomObjEffect(death_room, x).execute(dungeon)
                     dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " dropped ", x.get_name(), "."])
+                if self.target.is_id("shadowed_one"):
+                    dungeon.game_win = True
             RemoveRoomObjEffect(death_room, self.target).execute(dungeon)
 
 class DamageEvent(Effect):
@@ -248,6 +250,26 @@ class RepeatEvent(Effect):
             self.effect.execute_with_statics_and_reformat(dungeon, reformat_dict, True)
         dungeon.reply(self)
 
+class AOEEffect(Effect):
+    """Repeats the effect for each non-player entity."""
+    def __init__(self, effect : Effect):
+        super().__init__()
+        self.effect : Effect = effect
+    def get_desc(self):
+        return utility.combine_text(["For each enemy:", utility.tab_text(self.effect.get_desc())], True)
+    def reformat(self, dungeon, reformat_dict : dict):
+        super().reformat(dungeon, reformat_dict)
+        self.effect.reformat(dungeon, reformat_dict)
+    def execute(self, dungeon):
+        copy.deepcopy(self.effect).execute_with_statics(dungeon, True)
+    def execute_with_statics_and_reformat(self, dungeon, reformat_dict, deepcopy : bool):
+        dungeon.apply_statics(self)
+        for x in dungeon.place.get_roomobjects(lambda x : (hasattr(x,"stathandler") and x != dungeon.actor)):
+            new_dict = reformat_dict.copy()
+            new_dict["target"] = x
+            self.effect.execute_with_statics_and_reformat(dungeon, new_dict, True)
+        dungeon.reply(self)
+
 class ProbabilityEvent(Effect):
     """Repeats the effect an amount of times."""
     def __init__(self, effect : Effect, chance : float):
@@ -281,6 +303,20 @@ class HealEvent(Effect):
     def execute(self, dungeon):
         dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " is healed ", ("healing",str(self.healing)+ " HP"), " by ", self.source.get_name(), "."])
         new_hp = self.target.get_stat("HP").heal(self.healing)
+
+class IncreaseMaxHPEffect(Effect):
+    """Increases max HP of the target by an amount."""
+    def __init__(self, source, target, healing : int):
+        super().__init__()
+        self.source = source
+        self.target = target
+        self.healing : int = healing
+    def get_desc(self):
+        return ["Increase max ",("healing","HP"), " by ", ("healing",str(self.healing))]
+    def execute(self, dungeon):
+        dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), "'s max ", ("healing","HP"), " is increased by ", ("healing",str(self.healing)), "."])
+        self.target.get_stat("HP").max += self.healing
+        HealEvent(self.source, self.target, self.healing).execute(dungeon)
 
 class DullWeaponEvent(Effect):
     """Dulls the target by an amount."""
@@ -332,6 +368,20 @@ class RestoreMPEvent(Effect):
     def execute(self, dungeon):
         dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " restored ", ("magic", str(self.restoring) + " MP"), "."])
         self.target.get_stat("MP").restore(self.restoring)
+
+class IncreaseMaxMPEffect(Effect):
+    """Increases max MP of the target by an amount."""
+    def __init__(self, source, target, restoring : int):
+        super().__init__()
+        self.source = source
+        self.target = target
+        self.restoring : int = restoring
+    def get_desc(self):
+        return ["Increase max ",("magic","HP"), " by ", ("magic",str(self.restoring))]
+    def execute(self, dungeon):
+        dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), "'s max ", ("magic","MP"), " is increased by ", ("magic",str(self.restoring)), "."])
+        self.target.get_stat("MP").max += self.restoring
+        RestoreMPEvent(self.source, self.target, self.restoring).execute(dungeon)
 
 class UseEffect(Effect):
     """The source uses the item against the target. Verb determines the context of usage."""
@@ -567,7 +617,8 @@ class PlayerDialogueAction(PlayerAction):
         if self.dialogue.get_effect() != None:
             reformat_dict = {
                 "player":dungeon.player, 
-                "speaker":self.speaker
+                "speaker":self.speaker,
+                "place":dungeon.place
             }
             new_effect : Effect = copy.deepcopy(self.dialogue).get_effect()
             new_effect.execute_with_statics_and_reformat(dungeon, reformat_dict, True)

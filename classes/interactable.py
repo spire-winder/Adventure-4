@@ -117,7 +117,7 @@ class Actor(Interactable):
         self.ability_handler : AbilityHandler = ability_handler or AbilityHandler()
 
     def take_turn(self, dungeon) -> None:
-        self.event.emit(action=None)
+        return
     
     def end_of_round(self, chain) -> None:
         new_chain = chain.copy()
@@ -958,7 +958,7 @@ class StateEntity(Entity):
 
     def take_turn(self, dungeon) -> None:
         self.state.decide(dungeon)
-        self.event.emit(action=None)
+        return
 
 class ShopManager(Interactable):
     def __init__(self, items : dict[Item:int] = None):
@@ -993,9 +993,9 @@ class Vendor(StateEntity):
 
 class Room(Actor):
     def __init__(self, name : str | tuple[Hashable, str] | list[str | tuple[Hashable, str]], ability_handler : AbilityHandler = None, room_contents : list["RoomObject"] = None) -> None:
-        self.room_contents : list[RoomObject] = room_contents or None
+        self.room_contents : list[RoomObject] = room_contents or []
         self.discovered : bool = False 
-        #if len(self.get_roomobjects(lambda item : isinstance(item, Campfire))) > 0:
+        # if len(self.get_roomobjects(lambda item : isinstance(item, Campfire))) > 0:
         #    self.discovered = True# TODO: change to False
         super().__init__(name, ability_handler)
     

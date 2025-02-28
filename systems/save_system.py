@@ -22,7 +22,7 @@ def get_saves() -> list:
     return validsaves
 
 def has_saves() -> bool:
-    return len(get_saves()) > 0
+    return os.path.exists(save_dir_name) and len(get_saves()) > 0
 
 def save_game(filename : str, game):
     with open(get_save_filepath(filename), 'wb') as f:

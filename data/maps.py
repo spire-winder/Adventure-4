@@ -23,7 +23,7 @@ player : Player = Player(
     StatHandler({
         "HP":HPContainer(50),
         "MP":MPContainer(50),
-        "Bones":BoneContainer(0,50)
+        "Bones":BoneContainer(0,100)
     })
 )
 
@@ -32,7 +32,7 @@ standard_map : dict = {
         ("stone","Ruins of the Sun"), 
         AbilityHandler(), 
         [
-            copy.deepcopy(player),
+            player,
             get_entity("wise_figure"),
             Container(("wood","Wooden Chest"), AbilityHandler(), [
                 get_item("wooden_bo"),
@@ -139,7 +139,8 @@ misc_dic : dict[str:] = {
     "arcane_entrance":LockedPassage(("stone", "Hidden Passage"),destination_id="shattered_spire"),
     "arcane_entrance_lever":Lever(("stone","Hidden Lever"),oneffect=LockEffect("item","id:arcane_entrance"),offeffect=UnlockEffect("item","id:arcane_entrance")),
     "arcane_archive_entrance":LockedPassage(("magic", "Arcane Passage"), destination_id="arcane_archive"),
-    "arcane_archive_lever":Lever(("stone","Unmarked Lever"),oneffect=LockEffect("item","roomid:throne_room:arcane_entrance"),offeffect=UnlockEffect("item","roomid:throne_room:arcane_archive_entrance"))
+    "arcane_archive_lever":Lever(("stone","Unmarked Lever"),oneffect=LockEffect("item","roomid:throne_room:arcane_entrance"),offeffect=UnlockEffect("item","roomid:throne_room:arcane_archive_entrance")),
+    "hidden_stash_entrance":Passage(("water", "Behind the Waterfall"), destination_id="hidden_stash"),
 }
 
 for x in misc_dic:
@@ -164,7 +165,7 @@ ruins_of_the_sun : dict[str:Room] = {
         room_contents=[
             get_entity("greedling"),
             Container(("wood", "Wooden Chest"), contents=[get_item("rusty_sword"),get_item("wooden_shield")]),
-            Passage(("stone", "Chamber Exit"),destination_id="starting_room"),
+            Passage(("stone", "Chamber Entrance"),destination_id="starting_room"),
             Passage(("stone", "Cracked Steps"),destination_id="stone_rotunda")
         ]
     ),
@@ -221,6 +222,7 @@ ruins_of_the_sun : dict[str:Room] = {
         name=("stone", "Ransacked Vault"),
         room_contents=[
             get_entity("starved_greedling"),
+            get_item("lifeforce_container"),
             Passage(("stone", "Rotunda"),destination_id="stone_rotunda")
         ]
     ),
@@ -270,15 +272,18 @@ shattered_ruins : dict[str:Room] = {
     ),
     "submerged_cavern": Room(
         name=("water", "Submerged Cavern"),
-        ability_handler=AbilityHandler([get_ability("underwater_room")]),
+        ability_handler=AbilityHandler([get_ability("underwater_room"),Spawner([get_entity("cave_serpent")],1,25,3)]),
         room_contents=[
-            SubmergedPassage(("water", "Underwater Passage"),destination_id="echoing_cave"),
+            get_entity("cave_serpent"),
+            SubmergedPassage(("stone", "Cave"),destination_id="echoing_cave"),
+            SubmergedPassage(("water", "Glowing Trail"),destination_id="oceanic_promenade"),
         ]
     ),
     "cobblestone_road": Room(
         name=("stone", "Cobblestone Road"),
         room_contents=[
             Passage(("stone", "Southern Courtyard"),destination_id="ancient_courtyard"),
+            Passage(("shadow", "Shadowed Forest"),destination_id="forest_entrance"),
             get_entity("goblin_guard")
         ]
     ),
@@ -348,6 +353,7 @@ shattered_ruins : dict[str:Room] = {
     "arcane_archive": Room(
         name=("magic", "Arcane Archive"),
         room_contents=[
+            get_item("mana_container"),
             Container(("wood","Staff Display"),contents=[RandomElement([get_item("fire_staff"),get_item("ice_staff"),get_item("poison_staff"),get_item("lightning_staff"),get_item("arcane_staff"),get_item("shadow_staff"),get_item("celestial_staff")]),]),
             Container(("wood","Scroll Rack"),contents=[RandomElement([get_item("wildfire_scroll"),get_item("blizzard_scroll"),get_item("venom_scroll"),get_item("storm_scroll"),get_item("mystic_scroll"),get_item("eclipse_scroll"),get_item("starfire_scroll")])]),
             Container(("wood","Alchemy Station"),contents=[get_item("empowering_potion"),get_item("regen_potion")]),
@@ -357,6 +363,7 @@ shattered_ruins : dict[str:Room] = {
     "hidden_garden": Room(
         name=("stone", "Hidden Garden"),
         room_contents=[
+            get_item("lifeforce_container"),
             Container(("wood","Planter Box"),contents=[get_item("torchroot_buds"),get_item("shockflower_blossom"),get_item("surface_apple")]),
             Passage(("stone", "Garden Exit"),destination_id="royal_suite"),
         ]
@@ -383,6 +390,177 @@ shattered_ruins : dict[str:Room] = {
 
 map.update(shattered_ruins)
 
+shadowed_forest : dict[str:Room] = {
+    "forest_entrance": Room(
+        name=("shadow", "Forest Entrance"),
+        room_contents=[
+            get_entity("trailblazer"),
+            Passage(("stone", "Southern Road"),destination_id="cobblestone_road"),
+            Passage(("shadow", "Northern Grove"),destination_id="umbral_grove"),
+        ]
+    ),
+    "umbral_grove": Room(
+        name=("shadow", "Umbral Grove"),
+        ability_handler=AbilityHandler([Spawner([get_entity("mage_hater")],1,15,5)]),
+        room_contents=[
+            get_entity("mage_hater"),
+            Passage(("shadow", "Forest Entrance"),destination_id="forest_entrance"),
+            Passage(("shadow", "Northern Crossroads"),destination_id="forest_crossroads"),
+        ]
+    ),
+    "forest_crossroads": Room(
+        name=("shadow", "Forest Crossroads"),
+        room_contents=[
+            get_entity("old_figure"),
+            Campfire(("heat", "Campfire Embers")),
+            Passage(("stone", "Northern Cavern"),destination_id="cavern_maw"),
+            Passage(("water", "Eastern Stream"),destination_id="shadowed_stream"),
+            Passage(("shadow", "Southern Grove"),destination_id="umbral_grove"),
+            Passage(("shadow", "Western Hollow"),destination_id="maneaters_hollow"),
+        ]
+    ),
+    "cavern_maw": Room(
+        name=("stone", "Cavern Maw"),
+        ability_handler=AbilityHandler([Spawner([get_entity("colossal_bat")],2,10,5)]),
+        room_contents=[
+            get_entity("colossal_bat"),
+            get_entity("colossal_bat"),
+            Passage(("shadow", "Southern Crossroads"),destination_id="forest_crossroads"),
+            Passage(("iron", "Iron Gateway"),destination_id="iron_gate"),
+        ]
+    ),
+    "iron_gate": Room(
+        name=("iron", "Iron Gateway"),
+        room_contents=[
+            Passage(("stone", "Cavern"),destination_id="cavern_maw"),
+            LockedPassage(("iron", "Iron Gate"),destination_id="star_chamber",key_id="iron_key"),
+        ]
+    ),
+    "star_chamber": Room(
+        name=utility.alternate_colors("Star Chamber",["celestial","shadow"]),
+        room_contents=[
+            LockedPassage(("iron", "Iron Gate"),destination_id="iron_gate",key_id="iron_key"),
+            get_entity("shadowed_one"),
+        ]
+    ),
+    "shadowed_stream": Room(
+        name=("water", "Shadowed Stream"),
+        room_contents=[
+            get_entity("mage_hater"),
+            Destructible(("water","Pile of Mud"),contents=[get_item("spiked_ring"),],tool_requirement="Shovel",tool_strength=1),
+            Passage(("water", "Eastern Lake"),destination_id="dark_lake"),
+            Passage(("shadow", "Western Crossroads"),destination_id="forest_crossroads"),
+        ]
+    ),
+    "dark_lake": Room(
+        name=("water", "Dark Lake"),
+        room_contents=[
+            Passage(("wood", "Wooden Canoe"),destination_id="lumin"),
+            Passage(("water", "Western Stream"),destination_id="shadowed_stream"),
+            Passage(("water", "Southern Waterfall"),destination_id="waterfall"),
+            SubmergedPassage(("water", "Lake Surface"),destination_id="lakeside_keep"),
+        ]
+    ),
+    "waterfall": Room(
+        name=("water", "Waterfall"),
+        ability_handler=AbilityHandler([Spawner([get_entity("waterfall_serpent")],1,25,5)]),
+        room_contents=[
+            get_entity("waterfall_serpent"),
+            UsableRoomObj(("shadow", "Darkwood Fronds"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),actions={"investigate":AddRoomObjEffect("place",get_misc("hidden_stash_entrance"))}),
+            Passage(("water", "Northern Lake"),destination_id="dark_lake"),
+        ]
+    ),
+    "hidden_stash": Room(
+        name=("shadow", "Hidden Stash"),
+        room_contents=[
+            Destructible(("sand","Pile of Sand"),contents=[get_item("diving_gear"),get_item("magic_ring"),],tool_requirement="Shovel",tool_strength=1),
+            Container(("wood","Wooden Chest"),contents=[get_item("ironhide_potion"),get_item("healing_potion_with_magic")]),
+            Passage(("water", "Waterfall Clearing"),destination_id="waterfall"),
+        ]
+    ),
+    "lumin": Room(
+        name=("celestial", "Lumin"),
+        room_contents=[
+            Campfire(("heat","Central Bonfire")),
+            get_entity("young_child"),
+            get_entity("tired_parent"),
+            get_entity("wise_elder"),
+            Passage(("wood", "Wooden Canoe"),destination_id="dark_lake"),
+            SubmergedPassage(("water", "Lake Surface"),destination_id="lakeside_keep"),
+        ]
+    ),
+    "maneaters_hollow": Room(
+        name=("shadow", "Maneaters' Hollow"),
+        ability_handler=AbilityHandler([Spawner([get_entity("maneater")],1,25,5)]),
+        room_contents=[
+            get_entity("maneater"),
+            Passage(("shadow", "Eastern Crossroads"),destination_id="forest_crossroads"),
+            Passage(("magic", "Western Temple"),destination_id="mystic_temple"),
+        ]
+    ),
+    "mystic_temple": Room(
+        name=("magic", "Mystic Temple"),
+        ability_handler=AbilityHandler([Spawner([get_entity("temple_guardian")],1,25,5)]),
+        room_contents=[
+            get_entity("temple_guardian"),
+            Passage(("shadow", "Eastern Hollow"),destination_id="maneaters_hollow"),
+            LockedPassage(("iron", "Armory Door"),destination_id="forgotten_armory",key_id="armory_key")
+        ]
+    ),
+    "forgotten_armory": Room(
+        name=("iron", "Forgotten Armory"),
+        room_contents=[
+            get_item("guardian_chestplate"),
+            get_item("guardian_crystal"),
+            Passage(("magic", "Temple"),destination_id="mystic_temple"),
+        ]
+    ),
+
+}
+
+map.update(shadowed_forest)
+
+undersea_kingdom : dict[str:Room] = {
+    "oceanic_promenade": Room(
+        name=("water", "Oceanic Promenade"),
+        ability_handler=AbilityHandler([get_ability("underwater_room")]),
+        room_contents=[
+            SubmergedPassage(("water", "Submerged Cavern"),destination_id="submerged_cavern"),
+            SubmergedPassage(("water", "Bright Hall"),destination_id="undersea_hall"),
+            get_entity("fishy_peasant")
+        ]
+    ),
+    "lakeside_keep": Room(
+        name=("water", "Lakeside Keep"),
+        ability_handler=AbilityHandler([get_ability("underwater_room")]),
+        room_contents=[
+            SubmergedPassage(("water", "Lake Surface"),destination_id="dark_lake"),
+            SubmergedPassage(("water", "Bright Hall"),destination_id="undersea_hall"),
+            get_entity("fishy_merchant")
+        ]
+    ),
+    "undersea_hall": Room(
+        name=("water", "Undersea Hall"),
+        ability_handler=AbilityHandler([get_ability("underwater_room")]),
+        room_contents=[
+            Campfire(utility.alternate_colors("Underwater Flame",["heat","water"])),
+            SubmergedPassage(("water", "Promenade"),destination_id="oceanic_promenade"),
+            SubmergedPassage(("water", "Lakeside Keep"),destination_id="lakeside_keep"),
+            SubmergedPassage(("water", "Briney Throne"),destination_id="illuminated_throne"),
+            get_entity("fishy_noble")
+        ]
+    ),
+    "illuminated_throne": Room(
+        name=("water", "Illuminated Throne"),
+        ability_handler=AbilityHandler([get_ability("underwater_room")]),
+        room_contents=[
+            SubmergedPassage(("water", "Main Hall"),destination_id="undersea_hall"),
+            get_entity("coral_king")
+        ]
+    ),
+}
+
+map.update(undersea_kingdom)
 
 systems.save_system.create_folder(systems.save_system.map_dir_name)
 systems.save_system.save_map("standard", map)
