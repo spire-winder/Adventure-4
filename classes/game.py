@@ -95,8 +95,17 @@ class Game:
         options_menu = urwid.ListBox(urwid.SimpleFocusListWalker(menu_options))
         self.set_center_event.emit(new_center=options_menu)
     
+    def save_menu(self):
+        menu_options = []
+        menu_options.append(urwid.Text("Game saved."))
+        menu_options.append(urwid.Divider())
+        menu_options.append(ActionButton("Return to game", self.resume_wrapper))
+        options_menu = urwid.ListBox(urwid.SimpleFocusListWalker(menu_options))
+        self.set_center_event.emit(new_center=options_menu)
+    
     def save_wrapper(self, button : ActionButton) -> None:
         self.save()
+        self.save_menu()
 
     def save(self) -> None:
         systems.save_system.save_game(self.save_file, self.dungeon)
