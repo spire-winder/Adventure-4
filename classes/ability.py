@@ -126,9 +126,11 @@ class ManaCost(Ability):
             if not chain[2].has_stat("MP"):
                 chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), " can't use mana!"])
                 effect.cancel()
-            elif not chain[2].get_stat("MP").spend(self.mpcost):
+            elif chain[2].get_stat("MP").get_current_mp() < self.mpcost:
                 chain[0].add_to_message_queue_if_actor_visible(chain[2], [chain[2].get_name(), "'s mana ran out!"])
                 effect.cancel()
+            else:
+                SpendMPEvent("item","user",self.mpcost).execute_with_statics_and_reformat(chain[0], self.reformat_dict(chain),False)
     def apply_from_bag(self, chain, effect):
         return self.apply(chain, effect)
 

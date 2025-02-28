@@ -276,7 +276,7 @@ shadowed_forest_items : dict[str:Item] = {
         price=15
     ),
     "guardian_crystal":Equipment(
-        name=utility.alternate_colors("Guardian Chestplate", ["magic","stone"]),
+        name=utility.alternate_colors("Guardian Crystal", ["magic","stone"]),
         ability_handler=AbilityHandler([DamageTypeBuff("ancient_power1","Ancient Power","arcane",3),DamageTypeBuff("ancient_power2",None,"heat",3)]),
         slot="Offhand",
         price=12
@@ -571,7 +571,7 @@ consumeable_items : dict[str:Item] = {
         price=4
     ),
     "healing_potion_with_magic":Potion(
-        name=utility.alternate_colors("Infused Healing Potion",["healing"*2,"magic"*2]),
+        name=utility.alternate_colors("Infused Healing Potion",["healing","magic"]),
         ability_handler=AbilityHandler([ManaCost("manacost","Mana Cost", 5),SingleUse()]),
         useeffect=HealEvent("item","user",30),
         price=4

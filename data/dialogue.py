@@ -183,28 +183,28 @@ dialogue_nodes.update(old_figure)
 
 young_child : dict[str:DialogueNode] = {
     "young_child_1" : DialogueNode(
-        "Hello there!",
+        "\"Hello there!\"",
         ["\"Are you from the surface?\""],
         ["young_child_2","young_child_3"]
     ),
     "young_child_2" : DialogueNode(
-        "Yes.",
+        "\"Yes.\"",
         ["\"Wow, the sky must have looked cool.\""],
         "young_child_4"
     ),
     "young_child_3" : DialogueNode(
-        "No.",
+        "\"No.\"",
         ["\"I would know if you're from here. And you're not a monster, so you must be from the surface.\""],
         "young_child_4"
     ),
     "young_child_4" : DialogueNode(
-        "Is there anything around here?",
-        ["\"I have a friend who lives around here. They're a fish person. Sometimes I see them on the shore. The elder said I shouldn't go near them.\""],
+        "\"Is there anything around here?\"",
+        ["\"I have a friend who lives around here. They're a fish. Sometimes I see them on the shore. The elder said I shouldn't go near them.\""],
         None,
         SetDialogueEffect(source="young_child_done",target="speaker")
     ),
     "young_child_done" : DialogueNode(
-        "What are you doing now?",
+        "\"What are you doing now?\"",
         ["\"I'm a fish! Look at me!\""],
         None,
     ),
@@ -214,28 +214,28 @@ dialogue_nodes.update(young_child)
 
 tired_parent : dict[str:DialogueNode] = {
     "tired_parent_1" : DialogueNode(
-        "Hello!",
+        "\"Hello!\"",
         ["\"Have you seen where my child has gone off to? I turn around for one second and they're gone.\""],
         ["tired_parent_2","tired_parent_3"]
     ),
     "tired_parent_2" : DialogueNode(
-        "Yes. They're by the shore.",
+        "\"Yes. They're by the shore.\"",
         ["\"They know they're not supposed to do that! We don't want them getting snatched by those fish monsters.\""],
         "tired_parent_4"
     ),
     "tired_parent_3" : DialogueNode(
-        "No.",
+        "\"No.\"",
         ["\"Well, could you help me find them?\""],
         "tired_parent_1"
     ),
     "tired_parent_4" : DialogueNode(
-        "I'm going to escape from the Subterra.",
+        "\"I'm going to escape from the Subterra.\"",
         ["\"Good luck with that. I've never heard of anyone escaping. It's best to just accept life down here.\""],
         None,
         SetDialogueEffect(source="tired_parent_done",target="speaker")
     ),
     "tired_parent_done" : DialogueNode(
-        "Hello.",
+        "\"Hello.\"",
         ["\"Stay safe out there.\""],
         None,
     ),
@@ -245,28 +245,28 @@ dialogue_nodes.update(tired_parent)
 
 wise_elder : dict[str:DialogueNode] = {
     "wise_elder_1" : DialogueNode(
-        "Greetings, elder.",
+        "\"Greetings, elder.\"",
         ["\"Oh, you must be that person that fell from the surface!\""],
         ["wise_elder_2","wise_elder_3"]
     ),
     "wise_elder_2" : DialogueNode(
-        "How did you know?",
+        "\"How did you know?\"",
         ["\"Word gets around fast in the Subterra.\""],
         "wise_elder_4"
     ),
     "wise_elder_3" : DialogueNode(
-        "No.",
+        "\"No.\"",
         ["\"You must think you're funny.\""],
         "wise_elder_1"
     ),
     "wise_elder_4" : DialogueNode(
-        "How can I get out of this place?",
+        "\"How can I get out of this place?\"",
         ["\"I explored every cavern down here in my youth. I haven't been able to find any way out. The only place I was never able to get to was past the Iron Gate in the forest. Maybe try that?\""],
         None,
         SetDialogueEffect(source="wise_elder_done",target="speaker")
     ),
     "wise_elder_done" : DialogueNode(
-        "Greetings, elder.",
+        "\"Greetings, elder.\"",
         ["\"Remember, Iron Gate.\nAnd my child, take care of yourself.\nWe do not speak of what is past the Iron Gate, but you must defeat it for our sakes.\""],
         None,
     ),
@@ -276,28 +276,28 @@ dialogue_nodes.update(wise_elder)
 
 fishy_peasant : dict[str:DialogueNode] = {
     "fishy_peasant_1" : DialogueNode(
-        "Hello...?",
+        "\"Hello...?\"",
         ["\"Well, hello! Are you a human?\""],
         ["fishy_peasant_2","fishy_peasant_3"]
     ),
     "fishy_peasant_2" : DialogueNode(
-        "Yes!",
+        "\"Yes!\"",
         ["\"Oh wow! I've never seen a human under the water's surface before!\nI have a friend up there, but they've never visited my home.\""],
         "fishy_peasant_4"
     ),
     "fishy_peasant_3" : DialogueNode(
-        "No.",
+        "\"No.\"",
         ["\"Oh, well you sure are a strange looking fish.\""],
         "fishy_peasant_4"
     ),
     "fishy_peasant_4" : DialogueNode(
-        "What is this place?",
+        "\"What is this place?\"",
         ["\"This is the Undersea Keep. We live below the water of the lake in our bioluminescent kingdom.\nI've never seen the sky, but I've heard it is as if the lights of our city were brighter than anything.\""],
         None,
         SetDialogueEffect(source="fishy_peasant_done",target="speaker")
     ),
     "fishy_peasant_done" : DialogueNode(
-        "Hello!",
+        "\"Hello!\"",
         ["\"Nice to see you again. Enjoy your time in the city!\""],
         None,
     ),
@@ -307,17 +307,18 @@ dialogue_nodes.update(fishy_peasant)
 
 fishy_merchant : dict[str:DialogueNode] = {
     "fishy_merchant_1" : DialogueNode(
-        "Do you have wares for sale?",
+        "\"Do you have wares for sale?\"",
         ["\"For a customer as fine as yourself, of course.\nAnd I'll even take your bones as currency.\nNot everyone will do that down here. What do you say?\""],
         "fishy_merchant_2"
     ),
     "fishy_merchant_2" : DialogueNode(
-        "Sounds great!",
+        "\"Sounds great!\"",
         ["\"Well, don't hesitate! Take a look.\""],
+        None,
         SetDialogueEffect(source="fishy_merchant_done",target="speaker")
     ),
     "fishy_merchant_done" : DialogueNode(
-        "Hello.",
+        "\"Hello.\"",
         ["\"I've always got the best items in stock!\nTake a look.\""],
         None,
     ),
@@ -327,17 +328,18 @@ dialogue_nodes.update(fishy_merchant)
 
 fishy_noble : dict[str:DialogueNode] = {
     "fishy_noble_1" : DialogueNode(
-        "The city is beautiful.",
+        "\"The city is beautiful.\"",
         ["\"I'm sure it's unlike anything you've ever seen in the Subterra. Granted, I've never been above the water's surface, but I digress.\""],
         "fishy_noble_2"
     ),
     "fishy_noble_2" : DialogueNode(
-        "Do you hope to see the stars someday?",
+        "\"Do you hope to see the stars someday?\"",
         ["\"Don't we all? I hope we're released from this prison before I die. But the Shadowed One keeps us here, nonetheless.\""],
+        None,
         SetDialogueEffect(source="fishy_noble_done",target="speaker")
     ),
     "fishy_noble_done" : DialogueNode(
-        "Hello!",
+        "\"Hello!\"",
         ["\"I hope you will be the one to deliver us unto freedom.\""],
         None,
     ),
@@ -466,7 +468,7 @@ thrifty_traveller : dict[str:DialogueNode] = {
     ),
     "thrifty_traveller_info3" : DialogueNode(
         "\"Where are you from?\"",
-        ["\"I was born in the town of Ember. It's north of the ruins, and it's the main settlement in the Subterra.\""],
+        ["\"I was born in the town of Lumin. It's north of the ruins, and it's the main settlement in the Subterra.\""],
         None,
         SetDialogueEffect(source="thrifty_traveller_done",target="speaker")
     ),

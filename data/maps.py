@@ -246,7 +246,7 @@ shattered_ruins : dict[str:Room] = {
             Passage(("celestial", "Southern Temple"),destination_id="crumbling_entrance"),
             Passage(("stone", "Northern Trail"),destination_id="ancient_courtyard"),
             get_entity("goblin_miner"),
-            Destructible(("stone", "Rubble"), contents=[get_item("magic_ring"),get_item("spiked_shield")], tool_requirement="Pickaxe", tool_strength=2)
+            Destructible(("stone", "Rubble"), contents=[get_item("wooden_ring"),get_item("spiked_shield")], tool_requirement="Pickaxe", tool_strength=2)
         ]
     ),
     "ancient_courtyard": Room(
@@ -504,11 +504,11 @@ shadowed_forest : dict[str:Room] = {
         room_contents=[
             get_entity("temple_guardian"),
             Passage(("shadow", "Eastern Hollow"),destination_id="maneaters_hollow"),
-            LockedPassage(("iron", "Armory Door"),destination_id="forgotten_armory",key_id="armory_key")
+            LockedPassage(("iron", "Armory Door"),destination_id="ancient_armory",key_id="armory_key")
         ]
     ),
-    "forgotten_armory": Room(
-        name=("iron", "Forgotten Armory"),
+    "ancient_armory": Room(
+        name=("iron", "Ancient Armory"),
         room_contents=[
             get_item("guardian_chestplate"),
             get_item("guardian_crystal"),
@@ -546,7 +546,7 @@ undersea_kingdom : dict[str:Room] = {
             Campfire(utility.alternate_colors("Underwater Flame",["heat","water"])),
             SubmergedPassage(("water", "Promenade"),destination_id="oceanic_promenade"),
             SubmergedPassage(("water", "Lakeside Keep"),destination_id="lakeside_keep"),
-            SubmergedPassage(("water", "Briney Throne"),destination_id="illuminated_throne"),
+            SubmergedPassage(("water", "Waterlogged Throne"),destination_id="illuminated_throne"),
             get_entity("fishy_noble")
         ]
     ),

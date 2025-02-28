@@ -322,7 +322,7 @@ goblins : dict[str:StateEntity] = {
                 "Armor":get_item("mage_cloak"),
                 "Boots":get_item("mage_boots"),
             }),
-            Bag(-1, [get_item("clarity_crystal"),get_item("wooden_ring")])
+            Bag(-1, [get_item("clarity_crystal")])
         ),
         stathandler=StatHandler({"HP":HPContainer(20),"MP":MPContainer(30), "Bones":BoneContainer(5)}),
         dialogue_manager=None,
