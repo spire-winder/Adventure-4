@@ -4,7 +4,6 @@ import typing
 import urwid
 from classes.game import Game
 import classes.ui
-import data.maps
 import utility
 
 import os

@@ -5,6 +5,7 @@ import systems.save_system
 from classes.interactable import *
 from classes.actions import *
 import classes.actions
+import data.maps
 
 import typing
 if typing.TYPE_CHECKING:
@@ -12,7 +13,7 @@ if typing.TYPE_CHECKING:
 
 class Dungeon:
     def __init__(self):
-        self.map : dict[str:Room] = systems.save_system.load_map("standard")
+        self.map : dict[str:Room] = copy.deepcopy(data.maps.map)
         self.new_game_setup()
         self.ui_event = Event()
         self.save_game_event = Event()

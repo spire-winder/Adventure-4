@@ -562,5 +562,5 @@ undersea_kingdom : dict[str:Room] = {
 
 map.update(undersea_kingdom)
 
-systems.save_system.create_folder(systems.save_system.map_dir_name)
-systems.save_system.save_map("standard", map)
+# systems.save_system.create_folder(systems.save_system.map_dir_name)
+# systems.save_system.save_map("standard", map)
