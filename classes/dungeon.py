@@ -118,7 +118,6 @@ class Dungeon:
             self.actor : Actor = self.action_queue.pop()
             self.update_location()
             if self.actor != None and self.place != None:
-                utility.log(str(self.actor.get_name()))
                 self.actor.take_turn(self)
         self.end_of_round()
         self.show_message_queue()

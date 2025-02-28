@@ -109,6 +109,7 @@ class Game:
     
     def delete_and_quit(self, button : ActionButton) -> None:
         if self.dungeon.game_win:
+            self.dungeon.game_win = False
             self.load_victory_menu()
         else:
             self.quit_event.emit()
