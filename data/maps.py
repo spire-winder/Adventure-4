@@ -19,7 +19,7 @@ player : Player = Player(
             "Boots":None,
             "Ring":None
         }),
-        Bag(10,[get_item("rusty_pickaxe"),get_item("sharpening_stone")])),
+        Bag(10)),
     StatHandler({
         "HP":HPContainer(50),
         "MP":MPContainer(50),
