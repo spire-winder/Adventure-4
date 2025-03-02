@@ -1000,7 +1000,7 @@ class Room(Actor):
         # if len(self.get_roomobjects(lambda item : isinstance(item, Campfire))) > 0:
         #    self.discovered = True# TODO: change to False
         super().__init__(name, ability_handler)
-    
+
     def get_choices(self, dungeon) -> list[classes.actions.PlayerAction]:
         choices = []
         for x in self.get_roomobjects(lambda item : isinstance(item, Entity) and not isinstance(item, Player)):

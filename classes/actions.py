@@ -760,12 +760,13 @@ class UseItemAction(PlayerInteractAction):
 
 class EquipItemAction(PlayerAction):
     def __init__(self, item : "Equipment", source = None):
+        super().__init__()
         self.item = item
         self.source = source
     
     def execute(self, dungeon) -> None:
         EquipItemEffect(self.source, dungeon.actor, self.item).execute_with_statics(dungeon)
-        dungeon.end_current_turn()
+        self.prev.prev.execute(dungeon)
     
     def get_name(self):
         return ["Equip ", self.item.get_name()]

@@ -92,9 +92,9 @@ class Status(Ability):
 class Sharpness(Ability):
     def get_desc(self):
         percent : int = math.floor(self.sharpness * 100)
-        return [str(percent),"%"]
+        return [str(percent),"% sharpness"]
     def __init__(self, sharpness : float = 1.0, durability : float = 0.9):
-        super().__init__("sharpness","Sharpness")
+        super().__init__("sharpness","Durability")
         self.sharpness : float = sharpness
         self.durability : float = durability
     def apply(self, chain : list, effect : Effect):
