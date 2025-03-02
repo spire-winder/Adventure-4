@@ -311,7 +311,7 @@ class Sharpener(UsableItem):
         all_items = dungeon.actor.inventory.get_all_items()
         targets = []
         for x in all_items:
-            if hasattr(x, "sharpen"):
+            if x.has_ability("sharpness"):
                 targets.append(x)
         return targets
 
@@ -343,9 +343,11 @@ class MeleeWeapon(Weapon):
         self.ability_handler.add_ability(Sharpness(sharpness, durability))
     
     def dull(self, amount : float):
-        self.ability_handler.get_ability("sharpness").dull(amount)
+        if self.has_ability("sharpness"):
+            self.ability_handler.get_ability("sharpness").dull(amount)
     def sharpen(self, amount : float):
-        self.ability_handler.get_ability("sharpness").sharpen(amount)
+        if self.has_ability("sharpness"):
+            self.ability_handler.get_ability("sharpness").sharpen(amount)
 
 class MagicWeapon(Weapon):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, price : int = 0, drop_chance : float = 1, attackeffect : classes.actions.Effect = None, mana_cost : int = 10) -> None:
@@ -356,7 +358,7 @@ class MagicWeapon(Weapon):
 class MeleeTool(MeleeWeapon, Tool):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, price : int = 0, drop_chance : float = 1, attackeffect : classes.actions.Effect = None, sharpness : float = 1.0, durability : float = 0.9, tooleffect : classes.actions.Effect = None, tool_type : str = "?", tool_strength : str = "?") -> None:
         super().__init__(name, ability_handler, price, drop_chance, attackeffect, sharpness, durability)
-        Tool.__init__(self, name, ability_handler, price, drop_chance, tooleffect, tool_type, tool_strength)
+        Tool.__init__(self, name, self.ability_handler, price, drop_chance, tooleffect, tool_type, tool_strength)
     def get_effect(self, effect) -> Effect:
         return self.tooleffect if isinstance(effect.target, Destructible) else self.attackeffect
     def get_description(self, dungeon):
