@@ -282,7 +282,7 @@ goblins : dict[str:StateEntity] = {
         dialogue_manager=None,
         state=IdleState()
     ),
-    "demogob" : StateEntity(
+    "goblin_demolitionist" : StateEntity(
         name=[("heat","Demo"),("goblin","gob")], 
         ability_handler=AbilityHandler([get_ability("goblin")]),
         inventory=Inventory(
@@ -538,8 +538,8 @@ npcs : dict[str:StateEntity] = {
         DialogueManager("wise_figure_1"),
         PeacefulState()
     ),
-    "fellow_traveller" : StateEntity(
-        ("iron","Fellow Traveller"), 
+    "fellow_traveler" : StateEntity(
+        ("iron","Fellow Traveler"), 
         AbilityHandler([ImmuneToAbility("tough",("iron","Tough"), get_ability("poison"))]),
         Inventory(
             EquipmentHandler({
@@ -549,7 +549,7 @@ npcs : dict[str:StateEntity] = {
             })
         ), 
         StatHandler({"HP":HPContainer(40)}),
-        DialogueManager("fellow_traveller_1"),
+        DialogueManager("fellow_traveler_1"),
         PeacefulState()
     ),
     "training_dummy" : StateEntity(
@@ -558,10 +558,10 @@ npcs : dict[str:StateEntity] = {
         stathandler=StatHandler({"HP":HPContainer(1)}),
         state=NothingState()
     ),
-    "thrifty_traveller":Vendor(
-        name=("iron", "Thrifty Traveller"),
+    "thrifty_traveler":Vendor(
+        name=("iron", "Thrifty Traveler"),
         stathandler=StatHandler({"HP":HPContainer(40)}),
-        dialogue_manager=DialogueManager("thrifty_traveller_1"),
+        dialogue_manager=DialogueManager("thrifty_traveler_1"),
         inventory=Inventory(
             EquipmentHandler({
                 "Weapon":get_item("iron_sword"),

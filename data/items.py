@@ -551,7 +551,7 @@ magic_weapon_items : dict[str:Item] = {
 
 items.update(magic_weapon_items)
 
-consumeable_items : dict[str:Item] = {
+consumable_items : dict[str:Item] = {
     "sharpening_stone":Sharpener(
         name=("iron","Sharpening Stone"),
         ability_handler=AbilityHandler([MultiUse(3)]),
@@ -610,7 +610,7 @@ consumeable_items : dict[str:Item] = {
     )
 }
 
-items.update(consumeable_items)
+items.update(consumable_items)
 
 food_items : dict[str:Item] = {
     "roast_chicken":Food(

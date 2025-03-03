@@ -32,7 +32,7 @@ dialogue_nodes : dict[str:DialogueNode] = {}
 wise_figure : dict[str:DialogueNode] = {
     "wise_figure_1" : DialogueNode(
         "\"Hello?\"",
-        ["\"Well hello there traveller...\nIt appears you've awoken from your fall.\""],
+        ["\"Well hello there traveler...\nIt appears you've awoken from your fall.\""],
         "wise_figure_2"
     ),
     "wise_figure_2" : DialogueNode(
@@ -74,7 +74,7 @@ wise_figure : dict[str:DialogueNode] = {
     ),
     "wise_figure_gift" : DialogueNode(
         "\"Can you help me? The beasts of the Shadowed Forest are too strong.\"",
-        ["\"Oh, you're travelling into the forest now? You've come a long way! Well, I may have something that could be helpful. Take this, and may you see the stars.\""],
+        ["\"Oh, you're traveling into the forest now? You've come a long way! Well, I may have something that could be helpful. Take this, and may you see the stars.\""],
         None,
         EffectSequence([GiveItemEffect("speaker","player",get_item("celestial_staff")),SetDialogueEffect(source="wise_figure_done",target="speaker")])
     ),
@@ -90,7 +90,7 @@ coral_king : dict[str:DialogueNode] = {
     ),
     "coral_king_2" : DialogueNode(
         "\"I come seeking the key to the Iron Gate.\"",
-        ["\"You do recognise that the Iron Gate is the only thing stopping the Darkened One from wrecking havoc on the Subterra!\nYour foolishness seemingly knows no bounds.\""],
+        ["\"You do recognize that the Iron Gate is the only thing stopping the Darkened One from wrecking havoc on the Subterra!\nYour foolishness seemingly knows no bounds.\""],
         "coral_king_3"
     ),
     "coral_king_3" : DialogueNode(
@@ -118,42 +118,42 @@ coral_king : dict[str:DialogueNode] = {
 
 dialogue_nodes.update(coral_king)
 
-fellow_traveller : dict[str:DialogueNode] = {
-    "fellow_traveller_1" : DialogueNode(
+fellow_traveler : dict[str:DialogueNode] = {
+    "fellow_traveler_1" : DialogueNode(
         None,
         ["\"Hail! I haven't seen you before.\nI hate to ask, but did you just fall down?\""],
-        "fellow_traveller_2"
+        "fellow_traveler_2"
     ),
-    "fellow_traveller_2" : DialogueNode(
+    "fellow_traveler_2" : DialogueNode(
         "How did you know?",
         ["\"You've got all the gear that old man gives everyone.\nBy the way, watch out in this area\""],
-        ["fellow_traveller_3", "fellow_traveller_4"]
+        ["fellow_traveler_3", "fellow_traveler_4"]
     ),
-    "fellow_traveller_3" : DialogueNode(
+    "fellow_traveler_3" : DialogueNode(
         "Why?",
         ["\"There's a goblin cave to the north of here. I'd hate to lose another human down here.\""],
-        "fellow_traveller_4"
+        "fellow_traveler_4"
     ),
-    "fellow_traveller_4" : DialogueNode(
+    "fellow_traveler_4" : DialogueNode(
         "I'll be fine",
         ["\"Well, no matter what happens, why don't you take this. Hopefully it will help.\""],
-        "fellow_traveller_5",
-        AddtoInventoryEvent("player",get_item("lightning_staff"))
+        "fellow_traveler_5",
+        AddToInventoryEvent("player",get_item("lightning_staff"))
     ),
-    "fellow_traveller_5" : DialogueNode(
+    "fellow_traveler_5" : DialogueNode(
         "Thank you!",
         ["\"Live long, friend.\""],
         None,
-        SetDialogueEffect(source="fellow_traveller_done",target="speaker")
+        SetDialogueEffect(source="fellow_traveler_done",target="speaker")
     ),
-    "fellow_traveller_done" : DialogueNode(
+    "fellow_traveler_done" : DialogueNode(
         None,
         ["\"Remember, goblin cave up north!\""],
         None,
     ),
 }
 
-dialogue_nodes.update(fellow_traveller)
+dialogue_nodes.update(fellow_traveler)
 
 old_figure : dict[str:DialogueNode] = {
     "old_figure_1" : DialogueNode(
@@ -350,7 +350,7 @@ dialogue_nodes.update(fishy_noble)
 trailblazer : dict[str:DialogueNode] = {
     "trailblazer_1" : DialogueNode(
         "\"Hail!\"",
-        ["\"Hail to you! Traveller, do you know what danger you're in?\""],
+        ["\"Hail to you! Traveler, do you know what danger you're in?\""],
         ["trailblazer_2","trailblazer_4"]
     ),
     "trailblazer_2" : DialogueNode(
@@ -402,7 +402,7 @@ trailblazer : dict[str:DialogueNode] = {
     ),
     "trailblazer_info1" : DialogueNode(
         "\"How can I fight the monsters in the Shadowed Forest?\"",
-        ["\"Many of the monsters in the forest have been evolving here for centures. They're weak to celestial magic. You've fallen, so you must have met the Wise Figure, correct? They may be able to help you.\""],
+        ["\"Many of the monsters in the forest have been evolving here for centuries. They're weak to celestial magic. You've fallen, so you must have met the Wise Figure, correct? They may be able to help you.\""],
         None,
         EffectSequence([SetDialogueEffect(source="trailblazer_very_done",target="speaker"),SetDialogueEffect(source="wise_figure_gift",target="roomid:starting_room:wise_figure")])
     ),
@@ -413,7 +413,7 @@ trailblazer : dict[str:DialogueNode] = {
         SetDialogueEffect(source="trailblazer_very_done",target="speaker")
     ),
     "trailblazer_info3" : DialogueNode(
-        "\"Why are you travelling into the forest?\"",
+        "\"Why are you traveling into the forest?\"",
         ["\"The forest is dangerous, and needs someone to blaze the trails. I've set up a campfire in one of the clearings you can use.\""],
         None,
         SetDialogueEffect(source="trailblazer_very_done",target="speaker")
@@ -422,59 +422,59 @@ trailblazer : dict[str:DialogueNode] = {
 
 dialogue_nodes.update(trailblazer)
 
-thrifty_traveller : dict[str:DialogueNode] = {
-    "thrifty_traveller_1" : DialogueNode(
+thrifty_traveler : dict[str:DialogueNode] = {
+    "thrifty_traveler_1" : DialogueNode(
         "\"Hello!\"",
         ["\"Greetings friend!\nAre you new to the Subterra?\""],
-        ["thrifty_traveller_2","thrifty_traveller_3"]
+        ["thrifty_traveler_2","thrifty_traveler_3"]
     ),
-    "thrifty_traveller_2" : DialogueNode(
+    "thrifty_traveler_2" : DialogueNode(
         "\"Yes.\"",
         ["\"Welcome to the underground. It's dangerous down here, make sure you never let your guard down.\""],
-        "thrifty_traveller_4"
+        "thrifty_traveler_4"
     ),
-    "thrifty_traveller_3" : DialogueNode(
+    "thrifty_traveler_3" : DialogueNode(
         "\"That's not for you to know.\"",
-        ["\"Oh, very mysterious! Well I hope you can wash off some of those greedling guts.\"\nThe traveller points at your nasty clothes."],
-        "thrifty_traveller_4"
+        ["\"Oh, very mysterious! Well I hope you can wash off some of those greedling guts.\"\nThe traveler points at your nasty clothes."],
+        "thrifty_traveler_4"
     ),
-    "thrifty_traveller_4" : DialogueNode(
+    "thrifty_traveler_4" : DialogueNode(
         "\"What are you doing down here?\"",
         ["\"I'm what you might describe as a merchant. I peddle my wares and travel around.\""],
-        "thrifty_traveller_5"
+        "thrifty_traveler_5"
     ),
-    "thrifty_traveller_5" : DialogueNode(
+    "thrifty_traveler_5" : DialogueNode(
         "\"Goodbye.\"",
         ["\"Live long, friend.\""],
         None,
-        SetDialogueEffect(source="thrifty_traveller_done",target="speaker")
+        SetDialogueEffect(source="thrifty_traveler_done",target="speaker")
     ),
-    "thrifty_traveller_done" : DialogueNode(
+    "thrifty_traveler_done" : DialogueNode(
         "\"I want to talk.\"",
         ["\"What is it?\""],
-        ["thrifty_traveller_info1","thrifty_traveller_info2","thrifty_traveller_info3"],
+        ["thrifty_traveler_info1","thrifty_traveler_info2","thrifty_traveler_info3"],
     ),
-    "thrifty_traveller_info1" : DialogueNode(
+    "thrifty_traveler_info1" : DialogueNode(
         "\"Why does your economy depend on bones?\"",
-        ["\"Bones are the backbone of commerce in the Subterra.\nThey're readily avaliable, but scarce enough to make a good currency.\nNow why don't you buy some of my things?\""],
+        ["\"Bones are the backbone of commerce in the Subterra.\nThey're readily available, but scarce enough to make a good currency.\nNow why don't you buy some of my things?\""],
         None,
-        SetDialogueEffect(source="thrifty_traveller_done",target="speaker")
+        SetDialogueEffect(source="thrifty_traveler_done",target="speaker")
     ),
-    "thrifty_traveller_info2" : DialogueNode(
+    "thrifty_traveler_info2" : DialogueNode(
         "\"What's around here?\"",
         ["\"To the south are the Ruins of the Sun. The Wise Figure spends a lot of time there.\nTo the north are the Shattered Ruins. There's a castle there, but it's been overrun by goblins. Stay safe if you're going to check it out.\""],
         None,
-        SetDialogueEffect(source="thrifty_traveller_done",target="speaker")
+        SetDialogueEffect(source="thrifty_traveler_done",target="speaker")
     ),
-    "thrifty_traveller_info3" : DialogueNode(
+    "thrifty_traveler_info3" : DialogueNode(
         "\"Where are you from?\"",
         ["\"I was born in the town of Lumin. It's north of the ruins, and it's the main settlement in the Subterra.\""],
         None,
-        SetDialogueEffect(source="thrifty_traveller_done",target="speaker")
+        SetDialogueEffect(source="thrifty_traveler_done",target="speaker")
     ),
 }
 
-dialogue_nodes.update(thrifty_traveller)
+dialogue_nodes.update(thrifty_traveler)
 
 def get_dialogue(dia_id : str) -> DialogueNode:
     return dialogue_nodes[dia_id]

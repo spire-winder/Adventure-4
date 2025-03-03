@@ -143,7 +143,7 @@ class EffectSequence(Effect):
             x.execute_with_statics_and_reformat(dungeon, reformat_dict, True)
         dungeon.reply(self)
 
-class AddtoInventoryEvent(Effect):
+class AddToInventoryEvent(Effect):
     """Adds the target to the source's inventory. If it cannot, then adds to the room"""
     def __init__(self, source, target):
         super().__init__()
@@ -487,7 +487,7 @@ class TakeItemEffect(Effect):
         if not self.target.can_take_item(self.item):
             return
         RemoveRoomObjEffect(self.source, self.item).execute(dungeon)
-        AddtoInventoryEvent(self.target, self.item).execute(dungeon)
+        AddToInventoryEvent(self.target, self.item).execute(dungeon)
         dungeon.add_to_message_queue_if_actor_visible(self.source, [self.target.get_name(), " takes ", self.item.get_name(), "."])
 
 class EquipItemEffect(Effect):
@@ -518,7 +518,7 @@ class GiveItemEffect(Effect):
         if hasattr(self.item,"equipment_slot") and self.target.inventory.equipment_handler.can_equip_without_swap(self.item):
             self.target.equip_item(self.item)
         else:
-            AddtoInventoryEvent(self.target, self.item).execute(dungeon)
+            AddToInventoryEvent(self.target, self.item).execute(dungeon)
         dungeon.add_to_message_queue_if_actor_visible(self.source, [self.source.get_name(), " gives ",self.target.get_name()," ", self.item.get_name(), "."])
 
 class PlayerAction:
@@ -701,7 +701,7 @@ class PlayerBuyAction(PlayerAction):
     def execute(self, dungeon) -> None:
         if dungeon.player.can_take_item(self.item) and dungeon.actor.get_stat("Bones").get_current_bones() >= self.price:
             dungeon.add_to_message_queue([dungeon.player.get_name(), " bought ", self.item.get_name(), "."])
-            AddtoInventoryEvent(dungeon.player, copy.deepcopy(self.item)).execute_with_statics(dungeon)
+            AddToInventoryEvent(dungeon.player, copy.deepcopy(self.item)).execute_with_statics(dungeon)
             dungeon.actor.get_stat("Bones").spend(self.price)
             self.prev.execute(dungeon)
     

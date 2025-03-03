@@ -261,11 +261,11 @@ shattered_ruins : dict[str:Room] = {
     ),
     "echoing_cave": Room(
         name=("stone", "Echoing Cave"),
-        ability_handler=AbilityHandler([Spawner([get_entity("demogob")],1,25,3)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("goblin_demolitionist")],1,25,3)]),
         room_contents=[
             Passage(("stone", "Western Courtyard"),destination_id="ancient_courtyard"),
             SubmergedPassage(("water", "Underwater Passage"),destination_id="submerged_cavern"),
-            get_entity("demogob"),
+            get_entity("goblin_demolitionist"),
             get_entity("goblin_miner"),
             get_item("dynamite")
         ]

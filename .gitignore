@@ -180,3 +180,4 @@ log.txt
 /test.build
 /test.dist
 nuitka-crash-report.xml
+/.vscode
