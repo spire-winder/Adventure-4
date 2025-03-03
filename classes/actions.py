@@ -703,7 +703,7 @@ class PlayerBuyAction(PlayerAction):
             dungeon.add_to_message_queue([dungeon.player.get_name(), " bought ", self.item.get_name(), "."])
             AddtoInventoryEvent(dungeon.player, copy.deepcopy(self.item)).execute_with_statics(dungeon)
             dungeon.actor.get_stat("Bones").spend(self.price)
-            dungeon.end_current_turn()
+            self.prev.execute(dungeon)
     
     def get_name(self):
         return ["Buy ", self.item.get_name(), ": ", ("bone", str(self.price) + " bones")]
