@@ -616,13 +616,13 @@ class Bag(Interactable):
             x.reply(new_chain, effect)
 
     def get_items_in_bag(self, condition = lambda item : True) -> list["Item"]:
-        roomobjets : list["Item"] = []
+        roomobjects : list["Item"] = []
         for x in self.items_list:
             if condition(x):
-                roomobjets.append(x)
+                roomobjects.append(x)
             else:
                 pass
-        return roomobjets
+        return roomobjects
     
 class Inventory(Interactable):
     def __init__(self, equipment_handler : EquipmentHandler = None, bag : Bag = None):
@@ -1026,13 +1026,13 @@ class Room(Actor):
         return False
     
     def get_roomobjects(self, condition = lambda item : True) -> list["RoomObject"]:
-        roomobjets : list["RoomObject"] = []
+        roomobjects : list["RoomObject"] = []
         for x in self.room_contents:
             if condition(x):
-                roomobjets.append(x)
+                roomobjects.append(x)
             else:
                 pass
-        return roomobjets
+        return roomobjects
 
     def get_roomobject_of_id(self, id : str) -> RoomObject:
         for x in self.room_contents:
