@@ -701,7 +701,7 @@ class PlayerBuyAction(PlayerAction):
     def execute(self, dungeon) -> None:
         if dungeon.player.can_take_item(self.item) and dungeon.actor.get_stat("Bones").get_current_bones() >= self.price:
             dungeon.add_to_message_queue([dungeon.player.get_name(), " bought ", self.item.get_name(), "."])
-            AddtoInventoryEvent(dungeon.player, self.item).execute_with_statics(dungeon)
+            AddtoInventoryEvent(dungeon.player, copy.deepcopy(self.item)).execute_with_statics(dungeon)
             dungeon.actor.get_stat("Bones").spend(self.price)
             dungeon.end_current_turn()
     

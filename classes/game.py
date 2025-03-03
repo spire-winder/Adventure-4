@@ -58,6 +58,7 @@ class Game:
                 room_list.append(urwid.Divider())
                 room_list.append(ActionButton("Options", self.load_options_menu_wrapper))
         center_widget : urwid.ListBox = urwid.ListBox(urwid.SimpleFocusListWalker(room_list))
+        self.current_interaction = inter
         self.set_center_event.emit(new_center=center_widget)
 
     def show_message_queue(self, queue : list):
@@ -73,6 +74,7 @@ class Game:
         else:
             li.append(ActionButton(["Return to menu"], self.delete_and_quit))
         notif_widget = urwid.ListBox(urwid.SimpleFocusListWalker(li))
+        self.current_interaction = None
         self.set_center_event.emit(new_center=notif_widget)
 
     def load_options_menu_wrapper(self, button):
@@ -84,6 +86,7 @@ class Game:
         options_menu_options.append(ActionButton("Save", self.save_wrapper))
         options_menu_options.append(ActionButton("Save and quit", self.save_and_quit))
         options_menu = urwid.ListBox(urwid.SimpleFocusListWalker(options_menu_options))
+        self.current_interaction = None
         self.set_center_event.emit(new_center=options_menu)
     
     def load_victory_menu(self):
@@ -93,6 +96,7 @@ class Game:
         menu_options.append(urwid.Divider())
         menu_options.append(ActionButton("Return to menu", self.save_and_quit))
         options_menu = urwid.ListBox(urwid.SimpleFocusListWalker(menu_options))
+        self.current_interaction = None
         self.set_center_event.emit(new_center=options_menu)
     
     def save_menu(self):
@@ -101,6 +105,7 @@ class Game:
         menu_options.append(urwid.Divider())
         menu_options.append(ActionButton("Return to game", self.resume_wrapper))
         options_menu = urwid.ListBox(urwid.SimpleFocusListWalker(menu_options))
+        self.current_interaction = None
         self.set_center_event.emit(new_center=options_menu)
     
     def save_wrapper(self, button : ActionButton) -> None:
@@ -129,3 +134,7 @@ class Game:
 
     def end_round(self, button : ActionButton) -> None:
         self.dungeon.start_round()
+    
+    def back_pressed(self) -> None:
+        if self.current_interaction != None and hasattr(self.current_interaction, "prev") and self.current_interaction.prev != None:
+            self.player_interact(self.current_interaction.prev)

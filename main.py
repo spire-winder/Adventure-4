@@ -106,8 +106,14 @@ class Program:
 
     def exit_game(self, button : classes.ui.ActionButton) -> typing.NoReturn:
         raise urwid.ExitMainLoop()
+    
+    def unhandled(self, key: str) -> None:
+        if key in {"backspace", "delete", "esc"}:
+            if self.game != None:
+                self.game.back_pressed()
+            
 
 if __name__ == "__main__":
     program = Program()
-    loop = urwid.MainLoop(program.top, palette=classes.ui.full_palette)
+    loop = urwid.MainLoop(program.top, palette=classes.ui.full_palette, unhandled_input=program.unhandled)
     loop.run()

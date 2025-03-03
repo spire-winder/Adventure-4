@@ -309,7 +309,7 @@ goblins : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("roast_chicken"),get_item("roast_beef"),get_item("bone_marrow_stew")])
         ),
-        stathandler=StatHandler({"HP":HPContainer(20), "Bones":BoneContainer(5)}),
+        stathandler=StatHandler({"HP":HPContainer(20), "Bones":BoneContainer(15)}),
         dialogue_manager=None,
         state=IdleState()
     ),
@@ -324,7 +324,7 @@ goblins : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("clarity_crystal")])
         ),
-        stathandler=StatHandler({"HP":HPContainer(20),"MP":MPContainer(30), "Bones":BoneContainer(5)}),
+        stathandler=StatHandler({"HP":HPContainer(20),"MP":MPContainer(30), "Bones":BoneContainer(15)}),
         dialogue_manager=None,
         state=IdleState()
     ),
@@ -340,7 +340,7 @@ goblins : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("garden_key")])
         ),
-        stathandler=StatHandler({"HP":HPContainer(25), "Bones":BoneContainer(5)}),
+        stathandler=StatHandler({"HP":HPContainer(25), "Bones":BoneContainer(25)}),
         dialogue_manager=None,
         state=IdleState()
     )
@@ -358,7 +358,7 @@ forest_beasts : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("roast_pork")])
         ), 
-        stathandler=StatHandler({"HP":HPContainer(25)}),
+        stathandler=StatHandler({"HP":HPContainer(25), "Bones":BoneContainer(5)}),
         state=IdleState()
     ),
     "maneater" : StateEntity(
@@ -382,7 +382,7 @@ forest_beasts : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("gillberry"),get_item("frozen_helm"),get_item("serpent_flesh"),get_item("lifeforce_container"),RandomElement([get_item("ice_staff"),get_item("blizzard_scroll")])])
         ), 
-        stathandler=StatHandler({"HP":HPContainer(30)}),
+        stathandler=StatHandler({"HP":HPContainer(30), "Bones":BoneContainer(30)}),
         state=IdleCannotLeaveState()
     ),
     "cave_serpent" : StateEntity(
@@ -394,7 +394,7 @@ forest_beasts : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("serpent_flesh")])
         ), 
-        stathandler=StatHandler({"HP":HPContainer(15)}),
+        stathandler=StatHandler({"HP":HPContainer(15), "Bones":BoneContainer(10)}),
         state=IdleCannotLeaveState()
     ),
     "colossal_bat" : StateEntity(
@@ -406,7 +406,7 @@ forest_beasts : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("bat_flesh")])
         ), 
-        stathandler=StatHandler({"HP":HPContainer(10)}),
+        stathandler=StatHandler({"HP":HPContainer(10), "Bones":BoneContainer(5)}),
         state=IdleCannotLeaveState()
     ),
     "temple_guardian" : StateEntity(
