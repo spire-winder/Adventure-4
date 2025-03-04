@@ -477,4 +477,5 @@ thrifty_traveler : dict[str:DialogueNode] = {
 dialogue_nodes.update(thrifty_traveler)
 
 def get_dialogue(dia_id : str) -> DialogueNode:
-    return dialogue_nodes[dia_id]
+    new_id = dia_id.replace("traveller","traveler")
+    return dialogue_nodes[new_id]

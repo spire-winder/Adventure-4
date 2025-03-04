@@ -114,7 +114,7 @@ standard_map : dict = {
         AbilityHandler(), 
         [
             get_item("roast_beef"),
-            get_entity("fellow_traveller"),
+            get_entity("fellow_traveler"),
             get_item("iron_boots"),
             Campfire(("heat", "Small Campfire")),
             Passage(("stone", "Goblin Cave"), destination_id="goblin_cave"),
@@ -229,7 +229,7 @@ ruins_of_the_sun : dict[str:Room] = {
     "crumbling_entrance": Room(
         name=("stone", "Crumbling Entrance"),
         room_contents=[
-            get_entity("thrifty_traveller"),
+            get_entity("thrifty_traveler"),
             Passage(("celestial", "Temple Gate"),destination_id="stone_rotunda"),
             Passage(("stone", "Northern Cavern"),destination_id="empty_cavern"),
         ]
