@@ -35,7 +35,7 @@ class Interactable:
         return []
     def interact(self) -> None:
         self.event.emit(action=classes.actions.PlayerInteractAction(self))
-    def notify(self, dungeon, notif : Notif) -> None:
+    def notify(self, dungeon, notif : Effect) -> None:
         self.notif.emit(dungeon, notif)
     def handle_connecting_signals(self, dungeon):
         self.event.subscribe(dungeon.interaction_event)
@@ -341,13 +341,6 @@ class MeleeWeapon(Weapon):
         super().__init__(name, ability_handler, price, drop_chance, attackeffect)
         self.ability_handler.add_ability(get_ability("melee"))
         self.ability_handler.add_ability(Sharpness(sharpness, durability))
-    
-    def dull(self, amount : float):
-        if self.has_ability("sharpness"):
-            self.ability_handler.get_ability("sharpness").dull(amount)
-    def sharpen(self, amount : float):
-        if self.has_ability("sharpness"):
-            self.ability_handler.get_ability("sharpness").sharpen(amount)
 
 class MagicWeapon(Weapon):
     def __init__(self, name:str | tuple["Hashable", str] | list[str | tuple["Hashable", str]], ability_handler : AbilityHandler = None, price : int = 0, drop_chance : float = 1, attackeffect : classes.actions.Effect = None, mana_cost : int = 10) -> None:

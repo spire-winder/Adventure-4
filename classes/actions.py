@@ -326,7 +326,7 @@ class DullWeaponEvent(Effect):
         self.target = target
         self.dulling : float = dulling
     def execute(self, dungeon):
-        self.target.dull(self.dulling)
+        self.target.get_ability("sharpness").dull(self.dulling)
 
 class SharpenEvent(Effect):
     """Sharpens the target by an amount."""
@@ -341,7 +341,7 @@ class SharpenEvent(Effect):
     def execute(self, dungeon):
         percent : int = math.floor(self.sharpening * 100)
         dungeon.add_to_message_queue_if_visible([self.target.get_name(), " is sharpened ", ("iron",str(percent) + "%"), " by ", self.source.get_name(), "."])
-        self.target.sharpen(self.sharpening)
+        self.target.get_ability("sharpness").sharpen(self.sharpening)
 
 class SpendMPEvent(Effect):
     """The target spends MP."""
