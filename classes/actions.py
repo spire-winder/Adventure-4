@@ -514,7 +514,7 @@ class GiveItemEffect(Effect):
     
     def execute(self, dungeon) -> None:
         if not self.target.can_take_item(self.item):
-            return
+            AddRoomObjEffect(dungeon.place, self.item)
         if hasattr(self.item,"equipment_slot") and self.target.inventory.equipment_handler.can_equip_without_swap(self.item):
             self.target.equip_item(self.item)
         else:

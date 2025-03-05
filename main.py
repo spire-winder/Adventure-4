@@ -11,6 +11,7 @@ os.system('title Adventure 4')
 
 class Program:
     def __init__(self) -> None:
+        self.game = None
         self.load_ui()
         if systems.save_system.has_saves():
             self.load_main_menu()
