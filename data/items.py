@@ -474,7 +474,7 @@ magic_weapon_items : dict[str:Item] = {
         name=("heat","Wildfire Scroll"),
         ability_handler=AbilityHandler([MultiUse(3)]),
         useeffect=EffectSequence([
-            RepeatEvent(DamageEvent(damage=15,damage_type="heat"),3)
+            RepeatEvent(DamageEvent(damage=12,damage_type="heat"),3)
         ]),
         mana_cost=5,
         price=15

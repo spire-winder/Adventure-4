@@ -23,7 +23,7 @@ player : Player = Player(
     StatHandler({
         "HP":HPContainer(50),
         "MP":MPContainer(50),
-        "Bones":BoneContainer(0,100)
+        "Bones":BoneContainer(0,500)
     })
 )
 
@@ -183,7 +183,7 @@ ruins_of_the_sun : dict[str:Room] = {
     ),
     "western_hallway": Room(
         name=("stone", "Western Hallway"),
-        ability_handler=AbilityHandler([Spawner([get_entity("arcane_greedling")],1,30)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("arcane_greedling")],1,50)]),
         room_contents=[
             get_entity("greedling"),
             get_entity("arcane_greedling"),

@@ -367,8 +367,9 @@ class RestoreMPEvent(Effect):
     def get_desc(self):
         return ["Restore ",("magic", str(self.restoring) + " MP")]
     def execute(self, dungeon):
-        dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " restored ", ("magic", str(self.restoring) + " MP"), "."])
-        self.target.get_stat("MP").restore(self.restoring)
+        if hasattr(self.target, "get_stat"):
+            dungeon.add_to_message_queue_if_actor_visible(self.target, [self.target.get_name(), " restored ", ("magic", str(self.restoring) + " MP"), "."])
+            self.target.get_stat("MP").restore(self.restoring)
 
 class IncreaseMaxMPEffect(Effect):
     """Increases max MP of the target by an amount."""
