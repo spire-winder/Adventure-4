@@ -502,7 +502,7 @@ class EquipItemEffect(Effect):
         if self.source != None:
             RemoveRoomObjEffect(self.source, self.item).execute(dungeon)
         self.target.equip_item(self.item)
-        dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " equipped the ", self.item.get_name(), "."])
+        #dungeon.add_to_message_queue_if_visible([dungeon.actor.get_name(), " equips the ", self.item.get_name(), "."])
 
 class GiveItemEffect(Effect):
     """The source gives the target an item."""

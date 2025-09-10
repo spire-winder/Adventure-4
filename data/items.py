@@ -695,17 +695,20 @@ enemy_items : dict[str:Item] = {
     "tooth":MeleeWeapon(
         name=("meat","Tooth"),
         drop_chance=0.2,
-        attackeffect=DamageEvent(damage=2,damage_type="slashing",armor_penetrate=1)
+        attackeffect=DamageEvent(damage=2,damage_type="slashing",armor_penetrate=1),
+        price=1
     ),
     "magic_tooth":MeleeWeapon(
         name=("magic","Arcane Tooth"),
         drop_chance=0.1,
-        attackeffect=DamageEvent(damage=4,damage_type="arcane",armor_penetrate=2)
+        attackeffect=DamageEvent(damage=4,damage_type="arcane",armor_penetrate=2),
+        price=3
     ),
     "shadow_tooth":MeleeWeapon(
         name=("shadow","Shadow Tooth"),
         drop_chance=0.1,
-        attackeffect=DamageEvent(damage=6,damage_type="shadow")
+        attackeffect=DamageEvent(damage=6,damage_type="shadow"),
+        price=3
     ),
     "maneater_bite":MeleeWeapon(
         name=("shadow","Maneater Jaw"),
