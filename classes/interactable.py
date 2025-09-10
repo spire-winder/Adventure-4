@@ -571,7 +571,8 @@ class Bag(Interactable):
             return False
     
     def add_item(self, item : Item):
-        self.items_list.append(item)
+        if item != None:
+            self.items_list.append(item)
     
     def remove_item(self, item : Item):
         self.items_list.remove(item)
@@ -780,7 +781,14 @@ class Container(RoomObject):
         super().handle_connecting_signals(dungeon)
         for object in self.contents:
             object.handle_connecting_signals(dungeon)
-
+    
+    def dungeon_init(self, chain : list):
+        new_chain = chain.copy()
+        new_chain.append(self)
+        for x in range(len(self.contents)):
+            ele = self.contents[x]
+            if isinstance(ele, RandomElement):
+                self.contents[x] = ele.dungeon_init(new_chain)
 
 from data.dialogue import DialogueNode
 from data.dialogue import get_dialogue

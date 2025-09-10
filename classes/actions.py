@@ -119,7 +119,8 @@ class SetDialogueEffect(Effect):
         self.source = source
         self.target = target
     def execute(self, dungeon):
-        self.target.dialogue_manager.set_dialogue(self.source)
+        if self.target != None:
+            self.target.dialogue_manager.set_dialogue(self.source)
 
 class EffectSequence(Effect):
     """Used when multiple effects must happen."""
@@ -513,6 +514,8 @@ class GiveItemEffect(Effect):
         self.item = item
     
     def execute(self, dungeon) -> None:
+        self.item = self.source.get_items_in_bag( lambda x : x.name == self.item.name)[0]
+        RemoveFromInventoryEvent(self.source, self.item).execute(dungeon)
         if not self.target.can_take_item(self.item):
             AddRoomObjEffect(dungeon.place, self.item)
         if hasattr(self.item,"equipment_slot") and self.target.inventory.equipment_handler.can_equip_without_swap(self.item):

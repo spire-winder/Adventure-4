@@ -231,7 +231,7 @@ shattered_ruins_items : dict[str:Item] = {
     "small_rock":UsableWeapon(
         name=("stone","Small Rock"),
         ability_handler=AbilityHandler([SingleUse()]),
-        drop_chance=0.9,
+        drop_chance=0,
         useeffect=DamageEvent(damage=7,damage_type="bashing")
     ),
     "spiked_shield":Equipment(
@@ -513,7 +513,7 @@ magic_weapon_items : dict[str:Item] = {
         name=("arcane","Mystic Scroll"),
         ability_handler=AbilityHandler([MultiUse(3)]),
         useeffect=EffectSequence([
-            DamageEvent(damage=30,damage_type="arcane",armor_penetrate=-1)
+            DamageEvent(damage=20,damage_type="arcane",armor_penetrate=-1)
         ]),
         mana_cost=5,
         price=15
@@ -537,15 +537,6 @@ magic_weapon_items : dict[str:Item] = {
         ]),
         mana_cost=5,
         price=15
-    ),
-    "mega_death":MagicWeapon(
-        name=("shadow","Mega Death"),
-        attackeffect=EffectSequence([
-            DamageEvent(damage=110,damage_type="shadow"),
-            AddAbilityEffect("target", Status(get_ability("stun"),5))
-        ]),
-        mana_cost=1,
-        price=10
     )
 }
 
@@ -806,6 +797,32 @@ final_boss_items : dict[str:Item] = {
 }
 
 items.update(final_boss_items)
+
+debug_items : dict[str:Item] = {
+    "demonic_blade_of_doom":MeleeWeapon(
+        name=[("shadow","Demonic Blade of Doom")],
+        attackeffect=
+            EffectSequence([
+                DamageEvent(damage=100, damage_type="slashing"),
+                DamageEvent(damage=100, damage_type="shadow"),
+                ProbabilityEvent(AddAbilityEffect("target", Status(get_ability("doomed"),5)),0.75)
+            ]),
+        drop_chance=0.3,
+        durability=0.95,
+        price=20
+    ),
+    "mega_death":MagicWeapon(
+        name=("shadow","Mega Death"),
+        attackeffect=EffectSequence([
+            DamageEvent(damage=110,damage_type="shadow"),
+            AddAbilityEffect("target", Status(get_ability("stun"),5))
+        ]),
+        mana_cost=1,
+        price=10
+    )
+}
+
+items.update(debug_items)
 
 for x in items:
     items[x].id = x

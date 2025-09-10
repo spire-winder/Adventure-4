@@ -19,7 +19,7 @@ player : Player = Player(
             "Boots":None,
             "Ring":None
         }),
-        Bag(10)),
+        Bag(20)),
     StatHandler({
         "HP":HPContainer(50),
         "MP":MPContainer(50),
@@ -171,7 +171,7 @@ ruins_of_the_sun : dict[str:Room] = {
     ),
     "stone_rotunda": Room(
         name=("stone", "Stone Rotunda"),
-        ability_handler=AbilityHandler([Spawner([get_entity("large_greedling")],2,50,5)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("large_greedling")],1,50,5)]),
         room_contents=[
             get_entity("large_greedling"),
             Campfire(("heat", "Roaring Campfire")),
@@ -183,7 +183,7 @@ ruins_of_the_sun : dict[str:Room] = {
     ),
     "western_hallway": Room(
         name=("stone", "Western Hallway"),
-        ability_handler=AbilityHandler([Spawner([get_entity("arcane_greedling")],1,25)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("arcane_greedling")],1,30)]),
         room_contents=[
             get_entity("greedling"),
             get_entity("arcane_greedling"),
@@ -203,7 +203,7 @@ ruins_of_the_sun : dict[str:Room] = {
     ),
     "crypt_of_the_sunblessed": Room(
         name=[("stone", "Crypt of the "), ("celestial", "Sunblessed")],
-        ability_handler=AbilityHandler([Spawner([get_entity("shadow_greedling")],1,25)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("shadow_greedling")],1,30)]),
         room_contents=[
             get_entity("shadow_greedling"),
             Container(("stone", "Defiled Grave"), contents=[get_item("wooden_shovel"),get_item("wooden_dagger")]),
@@ -298,7 +298,7 @@ shattered_ruins : dict[str:Room] = {
     ),
     "ransacked_hall": Room(
         name=("stone", "Ransacked Hall"),
-        ability_handler=AbilityHandler([Spawner([get_entity("goblin_guard_spawned")],3,20,2)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("goblin_guard_spawned")],2,40,10)]),
         room_contents=[
             get_entity("goblin_officer"),
             get_entity("goblin_basher"),
@@ -311,7 +311,7 @@ shattered_ruins : dict[str:Room] = {
     ),
     "kitchen": Room(
         name=("stone", "Royal Kitchen"),
-        ability_handler=AbilityHandler([Spawner([get_entity("goblin_chef")],1,15,2)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("goblin_chef")],1,50,10)]),
         room_contents=[
             get_entity("goblin_chef"),
             Campfire(("heat","Royal Hearth")),
@@ -320,7 +320,7 @@ shattered_ruins : dict[str:Room] = {
     ),
     "shattered_spire": Room(
         name=("stone", "Shattered Spire"),
-        ability_handler=AbilityHandler([Spawner([get_entity("goblin_mage")],1,15,2)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("goblin_mage")],1,50,10)]),
         room_contents=[
             get_entity("goblin_mage"),
             Passage(("stone", "Spire Exit"),destination_id="ransacked_hall"),
@@ -354,8 +354,8 @@ shattered_ruins : dict[str:Room] = {
         name=("magic", "Arcane Archive"),
         room_contents=[
             get_item("mana_container"),
-            Container(("wood","Staff Display"),contents=[RandomElement([get_item("fire_staff"),get_item("ice_staff"),get_item("poison_staff"),get_item("lightning_staff"),get_item("arcane_staff"),get_item("shadow_staff"),get_item("celestial_staff")]),]),
-            Container(("wood","Scroll Rack"),contents=[RandomElement([get_item("wildfire_scroll"),get_item("blizzard_scroll"),get_item("venom_scroll"),get_item("storm_scroll"),get_item("mystic_scroll"),get_item("eclipse_scroll"),get_item("starfire_scroll")])]),
+            Container(("wood","Staff Display"),contents=[RandomElement([get_item("ice_staff"),get_item("poison_staff"),get_item("lightning_staff"),get_item("arcane_staff"),get_item("shadow_staff")]),]),
+            Container(("wood","Scroll Rack"),contents=[RandomElement([get_item("wildfire_scroll"),get_item("venom_scroll"),get_item("storm_scroll"),get_item("eclipse_scroll"),get_item("starfire_scroll")])]),
             Container(("wood","Alchemy Station"),contents=[get_item("empowering_potion"),get_item("regen_potion")]),
             Passage(("stone", "Archive Exit"),destination_id="throne_room"),
         ]
@@ -372,7 +372,6 @@ shattered_ruins : dict[str:Room] = {
         name=("stone", "Forgotten Armory"),
         room_contents=[
             get_item("iron_shield"),
-            get_item("iron_ring"),
             get_item("iron_axe"),
             get_item("sharpening_stone"),
             Passage(("stone", "Parlor"),destination_id="demolished_parlor"),
@@ -401,7 +400,7 @@ shadowed_forest : dict[str:Room] = {
     ),
     "umbral_grove": Room(
         name=("shadow", "Umbral Grove"),
-        ability_handler=AbilityHandler([Spawner([get_entity("mage_hater")],1,15,5)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("mage_hater")],1,30,5)]),
         room_contents=[
             get_entity("mage_hater"),
             Passage(("shadow", "Forest Entrance"),destination_id="forest_entrance"),
@@ -421,7 +420,7 @@ shadowed_forest : dict[str:Room] = {
     ),
     "cavern_maw": Room(
         name=("stone", "Cavern Maw"),
-        ability_handler=AbilityHandler([Spawner([get_entity("colossal_bat")],2,10,5)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("colossal_bat")],2,25,5)]),
         room_contents=[
             get_entity("colossal_bat"),
             get_entity("colossal_bat"),
@@ -463,7 +462,7 @@ shadowed_forest : dict[str:Room] = {
     ),
     "waterfall": Room(
         name=("water", "Waterfall"),
-        ability_handler=AbilityHandler([Spawner([get_entity("waterfall_serpent")],1,25,5)]),
+        ability_handler=AbilityHandler(),
         room_contents=[
             get_entity("waterfall_serpent"),
             UsableRoomObj(("shadow", "Darkwood Fronds"),ability_handler=AbilityHandler([get_ability("hidden_single_use")]),actions={"investigate":AddRoomObjEffect("place",get_misc("hidden_stash_entrance"))}),
@@ -491,7 +490,7 @@ shadowed_forest : dict[str:Room] = {
     ),
     "maneaters_hollow": Room(
         name=("shadow", "Maneaters' Hollow"),
-        ability_handler=AbilityHandler([Spawner([get_entity("maneater")],1,25,5)]),
+        ability_handler=AbilityHandler([Spawner([get_entity("maneater")],1,30,5)]),
         room_contents=[
             get_entity("maneater"),
             Passage(("shadow", "Eastern Crossroads"),destination_id="forest_crossroads"),
@@ -500,7 +499,7 @@ shadowed_forest : dict[str:Room] = {
     ),
     "mystic_temple": Room(
         name=("magic", "Mystic Temple"),
-        ability_handler=AbilityHandler([Spawner([get_entity("temple_guardian")],1,25,5)]),
+        ability_handler=AbilityHandler(),
         room_contents=[
             get_entity("temple_guardian"),
             Passage(("shadow", "Eastern Hollow"),destination_id="maneaters_hollow"),

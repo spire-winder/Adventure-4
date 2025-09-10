@@ -318,7 +318,7 @@ goblins : dict[str:StateEntity] = {
         ability_handler=AbilityHandler([get_ability("goblin"),DamageTypeBuff("arcane_arts",("magic", "Arcane Arts"), "arcane", 2)]),
         inventory=Inventory(
             EquipmentHandler({
-                "Weapon":RandomElement([get_item("fire_staff"),get_item("ice_staff"),get_item("poison_staff"),get_item("lightning_staff"),get_item("arcane_staff"),get_item("shadow_staff"),get_item("celestial_staff")]),
+                "Weapon":RandomElement([get_item("ice_staff"),get_item("poison_staff"),get_item("lightning_staff"),get_item("arcane_staff"),get_item("shadow_staff")]),
                 "Armor":get_item("mage_cloak"),
                 "Boots":get_item("mage_boots"),
             }),
@@ -382,7 +382,7 @@ forest_beasts : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("gillberry"),get_item("frozen_helm"),get_item("serpent_flesh"),get_item("lifeforce_container"),RandomElement([get_item("ice_staff"),get_item("blizzard_scroll")])])
         ), 
-        stathandler=StatHandler({"HP":HPContainer(30), "Bones":BoneContainer(30)}),
+        stathandler=StatHandler({"HP":HPContainer(40), "Bones":BoneContainer(30)}),
         state=IdleCannotLeaveState()
     ),
     "cave_serpent" : StateEntity(
@@ -418,7 +418,7 @@ forest_beasts : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("mana_container"),get_item("armory_key"),RandomElement([get_item("fire_staff"),get_item("wildfire_scroll")])])
         ), 
-        stathandler=StatHandler({"HP":HPContainer(20)}),
+        stathandler=StatHandler({"HP":HPContainer(30)}),
         state=IdleCannotLeaveState()
     ),
     "shadowed_one" : StateEntity(
@@ -430,7 +430,7 @@ forest_beasts : dict[str:StateEntity] = {
             }),
             Bag(-1, [get_item("iron_key"),get_item("gloom_helm"),get_item("umbra_cloak"),get_item("blight_treads"),get_item("twilight_ring"),get_item("dusk_shield")])
         ), 
-        stathandler=StatHandler({"HP":HPContainer(40)}),
+        stathandler=StatHandler({"HP":HPContainer(60)}),
         state=IdleCannotLeaveState()
     ),
 }
@@ -532,7 +532,15 @@ npcs : dict[str:StateEntity] = {
             EquipmentHandler({
                 "Weapon":get_item("magic_axe"),
                 "Offhand":get_item("magic_shield")
-            })
+            }),
+            Bag(
+                -1,
+                [
+                    get_item("wooden_sword"),
+                    get_item("wooden_key"),
+                    get_item("celestial_staff")
+                ]
+            )
         ), 
         StatHandler({"HP":HPContainer(40)}),
         DialogueManager("wise_figure_1"),
@@ -580,7 +588,14 @@ npcs : dict[str:StateEntity] = {
                 "Weapon":get_item("iron_staff"),
                 "Offhand":get_item("wooden_dagger"),
                 "Boots":get_item("iron_boots")
-            })
+            }),
+            Bag(
+                -1,
+                [
+                    get_item("healing_potion"),
+                    get_item("regen_potion")
+                ]
+            )
         ), 
         dialogue_manager=DialogueManager("trailblazer_1"),
         state=PeacefulState()
@@ -644,7 +659,13 @@ npcs : dict[str:StateEntity] = {
                 "Weapon":get_item("iron_staff"),
                 "Offhand":get_item("wooden_dagger"),
                 "Boots":get_item("waterforged_boots")
-            })
+            }),
+            Bag(
+                -1,
+                [
+                    get_item("iron_key")
+                ]
+            )
         ), 
         state=PeacefulState()
     ),
